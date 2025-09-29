@@ -8,8 +8,8 @@ import anvil.server
 import csv
 
 @anvil.server.callable
-def read_file():
-  the_csv = tables.app_tables.test_csv.get(name="discovery")['file']
+def read_file(fn):
+  the_csv = fn
   with open(the_csv, newline='', encoding='utf-8') as csvfile:
     reader = csv.reader(csvfile)
 

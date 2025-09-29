@@ -1,4 +1,9 @@
 components:
+- event_bindings: {change: file_loader_1_change}
+  layout_properties: {grid_position: 'ERZSQA,ELVPQZ'}
+  name: file_loader_1
+  properties: {}
+  type: FileLoader
 - components:
   - components:
     - layout_properties: {grid_position: 'SPXODK,DZNMMD'}

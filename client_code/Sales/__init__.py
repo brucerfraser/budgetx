@@ -51,5 +51,8 @@ class Sales(SalesTemplate):
     """This method is called when an item is selected"""
     self.y_values = anvil.server.call('return_data', self.drop_down_1.selected_value)
     self.create_line_graph()
+
+  def file_loader_1_change(self, file, **event_args):
+    anvil.server.call('read_file',fn=file)
     
 

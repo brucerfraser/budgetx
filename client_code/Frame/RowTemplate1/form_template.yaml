@@ -11,5 +11,7 @@ components:
   name: label_2
   properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: '', tooltip: '', underline: false, visible: true}
   type: Label
-container: {type: DataRowPanel}
+container:
+  properties: {visible: true}
+  type: DataRowPanel
 is_package: true
