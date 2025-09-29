@@ -1,0 +1,41 @@
+components:
+- components:
+  - layout_properties: {grid_position: 'LLNAAG,BRSXTM'}
+    name: spacer_1
+    properties: {height: 32}
+    type: Spacer
+  - event_bindings: {click: sales_page_link_click}
+    layout_properties: {grid_position: 'ATKKKJ,DBSYGY'}
+    name: sales_page_link
+    properties: {align: center, background: '', bold: false, border: '', enabled: true, font: '', font_size: 18, foreground: '', icon: 'fa:bar-chart', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: ' Sales', tooltip: '', underline: false, visible: true}
+    type: Button
+  - event_bindings: {click: reports_page_link_click}
+    layout_properties: {grid_position: 'AODCYE,XQMJOX'}
+    name: reports_page_link
+    properties: {align: center, background: '', bold: false, border: '', enabled: true, font: '', font_size: 18, foreground: '', icon: 'fa:pie-chart', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: ' Reports', tooltip: '', underline: false, visible: true}
+    type: Button
+  - layout_properties: {grid_position: 'KHSNGK,VNCASN'}
+    name: label_1
+    properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: '                                                                                 ', tooltip: '', underline: false, visible: true}
+    type: Label
+  - event_bindings: {click: signout_link_click}
+    layout_properties: {grid_position: 'QDWBQK,DOAOHZ'}
+    name: signout_link
+    properties: {align: center, background: '', bold: false, border: '', enabled: true, font: '', font_size: null, foreground: 'theme:Primary', icon: 'fa:sign-out', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: Sign out, tooltip: '', underline: false, visible: true}
+    type: Button
+  layout_properties: {slot: left-nav}
+  name: column_panel_2
+  properties: {col_widths: '{}'}
+  type: ColumnPanel
+- layout_properties: {slot: logo}
+  name: image_1
+  properties: {background: '', border: '', display_mode: shrink_to_fit, foreground: '', height: 111, horizontal_align: center, role: null, source: 'data:image/png;base64,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', spacing_above: small, spacing_below: small, tooltip: '', vertical_align: center, visible: true}
+  type: Image
+- layout_properties: {slot: default}
+  name: content_panel
+  properties: {}
+  type: ColumnPanel
+container:
+  properties: {html: '@theme:standard-page.html'}
+  type: HtmlTemplate
+is_package: true

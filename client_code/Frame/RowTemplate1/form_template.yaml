@@ -1,0 +1,15 @@
+components:
+- data_bindings:
+  - {code: 'self.item[''created''].strftime("%m/%d/%Y")', property: text}
+  layout_properties: {column: KXESPC}
+  name: label_1
+  properties: {}
+  type: Label
+- data_bindings:
+  - {code: 'self.item[''author''][''name'']', property: text}
+  layout_properties: {column: VSSQIK}
+  name: label_2
+  properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: '', tooltip: '', underline: false, visible: true}
+  type: Label
+container: {type: DataRowPanel}
+is_package: true

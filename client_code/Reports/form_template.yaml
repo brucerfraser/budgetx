@@ -1,0 +1,110 @@
+components:
+- components:
+  - layout_properties: {grid_position: 'KHHYTD,VLBHJI'}
+    name: label_2
+    properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: body, spacing_above: small, spacing_below: small, text: PAGE VIEWS, tooltip: '', underline: false, visible: true}
+    type: Label
+  - components:
+    - layout_properties: {grid_position: 'EVNISV,XJQTTQ'}
+      name: label_5
+      properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: headline, spacing_above: small, spacing_below: small, text: '12930', tooltip: '', underline: false, visible: true}
+      type: Label
+    - layout_properties: {grid_position: 'EVNISV,CNJWYO'}
+      name: label_8
+      properties: {align: left, background: '', bold: false, border: '', font: '', font_size: 32, foreground: 'theme:Primary', icon: 'fa:caret-up', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: '', tooltip: '', underline: false, visible: true}
+      type: Label
+    layout_properties: {grid_position: 'UKUHCZ,JZCHYN'}
+    name: flow_panel_1
+    properties: {}
+    type: FlowPanel
+  layout_properties: {grid_position: 'WSLHTU,RGQMIU'}
+  name: card_2
+  properties: {col_widths: '{}', role: card}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'YTQXRZ,WVLWFF'}
+    name: label_4
+    properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: body, spacing_above: small, spacing_below: small, text: AVG TIME, tooltip: '', underline: false, visible: true}
+    type: Label
+  - components:
+    - layout_properties: {grid_position: 'QQVKNZ,MVZAXD'}
+      name: label_7
+      properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: headline, spacing_above: small, spacing_below: small, text: 42 mins., tooltip: '', underline: false, visible: true}
+      type: Label
+    - layout_properties: {grid_position: 'QQVKNZ,YHCKMO'}
+      name: label_10
+      properties: {align: left, background: '', bold: false, border: '', font: '', font_size: 32, foreground: 'theme:Error', icon: 'fa:caret-down', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: '', tooltip: '', underline: false, visible: true}
+      type: Label
+    layout_properties: {grid_position: 'LUUIKF,LIDJIO'}
+    name: flow_panel_3
+    properties: {}
+    type: FlowPanel
+  layout_properties: {grid_position: 'WSLHTU,GHTBXT'}
+  name: card_4
+  properties: {col_widths: '{}', role: card}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'KDZSKT,QUJOLO'}
+    name: label_3
+    properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: body, spacing_above: small, spacing_below: small, text: BOUNCE RATE, tooltip: '', underline: false, visible: true}
+    type: Label
+  - components:
+    - layout_properties: {grid_position: 'DEOGJL,QLJHQM'}
+      name: label_6
+      properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: headline, spacing_above: small, spacing_below: small, text: 34%, tooltip: '', underline: false, visible: true}
+      type: Label
+    - layout_properties: {grid_position: 'YYSDRE,SFJZYN'}
+      name: label_9
+      properties: {align: left, background: '', bold: false, border: '', font: '', font_size: 32, foreground: 'theme:Primary', icon: 'fa:caret-down', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: '', tooltip: '', underline: false, visible: true}
+      type: Label
+    layout_properties: {grid_position: 'DEOGJL,CGNKMQ'}
+    name: flow_panel_2
+    properties: {}
+    type: FlowPanel
+  layout_properties: {grid_position: 'WSLHTU,UEKQLD'}
+  name: card_3
+  properties: {col_widths: '{}', role: card}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'TYZKNT,WZQHNH'}
+    name: label_1
+    properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: title, spacing_above: small, spacing_below: small, text: Sign-ups, tooltip: '', underline: false, visible: true}
+    type: Label
+  - layout_properties: {grid_position: 'LNSHOL,HLYVYY'}
+    name: plot_1
+    properties: {}
+    type: Plot
+  layout_properties: {grid_position: 'TMIMPR,WMQMZT'}
+  name: card_1
+  properties: {col_widths: '{}', role: card}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'YCGUEF,NJDVES'}
+    name: label_11
+    properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: title, spacing_above: small, spacing_below: small, text: Results, tooltip: '', underline: false, visible: true}
+    type: Label
+  - layout_properties: {grid_position: 'XRTCSL,FLVKQE'}
+    name: plot_2
+    properties: {}
+    type: Plot
+  layout_properties: {grid_position: 'NXBMON,OSRNEE'}
+  name: card_5
+  properties: {col_widths: '{}', role: card}
+  type: ColumnPanel
+- components:
+  - layout_properties: {grid_position: 'FQHSUJ,OXGDPN'}
+    name: label_12
+    properties: {align: left, background: '', bold: false, border: '', font: '', font_size: null, foreground: '', icon: '', icon_align: left, italic: false, role: title, spacing_above: small, spacing_below: small, text: Devices, tooltip: '', underline: false, visible: true}
+    type: Label
+  - layout_properties: {grid_position: 'KFRZLY,TMRYZA'}
+    name: plot_3
+    properties: {}
+    type: Plot
+  layout_properties: {grid_position: 'NXBMON,BRKAYU'}
+  name: card_6
+  properties: {col_widths: '{}', role: card}
+  type: ColumnPanel
+container:
+  properties: {col_widths: '{}'}
+  type: ColumnPanel
+is_package: true
