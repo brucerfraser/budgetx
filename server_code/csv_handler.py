@@ -17,20 +17,25 @@ def read_file(fn):
   # Create a list of lines split on \n
   line_list = mString.split('\n')
   # we need to identify the account, and the line of the header
+  header_triggers = ["date","amount","description","details","debits","credits","balance"]
+  r = 0
   for l in line_list:
-    print(l)
+    r += 1
+    triggers = 0
+    for t in header_triggers:
+      if t in l.lower():
+        triggers += 1
+    # print(l)
+    if triggers > 2:
+      break
+  print(r,line_list[r-1])
+  # print(line_list[7])
+    # print(l)
   # header = line_list[0]
-  # sep, quote = find_sep_quote(line_list)
+  sep, quote = find_sep_quote(line_list)
+  # print(sep,quote)
   
-  # the_csv = fn
-  # with open(the_csv, newline='', encoding='utf-8') as csvfile:
-  #   reader = csv.reader(csvfile)
-
-  #   # Loop through the first 10 rows
-  #   for i, row in enumerate(reader):
-  #     print(row)
-  #     if i >= 9:  # stop after 10 lines (0–9)
-  #       break
+  
 
 def convert_CSV_LIST(csv_object):
   # Get the data as bytes.
@@ -87,3 +92,52 @@ def convert_CSV_LIST(csv_object):
     new_logbook.append(flight)
 
   return new_logbook,non_included
+
+def parse_quote(line, sep, quote):
+  line = line.split(sep)
+  idx = 0
+  for item in line:
+    if item.count(quote) > 0:
+      sub_line = line[idx + 1:]
+      brk = 0
+      for sub in sub_line:
+        if sub.count(quote) > 0:
+          break
+        else:
+          brk += 1
+      n_item = ''
+      for i in range(idx, idx + brk + 2):
+        n_item += line[i] + sep
+      line[idx] = n_item[0:-1]
+      for i in range(idx + 1,idx + brk + 2):
+        line.pop(idx + 1)
+    idx += 1
+  return line
+
+def find_sep_quote(list_obj):
+  s_c = 0
+  l_c = 0
+  d_q = 0
+  s_q = 0
+  for line in list_obj:
+    s_c += line.count(',')
+    l_c += line.count(';')
+    d_q += line.count('"')
+    s_q += line.count("'")
+  if s_c > l_c:
+    sep = ','
+  else:
+    sep = ';'
+  if d_q > s_q:
+    quo = '"'
+  elif s_q > d_q:
+    quo = "'"
+  else:
+    quo = ''
+  return sep, quo
+
+def build_user_keys(user_key_list):
+  user_key_dict = {}
+  for row in user_key_list:
+    user_key_dict[row['name']] = row['key']
+  return user_key_dict
