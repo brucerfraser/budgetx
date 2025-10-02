@@ -29,13 +29,42 @@ def read_file(fn):
     if triggers > 2:
       break
   print(r,line_list[r-1])
+  header_words(line_list,r-1)
   # print(line_list[7])
     # print(l)
   # header = line_list[0]
   sep, quote = find_sep_quote(line_list)
   # print(sep,quote)
   
-  
+def header_words(csv_output, header):
+  # find all alphanum string-parts in the csv rows before the ehader row
+  word_list = []
+  for l in csv_output[0:header]:
+    index,start, run = 1,0,True
+    print(l[0:100])
+    while run:
+      try:
+        if l[start:index].isalnum():
+          index += 1
+          print(1, index)
+        else:
+          # we may have a word
+          print(2)
+          if index > start:
+            index -= 1
+            word_list.append(l[start:index])
+            start = index + 2 # we know index + 1 isnot alnum
+            index += 3
+      except:
+        print(3)
+        # we're past the end of the list
+        index -= 1
+        #we may have a word
+        if index > start:
+          index -= 1
+          word_list.append(l[start:index])
+        run = False
+  print(word_list)
 
 def convert_CSV_LIST(csv_object):
   # Get the data as bytes.
