@@ -30,7 +30,8 @@ def read_file(fn):
     if triggers > 2:
       break
   print(r,line_list[r-1])
-  header_words(line_list,r-1)
+  key_words = header_words(line_list,r-1)
+  print("rows:",len(line_list) - r-1)
   # print(line_list[7])
     # print(l)
   # header = line_list[0]
@@ -41,39 +42,9 @@ def header_words(csv_output, header):
   # find all alphanum string-parts in the csv rows before the ehader row
   word_list = []
   for l in csv_output[0:header]:
-    word_list.append(re.findall(r'[a-zA-Z0-9]+', l))
-    # index,start, run = 1,0,True
-    # while run:
-    #   try:
-    #     if l[start:index].isalnum():
-    #       index += 1
-    #       if index + 1 > len(l):
-    #         word_list.append(l[start:index - 1])
-    #         run = False
-    #       print(1, index)
-    #     else:
-    #       # we may have a word
-    #       print(2)
-    #       if index > start + 1:
-    #         print(22)
-    #         index -= 1
-    #         word_list.append(l[start:index])
-    #         start = index + 2 # we know index + 1 isnot alnum
-    #         index += 3
-    #       else:
-    #         print(233, len(l))
-    #         if len(l) == 0:
-    #           run = False
-    #   except:
-    #     print(3)
-    #     # we're past the end of the list
-    #     index -= 1
-    #     #we may have a word
-    #     if index > start:
-    #       index -= 1
-    #       word_list.append(l[start:index])
-    #     run = False
-  print(word_list)
+    for word in re.findall(r'[a-zA-Z0-9]+', l):
+      word_list.append(word)
+  return word_list
 
 def convert_CSV_LIST(csv_object):
   # Get the data as bytes.
