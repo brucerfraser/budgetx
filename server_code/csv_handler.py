@@ -32,11 +32,10 @@ def read_file(fn):
       break
   print(r,line_list[r-1])
   key_words = header_words(line_list,r-1)
-  print("rows:",len(line_list) - r-1)
-  print(need_an_id()[0:10])
-  # print(line_list[7])
-    # print(l)
-  # header = line_list[0]
+  found, acc_id = account_finder(key_words)
+  print(found,acc_id)
+  
+  print(line_list[6])
   sep, quote = find_sep_quote(line_list)
   # print(sep,quote)
   
@@ -52,6 +51,27 @@ def header_words(csv_output, header):
 def need_an_id():
   return str(uuid.uuid4())
 
+def account_finder(keys):
+  # get all the accounts
+  accounts = []
+  for row in app_tables.accounts.search():
+    row_dict = dict(row)
+    accounts.append(row_dict)
+  found = False
+  match = True
+  acc_id = ''
+  for acc in accounts:
+    match = True
+    if len(acc['acc_keywords']) > 0:
+      for key in acc['acc_keywords']:
+        if not key in keys:
+          match = False
+      if match:
+        acc_id = acc['acc_id']
+        found = True
+        break
+  return found, acc_id
+    
 
 def convert_CSV_LIST(csv_object):
   # Get the data as bytes.
