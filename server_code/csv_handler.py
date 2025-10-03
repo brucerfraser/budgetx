@@ -7,6 +7,7 @@ from anvil.tables import app_tables
 import anvil.server
 import csv
 import re
+import uuid
 
 @anvil.server.callable
 def read_file(fn):
@@ -32,6 +33,7 @@ def read_file(fn):
   print(r,line_list[r-1])
   key_words = header_words(line_list,r-1)
   print("rows:",len(line_list) - r-1)
+  print(need_an_id()[0:10])
   # print(line_list[7])
     # print(l)
   # header = line_list[0]
@@ -45,6 +47,11 @@ def header_words(csv_output, header):
     for word in re.findall(r'[a-zA-Z0-9]+', l):
       word_list.append(word)
   return word_list
+
+@anvil.server.callable
+def need_an_id():
+  return str(uuid.uuid4())
+
 
 def convert_CSV_LIST(csv_object):
   # Get the data as bytes.
