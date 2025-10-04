@@ -53,6 +53,29 @@ db_schema:
       type: media
     server: full
     title: test_csv
+  transactions:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: date
+      type: date
+    - admin_ui: {order: 1, width: 200}
+      name: description
+      type: string
+    - admin_ui: {order: 2, width: 200}
+      name: amount
+      type: number
+    - admin_ui: {order: 3, width: 200}
+      name: notes
+      type: string
+    - admin_ui: {order: 4, width: 200}
+      name: hash
+      type: string
+    - admin_ui: {order: 5, width: 200}
+      name: account
+      type: string
+    server: full
+    title: transactions
   users:
     client: none
     columns:
@@ -90,8 +113,9 @@ package_name: BudgetX
 runtime_options:
   client_version: '3'
   preview_v3: true
-  server_spec: {base: python310-minimal}
-  server_version: python3-sandbox
+  server_spec: null
+  server_spec_disabled: {base: python310-standard, requirements: ''}
+  server_version: python3-full
   version: 2
 services:
 - client_config: {}

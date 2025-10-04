@@ -53,6 +53,7 @@ class Sales(SalesTemplate):
     self.create_line_graph()
 
   def file_loader_1_change(self, file, **event_args):
+    print('hello?')
     anvil.server.call('read_file',fn=file)
     
 

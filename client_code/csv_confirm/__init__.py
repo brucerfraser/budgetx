@@ -13,3 +13,6 @@ class csv_confirm(csv_confirmTemplate):
     self.init_components(**properties)
 
     # Any code you write here will run before the form opens.
+
+  def confirm_click(self, **event_args):
+    self.raise_event("x-close-alert", value=42)

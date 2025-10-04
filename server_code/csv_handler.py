@@ -8,6 +8,8 @@ import anvil.server
 import csv
 import re
 import uuid
+from dateutil.parser import parse
+from datetime import date, datetime
 
 transaction_keys = {'date':'Value Date','description':'Description','amount':'Amount'}
 all_trans_keys = ['date','description','amount','account','notes','hash']
@@ -27,11 +29,12 @@ def read_file(fn):
   # find alphanumeric words in the account header
   key_words = header_words(line_list,head_line)
   # do we know the account name?
-  found, acc_id = account_finder(key_words)
+  found, acc_id,accounts = account_finder(key_words)
   # comvert text file transaction body to list of lists and load transactions. 
-  load_transactions(line_list,acc_id,head_line)
-  # If there's no account, we cannot hash. 
-  # Confirm with popup, popup must be able to change hash anyway and re-check.
+  ready, raw = load_transactions(line_list,acc_id,head_line,accounts)
+  # If there's no account, we did not hash or make a ready list of dicts. 
+  # Time to go back to client.
+  return acc_id, ready, raw
   
   
   
@@ -62,28 +65,31 @@ def header_words(csv_output, header):
 def need_an_id():
   return str(uuid.uuid4())
 
-def account_finder(keys):
+def account_finder(keys=None,match=True):
   # get all the accounts
   accounts = []
   for row in app_tables.accounts.search():
     row_dict = dict(row)
     accounts.append(row_dict)
-  found = False
-  match = True
-  acc_id = ''
-  for acc in accounts:
+  if match:
+    found = False
     match = True
-    if len(acc['acc_keywords']) > 0:
-      for key in acc['acc_keywords']:
-        if not key in keys:
-          match = False
-      if match:
-        acc_id = acc['acc_id']
-        found = True
-        break
-  return found, acc_id
+    acc_id = ''
+    for acc in accounts:
+      match = True
+      if len(acc['acc_keywords']) > 0:
+        for key in acc['acc_keywords']:
+          if not key in keys:
+            match = False
+        if match:
+          acc_id = acc['acc_id']
+          found = True
+          break
+    return found, acc_id,accounts
+  else:
+    return accounts
 
-def load_transactions(file,account,head_line):
+def load_transactions(file,account,head_line,accounts):
   # first we get a list of lists
   sep,quote = find_sep_quote(file)
   new = file[head_line].replace("\r","")
@@ -91,7 +97,7 @@ def load_transactions(file,account,head_line):
   if quote:
     new=new.replace(quote,"")
   header_list = new.split(sep)
-  print(header_list)
+  # print(header_list)
   raw_list = []
   for line in file[head_line+1:]:
     new = line.replace("\r","")
@@ -118,8 +124,39 @@ def load_transactions(file,account,head_line):
     d = dict(zip(header_list,t))
     trans_list.append(d)
   # this dictionary is still based on the CSV file. We have to get it into BudgetX language keys
-  
+  # Here's where we split to make efficient!
+  r,t = make_ready(account,trans_list,accounts)
+  return r,t
 
+@anvil.server.callable
+def make_ready(account,trans_list,accounts=None):
+  if not accounts:
+    accounts = account_finder(None,False)
+  if account:
+    try:
+      deets = list(filter(lambda d: d['acc_id'] == account, accounts))      
+      ready_transactions = []
+      for t in trans_list:
+        d = {}
+        for key in all_trans_keys:
+          if key in deets[0]['key_map']:
+            d[key] = t[deets[0]['key_map'][key]]
+        d['account'] = account
+        # daymonthyearamountaccount
+        d['hash'] = str(parse(d['date']).day) + str(parse(d['date']).month) + str(parse(d['date']).year) + d['amount'] + d['account']
+        ready_transactions.append(d)
+        # ready for transport back to client
+        return ready_transactions,trans_list
+    except:
+      # ready for transport back to client
+      return [],trans_list
+  else:
+    # ready for transport back to client
+    return [],trans_list
+
+def date_handle(date):
+  pass
+  
 def convert_CSV_LIST(csv_object):
   # Get the data as bytes.
   mBytes = csv_object.get_bytes()

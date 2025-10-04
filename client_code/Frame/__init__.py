@@ -7,6 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from ..Reports import Reports
 from ..Sales import Sales
+from ..csv_confirm import csv_confirm
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
 class Frame(FrameTemplate):
@@ -49,8 +50,13 @@ class Frame(FrameTemplate):
   #   open_form('Logout')
 
   def file_loader_1_change(self, file, **event_args):
-    anvil.server.call('read_file',fn=file)
-
+    acc_id, ready, raw = anvil.server.call('read_file',fn=file)
+    # csv_confirm time
+    result = alert(content=csv_confirm(),
+                   title="Confirm CSV Details",
+                   large=True,
+                   buttons=[])
+    print(result)
 
 
 
