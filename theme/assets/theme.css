@@ -255,6 +255,10 @@ input[disabled] ~ span {
   border-bottom: 1px solid %color:Outline%;
 }
 
+.anvil-repeating-panel>.column-panel {
+  border-bottom: 1px solid grey
+}
+
 .anvil-data-row-panel>.data-row-col:not(:last-child) {
   border-right: 1px solid %color:Primary Overlay 2%;
 }

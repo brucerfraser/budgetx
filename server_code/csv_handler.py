@@ -34,7 +34,7 @@ def read_file(fn):
   ready, raw = load_transactions(line_list,acc_id,head_line,accounts)
   # If there's no account, we did not hash or make a ready list of dicts. 
   # Time to go back to client.
-  return acc_id, ready, raw
+  return acc_id, ready, raw, accounts
   
   
   
@@ -146,7 +146,7 @@ def make_ready(account,trans_list,accounts=None):
         d['hash'] = str(parse(d['date']).day) + str(parse(d['date']).month) + str(parse(d['date']).year) + d['amount'] + d['account']
         ready_transactions.append(d)
         # ready for transport back to client
-        return ready_transactions,trans_list
+      return ready_transactions,trans_list
     except:
       # ready for transport back to client
       return [],trans_list
@@ -154,85 +154,23 @@ def make_ready(account,trans_list,accounts=None):
     # ready for transport back to client
     return [],trans_list
 
-def date_handle(date):
-  pass
+@anvil.server.callable
+def duplicate_check(hash_list):
+  i = 0
+  for hash in hash_list:
+    for row in app_tables.transactions.search(hash=hash):
+      i += 1
+      break
+  return i
   
-def convert_CSV_LIST(csv_object):
-  # Get the data as bytes.
-  mBytes = csv_object.get_bytes()
-
-  # Convert bytes to a string.
-  mString = str(mBytes, "utf-8")
-  #   app_tables.flights.get(uid=anvil.users.get_user()['uid'])['log_string'] = mString
-  # Create a list of lines split on \n
-  line_list = mString.split('\n')
-  header = line_list[0]
-  sep, quote = find_sep_quote(line_list)
-
-  # Bring the generic keys and user defined names
-  concrete_keys = app_tables.generic.get(rid='generic')['concrete_keys']
-  # turn user defined list of dicts into a dict with key: user's name for field; value: generic key list
-  user_key_names = build_user_keys(app_tables.settings.get(uid=anvil.users.get_user()['uid'])['key_display_names'])
-
-  key_list = header.split(sep)
-  if '\ufeff' in key_list[0]:
-    t = key_list[0][1:]
-    key_list.pop(0)
-    key_list.insert(0,t)
-  add_list = []
-  for con_key in concrete_keys:
-    if con_key not in key_list:
-      add_list.append(con_key)
-  new_logbook = []
-  non_included = []
-  for line in line_list[1:]:
-    flight_list = None
-    if quote != "":
-      if line.count(quote) != 0:
-        flight_list = parse_quote(line,sep,quote)
-      else:
-        flight_list = line.split(sep)
-    else:
-      flight_list = line.split(sep)
-    flight = {}
-    idx = 0
-    if len(flight_list) > 1:
-      for key in key_list:
-        if key in concrete_keys:
-          flight[key] = flight_list[idx]
-        elif key in user_key_names.keys():
-          flight[user_key_names[key]] = flight_list[idx]
-        else:
-          if not key in non_included:
-            non_included.append(key)
-        idx += 1
-      for add_key in add_list:
-        flight[add_key] = ''
-
-    new_logbook.append(flight)
-
-  return new_logbook,non_included
-
-def parse_quote(line, sep, quote):
-  line = line.split(sep)
-  idx = 0
-  for item in line:
-    if item.count(quote) > 0:
-      sub_line = line[idx + 1:]
-      brk = 0
-      for sub in sub_line:
-        if sub.count(quote) > 0:
-          break
-        else:
-          brk += 1
-      n_item = ''
-      for i in range(idx, idx + brk + 2):
-        n_item += line[i] + sep
-      line[idx] = n_item[0:-1]
-      for i in range(idx + 1,idx + brk + 2):
-        line.pop(idx + 1)
-    idx += 1
-  return line
+@anvil.server.callable
+def save_transactions(ready_list):
+  for t in ready_list:
+    if len(list(app_tables.transactions.search(hash=t['hash']))) == 0:
+      t['date'] = parse(t['date']).date()
+      t['amount'] = float(t['amount'])
+      app_tables.transactions.add_row(**t)
+    break      
 
 def find_sep_quote(list_obj):
   s_c = 0
@@ -255,9 +193,3 @@ def find_sep_quote(list_obj):
   else:
     quo = ''
   return sep, quo
-
-def build_user_keys(user_key_list):
-  user_key_dict = {}
-  for row in user_key_list:
-    user_key_dict[row['name']] = row['key']
-  return user_key_dict

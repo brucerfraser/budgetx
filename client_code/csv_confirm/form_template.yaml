@@ -8,8 +8,11 @@ components:
     name: label_2
     properties: {align: right, text: 'Account:'}
     type: Label
-  - layout_properties: {grid_position: 'KMBDOZ,HLQQXA'}
-    name: drop_down_1
+  - data_bindings:
+    - {code: '', property: items, writeback: false}
+    event_bindings: {change: account_dd_change}
+    layout_properties: {grid_position: 'KMBDOZ,HLQQXA'}
+    name: account_dd
     properties: {include_placeholder: true, placeholder: Select Account}
     type: DropDown
   - layout_properties: {grid_position: 'KAKOYI,HQRKYI'}
@@ -17,7 +20,7 @@ components:
     properties: {text: 'Sample transactions:'}
     type: Label
   - layout_properties: {grid_position: 'MXZRVN,VRKRWU'}
-    name: repeating_panel_1
+    name: sample_trans
     properties: {item_template: csv_confirm.ItemTemplate1}
     type: RepeatingPanel
   - layout_properties: {grid_position: 'ORGJIE,VMUATT'}

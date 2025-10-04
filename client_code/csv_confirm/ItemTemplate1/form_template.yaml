@@ -1,15 +1,24 @@
 components:
-- layout_properties: {grid_position: 'XEWWCF,OCKHDZ'}
+- data_bindings:
+  - {code: 'self.item[''date'']', property: text, writeback: false}
+  layout_properties: {grid_position: 'XEWWCF,OCKHDZ'}
   name: date
   properties: {}
   type: Label
-- layout_properties: {grid_position: 'XEWWCF,QITFDJ'}
+- data_bindings:
+  - {code: 'self.item[''amount'']', property: text, writeback: false}
+  layout_properties: {grid_position: 'XEWWCF,QITFDJ'}
   name: amount
   properties: {}
   type: Label
-- layout_properties: {grid_position: 'XEWWCF,FZMOCE'}
+- data_bindings:
+  - {code: 'self.item[''description'']', property: text, writeback: false}
+  layout_properties: {grid_position: 'XEWWCF,FZMOCE'}
   name: description
   properties: {}
   type: Label
-container: {type: ColumnPanel}
+container:
+  data_bindings: []
+  properties: {role: repeating-panel}
+  type: ColumnPanel
 is_package: true

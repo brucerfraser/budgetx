@@ -50,13 +50,16 @@ class Frame(FrameTemplate):
   #   open_form('Logout')
 
   def file_loader_1_change(self, file, **event_args):
-    acc_id, ready, raw = anvil.server.call('read_file',fn=file)
+    acc_id, ready, raw, accounts = anvil.server.call('read_file',fn=file)
     # csv_confirm time
-    result = alert(content=csv_confirm(),
+    result = alert(content=csv_confirm(accounts=accounts,acc_id=acc_id,ready=ready,
+                                      trans=raw),
                    title="Confirm CSV Details",
                    large=True,
                    buttons=[])
-    print(result)
+    if result:
+      anvil.server.call('save_transactions',ready_list=result)
+    # print(result)
 
 
 

@@ -302,3 +302,4 @@ roles:
   name: body
 - components: [Label, Link]
   name: input-prompt
+- {name: repeating-panel}
