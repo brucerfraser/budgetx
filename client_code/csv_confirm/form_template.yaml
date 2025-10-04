@@ -1,0 +1,40 @@
+components:
+- layout_properties: {grid_position: 'FLLIIL,PCZPIQ'}
+  name: label_1
+  properties: {align: center, background: 'theme:Primary Container', bold: true, font_size: 18, text: 'Your uploaded file has the following properties:', underline: false}
+  type: Label
+- components:
+  - layout_properties: {grid_position: 'KMBDOZ,FBYGUC'}
+    name: label_2
+    properties: {align: right, text: 'Account:'}
+    type: Label
+  - layout_properties: {grid_position: 'KMBDOZ,HLQQXA'}
+    name: drop_down_1
+    properties: {include_placeholder: true, placeholder: Select Account}
+    type: DropDown
+  - layout_properties: {grid_position: 'KAKOYI,HQRKYI'}
+    name: label_3
+    properties: {text: 'Sample transactions:'}
+    type: Label
+  - layout_properties: {grid_position: 'MXZRVN,VRKRWU'}
+    name: repeating_panel_1
+    properties: {item_template: csv_confirm.ItemTemplate1}
+    type: RepeatingPanel
+  - layout_properties: {grid_position: 'ORGJIE,VMUATT'}
+    name: duplicate
+    properties: {text: Of the x transactions...}
+    type: Label
+  - layout_properties: {grid_position: 'JQEURP,AXRJCA'}
+    name: cancel
+    properties: {text: cancel}
+    type: Button
+  - layout_properties: {grid_position: 'JQEURP,HFNKPG'}
+    name: confirm
+    properties: {background: 'theme:Primary Container', text: confirm}
+    type: Button
+  layout_properties: {grid_position: 'JQCODM,BPPIHJ'}
+  name: card_1
+  properties: {role: card}
+  type: ColumnPanel
+container: {type: ColumnPanel}
+is_package: true

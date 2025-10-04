@@ -9,6 +9,10 @@ import csv
 import re
 import uuid
 
+transaction_keys = {'date':'Value Date','description':'Description','amount':'Amount'}
+all_trans_keys = ['date','description','amount','account','notes','hash']
+# Hash will be a unique id to detect duplicates: daymonthyearamountaccount
+
 @anvil.server.callable
 def read_file(fn):
   mBytes = fn.get_bytes()
@@ -18,10 +22,24 @@ def read_file(fn):
   #   app_tables.flights.get(uid=anvil.users.get_user()['uid'])['log_string'] = mString
   # Create a list of lines split on \n
   line_list = mString.split('\n')
-  # we need to identify the account, and the line of the header
+  # which line is the header?
+  head_line = header_line(line_list)
+  # find alphanumeric words in the account header
+  key_words = header_words(line_list,head_line)
+  # do we know the account name?
+  found, acc_id = account_finder(key_words)
+  # comvert text file transaction body to list of lists and load transactions. 
+  load_transactions(line_list,acc_id,head_line)
+  # If there's no account, we cannot hash. 
+  # Confirm with popup, popup must be able to change hash anyway and re-check.
+  
+  
+  
+
+def header_line(file):
   header_triggers = ["date","amount","description","details","debits","credits","balance"]
   r = 0
-  for l in line_list:
+  for l in file:
     r += 1
     triggers = 0
     for t in header_triggers:
@@ -30,15 +48,8 @@ def read_file(fn):
     # print(l)
     if triggers > 2:
       break
-  print(r,line_list[r-1])
-  key_words = header_words(line_list,r-1)
-  found, acc_id = account_finder(key_words)
-  print(found,acc_id)
-  
-  print(line_list[6])
-  sep, quote = find_sep_quote(line_list)
-  # print(sep,quote)
-  
+  return r-1
+
 def header_words(csv_output, header):
   # find all alphanum string-parts in the csv rows before the ehader row
   word_list = []
@@ -71,7 +82,43 @@ def account_finder(keys):
         found = True
         break
   return found, acc_id
-    
+
+def load_transactions(file,account,head_line):
+  # first we get a list of lists
+  sep,quote = find_sep_quote(file)
+  new = file[head_line].replace("\r","")
+  new = new.replace(" ","")
+  if quote:
+    new=new.replace(quote,"")
+  header_list = new.split(sep)
+  print(header_list)
+  raw_list = []
+  for line in file[head_line+1:]:
+    new = line.replace("\r","")
+    new = new.replace(" ","")
+    try:
+      if new[-1] == ',':
+        new = new[0:-1]
+    except:
+      pass
+    if new:
+      raw_list.append(new.split(sep))
+  # first we check head_line for debits/credits or amount
+  if not 'Amount' in header_list:
+    dbt = header_list.index("Debits")
+    crt = header_list.index("Credits")
+    header_list.append("Amount")
+    for t in raw_list:
+      c = float(t[crt]) if t[crt] else 0.0
+      d = float(t[dbt]) if t[dbt] else 0.0
+      t.append(str(c-d))
+  # Now we make a transaction dictionary
+  trans_list = []
+  for t in raw_list:
+    d = dict(zip(header_list,t))
+    trans_list.append(d)
+  # this dictionary is still based on the CSV file. We have to get it into BudgetX language keys
+  
 
 def convert_CSV_LIST(csv_object):
   # Get the data as bytes.

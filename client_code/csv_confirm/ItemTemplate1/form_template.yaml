@@ -1,0 +1,15 @@
+components:
+- layout_properties: {grid_position: 'XEWWCF,OCKHDZ'}
+  name: date
+  properties: {}
+  type: Label
+- layout_properties: {grid_position: 'XEWWCF,QITFDJ'}
+  name: amount
+  properties: {}
+  type: Label
+- layout_properties: {grid_position: 'XEWWCF,FZMOCE'}
+  name: description
+  properties: {}
+  type: Label
+container: {type: ColumnPanel}
+is_package: true

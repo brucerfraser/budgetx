@@ -13,6 +13,9 @@ db_schema:
     - admin_ui: {order: 2, width: 200}
       name: acc_keywords
       type: simpleObject
+    - admin_ui: {order: 3, width: 200}
+      name: key_map
+      type: simpleObject
     server: full
     title: accounts
   files:
