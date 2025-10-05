@@ -5,16 +5,15 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from .. import Transactions
 
 
 class one_transaction(one_transactionTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
-    
-    self.accounts = self.parent.accounts
+    self.dropdowns = Transactions().dd_list
+    self.accounts = Transactions().accounts
     self.init_components(**properties)
-    # self.accounts = self.parent.raise_event('x-get-accounts')
-    # self.drop_down_1.items = self.accounts
     self.date.tag = 'date'
     
     # Any code you write here will run before the form opens.

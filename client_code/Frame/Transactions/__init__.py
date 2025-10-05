@@ -13,8 +13,9 @@ class Transactions(TransactionsTemplate):
     self.init_components(**properties)
     self.accounts = anvil.server.call('get_accounts')
     keys = list(self.accounts.keys())
-    self.repeating_panel_1.accounts = [(self.accounts[k],k) for k in keys]
-    self.repeating_panel_1.add_event_handler('x-get-accounts',self.get_account_list)
+    self.dd_list = [(self.accounts[k],k) for k in keys]
+    # self.repeating_panel_1.accounts = [(self.accounts[k],k) for k in keys]
+    # self.repeating_panel_1.add_event_handler('x-get-accounts',self.get_account_list)
     self.repeating_panel_1.items = app_tables.transactions.search()
     # Any code you write here will run before the form opens.
 
