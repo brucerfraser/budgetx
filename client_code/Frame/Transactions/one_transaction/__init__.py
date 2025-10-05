@@ -5,18 +5,26 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+from .... import Global
+from datetime import date, datetime
 
 
 
 class one_transaction(one_transactionTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
-    
+    self.dd_list = Global.ACCOUNTS
     self.init_components(**properties)
     self.date.tag = 'date'
+    self.account_name = '
+    for f in self.dd_list:
+      if self.item['account'] == f[1]:
+        self.account_name = f[0]
+        break
+    self.account.text = self.account_name
     
     
-    # Any code you write here will run before the form opens.
+
 
   def click_date(self, **event_args):
     self.date_picker_1.visible = True
@@ -32,5 +40,16 @@ class one_transaction(one_transactionTemplate):
     self.drop_down_1.visible = True
     self.drop_down_1.focus()
     self.account.visible = False
+
+  def drop_down_1_change(self, **event_args):
+    for f in self.dd_list:
+      if self.item['account'] == f[1]:
+        self.account_name = f[0]
+        break
+    self.account.text = self.account_name
+    self.account.visible = True
+    self.drop_down_1.visible = False
+    # have to change the hash here
+    self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year)+ str(self.item['amount']) + self.item['account']
 
   

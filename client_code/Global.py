@@ -3,10 +3,11 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+import uuid
 
 global ACCOUNTS
-ACCOUNTS = "WORK 1"
+ACCOUNTS = []
 
-def launch():
-  global ACCOUNTS
-  ACCOUNTS = "working 2"
+accounts = anvil.server.call('get_accounts')
+keys = list(accounts.keys())
+ACCOUNTS = [(accounts[k],k) for k in keys]

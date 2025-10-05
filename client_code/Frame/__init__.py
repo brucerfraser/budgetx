@@ -9,6 +9,7 @@ from .Reports import Reports
 from .Sales import Sales
 from ..Pop_menus.csv_confirm import csv_confirm
 from .Transactions import Transactions
+from .. import Global
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
 class Frame(FrameTemplate):
