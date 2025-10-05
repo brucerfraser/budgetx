@@ -14,7 +14,8 @@ unique_ids:
     Pop_menus: '175965333863638235566726.211426'
     Pop_menus.csv_confirm: '1759553578501141641576963.3974'
     Pop_menus.csv_confirm.ItemTemplate1: '1759553872102481327193415.50354'
-  modules: {}
+  modules:
+    Global: '175966995946135121435252.51754'
   scripts: {}
   server_modules:
     ServerModule1: '1685452365618467403552812.8588'

@@ -25,8 +25,7 @@ components:
         padding: [0, null, 0, null]
     type: ColumnPanel
   - components:
-    - data_bindings:
-      - {code: 'self.accounts[self.item[''account'']]', property: text, writeback: false}
+    - data_bindings: []
       event_bindings: {click: click_account}
       layout_properties: {grid_position: 'ZTGZZC,XCSHEU'}
       name: account
