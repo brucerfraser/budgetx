@@ -257,8 +257,16 @@ input[disabled] ~ span {
 
 .anvil-role-fixed-repeating-panel {
   border-bottom: 1px solid grey
-  height: 300px; /* Set your desired fixed height */
+  height: 300px; !important /* Set your desired fixed height */
   overflow-y: auto; /* Enable vertical scrolling when content exceeds height */
+  background: %color:Surface Variant%;
+  padding: 8px 12px;
+}
+
+.anvil-role-fixed-holder {
+  height: 250px; !important /* Set your desired fixed height */
+  background: %color:Surface Variant%;
+  padding: 8px 12px;
 }
 
 .anvil-data-row-panel>.data-row-col:not(:last-child) {

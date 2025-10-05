@@ -304,3 +304,5 @@ roles:
   name: input-prompt
 - components: [RepeatingPanel, ColumnPanel]
   name: fixed-repeating-panel
+- components: [ColumnPanel]
+  name: fixed-holder

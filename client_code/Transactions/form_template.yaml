@@ -25,7 +25,7 @@ components:
       type: RepeatingPanel
     layout_properties: {grid_position: 'GEWNTV,WKFKHA'}
     name: card_3
-    properties: {role: card}
+    properties: {role: fixed-holder}
     type: ColumnPanel
   layout_properties: {grid_position: 'QBHNUR,CZOKND'}
   name: column_panel_1
