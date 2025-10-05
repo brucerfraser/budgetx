@@ -1,9 +1,4 @@
 components:
-- event_bindings: {change: file_loader_1_change}
-  layout_properties: {grid_position: 'ERZSQA,ELVPQZ'}
-  name: file_loader_1
-  properties: {}
-  type: FileLoader
 - components:
   - components:
     - layout_properties: {grid_position: 'SPXODK,DZNMMD'}
@@ -84,7 +79,11 @@ components:
       type: Plot
     layout_properties: {grid_position: 'ZWYAMV,XJDGPO'}
     name: card_5
-    properties: {col_widths: '{}', role: card}
+    properties:
+      col_widths: '{}'
+      role: card
+      spacing:
+        padding: [null, null, null, 12]
     type: ColumnPanel
   - components:
     - layout_properties: {grid_position: 'ZCOOLF,ZNQHMJ'}

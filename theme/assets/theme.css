@@ -255,8 +255,10 @@ input[disabled] ~ span {
   border-bottom: 1px solid %color:Outline%;
 }
 
-.anvil-repeating-panel>.column-panel {
+.anvil-role-fixed-repeating-panel {
   border-bottom: 1px solid grey
+  height: 300px; /* Set your desired fixed height */
+  overflow-y: auto; /* Enable vertical scrolling when content exceeds height */
 }
 
 .anvil-data-row-panel>.data-row-col:not(:last-child) {

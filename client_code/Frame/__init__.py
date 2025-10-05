@@ -8,6 +8,7 @@ from anvil.tables import app_tables
 from ..Reports import Reports
 from ..Sales import Sales
 from ..csv_confirm import csv_confirm
+from ..Transactions import Transactions
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
 class Frame(FrameTemplate):
@@ -19,10 +20,11 @@ class Frame(FrameTemplate):
     # anvil.server.call('read_file')
     #Set the Plotly plots template to match the theme of the app
     Plot.templates.default = "rally"
-    #When the app starts up, the Sales form will be added to the page
+    #When the app starts up, the Transactions form will be added to the page
+    self.load_transactions()
     # self.content_panel.add_component(Sales())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
-    self.sales_page_link.background = app.theme_colors['Primary Container']
+    # self.sales_page_link.background = app.theme_colors['Primary Container']
     
 
   def sales_page_link_click(self, **event_args):
@@ -42,6 +44,15 @@ class Frame(FrameTemplate):
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.reports_page_link.background = app.theme_colors['Primary Container']
     self.sales_page_link.background = "transparent"
+
+  def load_transactions(self, **event_args):
+    #Clear the content panel and add the Reports Form
+    self.content_panel.clear()
+    self.content_panel.add_component(Transactions())
+    #Change the color of the sales_page_link to indicate that the Reports page has been selected
+    self.transactions_page_link.background = app.theme_colors['Primary Container']
+    self.sales_page_link.background = "transparent"
+    self.reports_page_link.background = "transparent"
 
   #If using the Users service, uncomment this code to log out the user:
   # def signout_link_click(self, **event_args):
