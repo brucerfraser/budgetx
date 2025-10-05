@@ -56,7 +56,7 @@ a {
 }
 
 a:hover:not(disabled) {
-  color: %color:Primary Container%;
+  color: %color:On Primary Container%;
 }
 
 a:active:not(disabled), a:focus:not(disabled){
