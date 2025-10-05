@@ -306,3 +306,5 @@ roles:
   name: fixed-repeating-panel
 - components: [ColumnPanel]
   name: fixed-holder
+- components: [ColumnPanel, Label, Form, Link]
+  name: one-liner

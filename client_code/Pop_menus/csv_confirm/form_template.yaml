@@ -21,7 +21,7 @@ components:
     type: Label
   - layout_properties: {grid_position: 'MXZRVN,VRKRWU'}
     name: sample_trans
-    properties: {item_template: csv_confirm.ItemTemplate1}
+    properties: {item_template: Pop_menus.csv_confirm.ItemTemplate1}
     type: RepeatingPanel
   - layout_properties: {grid_position: 'ORGJIE,VMUATT'}
     name: duplicate

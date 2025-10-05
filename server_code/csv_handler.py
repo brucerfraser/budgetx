@@ -101,7 +101,7 @@ def load_transactions(file,account,head_line,accounts):
   raw_list = []
   for line in file[head_line+1:]:
     new = line.replace("\r","")
-    new = new.replace(" ","")
+    # new = new.replace(" ","")
     try:
       if new[-1] == ',':
         new = new[0:-1]
@@ -144,6 +144,7 @@ def make_ready(account,trans_list,accounts=None):
         d['account'] = account
         # daymonthyearamountaccount
         d['hash'] = str(parse(d['date']).day) + str(parse(d['date']).month) + str(parse(d['date']).year) + d['amount'] + d['account']
+        d['transaction_id'] = need_an_id()
         ready_transactions.append(d)
         # ready for transport back to client
       return ready_transactions,trans_list
@@ -170,7 +171,7 @@ def save_transactions(ready_list):
       t['date'] = parse(t['date']).date()
       t['amount'] = float(t['amount'])
       app_tables.transactions.add_row(**t)
-    break      
+          
 
 def find_sep_quote(list_obj):
   s_c = 0

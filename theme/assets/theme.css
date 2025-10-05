@@ -255,6 +255,8 @@ input[disabled] ~ span {
   border-bottom: 1px solid %color:Outline%;
 }
 
+/* BRUCE BUDGET SPECIALS */
+
 .anvil-role-fixed-repeating-panel {
   border-bottom: 1px solid grey
   height: 300px; !important /* Set your desired fixed height */
@@ -267,6 +269,11 @@ input[disabled] ~ span {
   height: 250px; !important /* Set your desired fixed height */
   background: %color:Surface Variant%;
   padding: 8px 12px;
+}
+
+.anvil-role-one-liner {
+  border-bottom: 1px solid white;
+  background: black;
 }
 
 .anvil-data-row-panel>.data-row-col:not(:last-child) {

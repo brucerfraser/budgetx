@@ -5,10 +5,10 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ..Reports import Reports
-from ..Sales import Sales
-from ..csv_confirm import csv_confirm
-from ..Transactions import Transactions
+from .Reports import Reports
+from .Sales import Sales
+from ..Pop_menus.csv_confirm import csv_confirm
+from .Transactions import Transactions
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
 class Frame(FrameTemplate):

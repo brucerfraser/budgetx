@@ -19,9 +19,9 @@ components:
     properties: {role: card}
     type: ColumnPanel
   - components:
-    - layout_properties: {grid_position: 'BEQGJZ,JGWJGD'}
+    - layout_properties: {full_width_row: false, grid_position: 'BEQGJZ,JGWJGD'}
       name: repeating_panel_1
-      properties: {item_template: Transactions.one_transaction, role: fixed-repeating-panel}
+      properties: {item_template: Frame.Transactions.one_transaction, role: fixed-repeating-panel, spacing_above: small}
       type: RepeatingPanel
     layout_properties: {grid_position: 'GEWNTV,WKFKHA'}
     name: card_3
