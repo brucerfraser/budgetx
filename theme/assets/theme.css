@@ -22,9 +22,7 @@ body {
   font-weight: 300;
 }
 
-.anvil-role-card-link {
-  pointer-events: none;
-}
+
 
 .anvil-role-headline {
   font-family: Eczar, serif;
@@ -275,6 +273,8 @@ input[disabled] ~ span {
   background: %color:Surface Variant%;
   padding: 8px 12px;
 }
+
+
 
 .anvil-role-one-liner {
   border-bottom: 1px solid white;

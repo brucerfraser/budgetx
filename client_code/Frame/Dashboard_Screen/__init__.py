@@ -19,5 +19,5 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
     self.link_transactions.add_component(Transactions())
 
   def link_transactions_click(self, **event_args):
-    print("Yes")
+    get_open_form().ping_ping()
     

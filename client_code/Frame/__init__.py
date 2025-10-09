@@ -28,6 +28,7 @@ class Frame(FrameTemplate):
     # self.content_panel.add_component(Sales())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     # self.sales_page_link.background = app.theme_colors['Primary Container']
+    self.paths = {"transactions":self.transactions_page_link}
     
 
   def sales_page_link_click(self, **event_args):
@@ -83,6 +84,10 @@ class Frame(FrameTemplate):
     clear_list = [self.sales_page_link,self.reports_page_link,self.transactions_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+
+  def ping_ping(self,ping,**event_args):
+    obj = self.paths[ping]
+    obj.raise_event("click")
 
 
 

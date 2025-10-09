@@ -23,7 +23,6 @@ class one_transaction(one_transactionTemplate):
         break
     self.account.text = self.account_name
     
-    
 
 
   def click_date(self, **event_args):

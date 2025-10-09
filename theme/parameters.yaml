@@ -308,3 +308,5 @@ roles:
   name: fixed-holder
 - components: [ColumnPanel, Label, Form, Link]
   name: one-liner
+- components: [Link]
+  name: card-link
