@@ -9,6 +9,7 @@ from anvil.tables import app_tables
 # from .Sales import Sales
 from ..Pop_menus.csv_confirm import csv_confirm
 from .Dashboard_Screen import Dashboard_Screen
+from ..Components.Transactions import Transactions
 
 from .. import Global
 
@@ -31,30 +32,33 @@ class Frame(FrameTemplate):
     self.paths = {"transactions":self.transactions_page_link}
     
 
-  def sales_page_link_click(self, **event_args):
+  def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Sales Form
     self.content_panel.clear()
-    self.content_panel.add_component(Sales())
+    # self.content_panel.add_component()
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
-    self.sales_page_link.background = app.theme_colors['Primary Container']
+    self.budget_page_link.background = app.theme_colors['Primary Container']
     self.reports_page_link.background = "transparent"
 
-  def reports_page_link_click(self, **event_args):
+  def transactions_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Reports Form
-    self.content_panel.clear()
-    self.content_panel.add_component(Reports())
-    #Change the color of the sales_page_link to indicate that the Reports page has been selected
-    self.reports_page_link.background = app.theme_colors['Primary Container']
-    self.sales_page_link.background = "transparent"
-
-  def load_transactions(self, **event_args):
-    #WILL HAVE to change the transactions here to Transactions_Screen
     self.content_panel.clear()
     self.content_panel.add_component(Transactions())
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.transactions_page_link.background = app.theme_colors['Primary Container']
+    
+
+  def load_transactions(self, **event_args):
+    #WILL HAVE to change the transactions here to Transactions_Screen
+    self.content_panel.clear()
+    # self.content_panel.add_component(Transactions())
+    #Change the color of the sales_page_link to indicate that the Reports page has been selected
+    self.transactions_page_link.background = app.theme_colors['Primary Container']
+    clear_list = [self.sales_page_link,self.reports_page_link,self.transactions_page_link]
+    for obj in clear_list:
+      obj.background = "transparent"
     self.sales_page_link.background = "transparent"
     self.reports_page_link.background = "transparent"
 
@@ -81,13 +85,17 @@ class Frame(FrameTemplate):
     self.content_panel.add_component(Dashboard_Screen())
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.dashboard_page_link.background = app.theme_colors['Primary Container']
-    clear_list = [self.sales_page_link,self.reports_page_link,self.transactions_page_link]
+    clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link]
     for obj in clear_list:
       obj.background = "transparent"
 
   def ping_ping(self,ping,**event_args):
     obj = self.paths[ping]
     obj.raise_event("click")
+
+  def signout_link_click(self, **event_args):
+    """This method is called when the button is clicked"""
+    pass
 
 
 

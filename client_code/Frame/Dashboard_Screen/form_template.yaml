@@ -25,7 +25,7 @@ components:
       layout_properties: {full_width_row: true, grid_position: 'RSIZQC,ORDBKQ'}
       name: link_transactions
       properties:
-        role: fixed-holder
+        role: null
         spacing:
           margin: [0, null, 0, null]
       type: Link
