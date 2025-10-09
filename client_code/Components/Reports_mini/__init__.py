@@ -1,4 +1,4 @@
-from ._anvil_designer import SalesTemplate
+from ._anvil_designer import Reports_miniTemplate
 from anvil import *
 import anvil.server
 import anvil.users
@@ -7,7 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import plotly.graph_objects as go
 
-class Sales(SalesTemplate):
+class Reports_mini(Reports_miniTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
