@@ -5,10 +5,11 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from .Reports import Reports
-from .Sales import Sales
+# from .Reports import Reports
+# from .Sales import Sales
 from ..Pop_menus.csv_confirm import csv_confirm
-from .Transactions import Transactions
+from .Dashboard_Screen import Dashboard_Screen
+
 from .. import Global
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
@@ -22,7 +23,8 @@ class Frame(FrameTemplate):
     #Set the Plotly plots template to match the theme of the app
     Plot.templates.default = "rally"
     #When the app starts up, the Transactions form will be added to the page
-    self.load_transactions()
+    self.dashboard_page_link_click()
+    # self.load_transactions()
     # self.content_panel.add_component(Sales())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     # self.sales_page_link.background = app.theme_colors['Primary Container']
@@ -47,7 +49,7 @@ class Frame(FrameTemplate):
     self.sales_page_link.background = "transparent"
 
   def load_transactions(self, **event_args):
-    #Clear the content panel and add the Reports Form
+    #WILL HAVE to change the transactions here to Transactions_Screen
     self.content_panel.clear()
     self.content_panel.add_component(Transactions())
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
@@ -72,6 +74,15 @@ class Frame(FrameTemplate):
     if result:
       anvil.server.call('save_transactions',ready_list=result)
     # print(result)
+
+  def dashboard_page_link_click(self, **event_args):
+    self.content_panel.clear()
+    self.content_panel.add_component(Dashboard_Screen())
+    #Change the color of the sales_page_link to indicate that the Reports page has been selected
+    self.dashboard_page_link.background = app.theme_colors['Primary Container']
+    clear_list = [self.sales_page_link,self.reports_page_link,self.transactions_page_link]
+    for obj in clear_list:
+      obj.background = "transparent"
 
 
 

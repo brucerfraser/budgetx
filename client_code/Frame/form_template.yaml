@@ -4,6 +4,11 @@ components:
     name: spacer_1
     properties: {height: 32}
     type: Spacer
+  - event_bindings: {click: dashboard_page_link_click}
+    layout_properties: {grid_position: 'GOETQX,RSOZMI'}
+    name: dashboard_page_link
+    properties: {align: center, background: '', bold: false, border: '', enabled: true, font: '', font_size: 18, foreground: '', icon: 'fa:pie-chart', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: DASHBOARD, tooltip: '', underline: false, visible: true}
+    type: Button
   - event_bindings: {click: sales_page_link_click}
     layout_properties: {grid_position: 'ATKKKJ,DBSYGY'}
     name: sales_page_link
