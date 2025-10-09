@@ -22,6 +22,10 @@ body {
   font-weight: 300;
 }
 
+.anvil-role-card-link {
+  pointer-events: none;
+}
+
 .anvil-role-headline {
   font-family: Eczar, serif;
   font-size: 32px;
@@ -62,6 +66,7 @@ a:hover:not(disabled) {
 a:active:not(disabled), a:focus:not(disabled){
   opacity: %color:Primary Container%;
 }
+
 
 
 
