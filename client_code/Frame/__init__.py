@@ -10,6 +10,8 @@ from anvil.tables import app_tables
 from ..Pop_menus.csv_confirm import csv_confirm
 from .Dashboard_Screen import Dashboard_Screen
 from ..Components.Transactions import Transactions
+from ..Components.Budget import Budget
+from ..Components.Reports import Reports
 
 from .. import Global
 
@@ -29,17 +31,32 @@ class Frame(FrameTemplate):
     # self.content_panel.add_component(Sales())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     # self.sales_page_link.background = app.theme_colors['Primary Container']
-    self.paths = {"transactions":self.transactions_page_link}
+    self.paths = {"transactions":self.transactions_page_link,
+                 "budget":self.budget_page_link,
+                 "reports":self.reports_page_link}
     
 
   def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Sales Form
     self.content_panel.clear()
-    # self.content_panel.add_component()
+    self.content_panel.add_component(Budget())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     self.budget_page_link.background = app.theme_colors['Primary Container']
-    self.reports_page_link.background = "transparent"
+    clear_list = [self.transactions_page_link,self.reports_page_link,self.dashboard_page_link]
+    for obj in clear_list:
+      obj.background = "transparent"
+
+  def reports_page_link_click(self, **event_args):
+    """This method is called when the link is clicked"""
+    #Clear the content panel and add the Sales Form
+    self.content_panel.clear()
+    self.content_panel.add_component(Reports())
+    #Change the color of the sales_page_link to indicate that the Sales page has been selected
+    self.reports_page_link.background = app.theme_colors['Primary Container']
+    clear_list = [self.transactions_page_link,self.budget_page_link,self.dashboard_page_link]
+    for obj in clear_list:
+      obj.background = "transparent"
 
   def transactions_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
@@ -96,6 +113,8 @@ class Frame(FrameTemplate):
   def signout_link_click(self, **event_args):
     """This method is called when the button is clicked"""
     pass
+
+  
 
 
 

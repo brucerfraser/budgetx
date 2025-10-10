@@ -1,59 +1,88 @@
 from ._anvil_designer import Reports_miniTemplate
 from anvil import *
+import plotly.graph_objects as go
 import anvil.server
 import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import plotly.graph_objects as go
+import random
+from datetime import date, timedelta
 
 class Reports_mini(Reports_miniTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    # Any code you write here will run before the form opens.
-    #The x-axis of plot_1 will be the months of the year. The y-axis will be dummy data returned from the server
-    self.x_months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
-    #Get the y-values from the server
-    self.y_values = anvil.server.call('return_data', "2023")
-    self.create_line_graph()
+    self.plot_1.figure = self.generate_graph()
     
-    self.plot_2.data = [
-      go.Pie(
-        labels=["Completed", "In progress", "Needs Review", "Not started"],
-        values=[30, 21, 10, 39 ],
-        hole=.5
-      )
-    ]
-
-    #Set the contents of the data grid (which has a repeating panel inside) to the contents of 
-    #the Files table. This is done on the secure server where you might only want to return user-visible data
-    self.repeating_panel_1.items = anvil.server.call('return_table')
-
-  def create_line_graph(self):
-    self.plot_1.data = [
-      go.Scatter(
-        x=self.x_months,
-        y=self.y_values[0],
-        fill="tozeroy",
-        name="Product A"
+  
+  def generate_graph(self,**event_args):
+    """Generates a Plotly graph with 12 months of random data."""
+  
+    # 1. Generate previous 12 months for the x-axis
+    today = date.today()
+    x_months = [(today - timedelta(days=365) + timedelta(days=30*i)).strftime('%b %Y') for i in range(12)]
+  
+    # 2. Generate two random datasets for Account A and Account B
+    # Values ranging from -ZAR200k to +ZAR500k
+    data_a = [random.randint(-200000, 500000) for _ in range(12)]
+    data_b = [random.randint(-200000, 500000) for _ in range(12)]
+  
+    # 3. Calculate the total value for the line graph
+    total_value = [sum(x) for x in zip(data_a, data_b)]
+  
+    # 4. Create the bar traces for the two accounts
+    trace_a = go.Bar(
+      x=x_months,
+      y=data_a,
+      name='Account A',
+      marker_color='#1f77b4',  # Muted blue
+      hovertemplate='Account A: %{y:,.2f} ZAR'
+    )
+    trace_b = go.Bar(
+      x=x_months,
+      y=data_b,
+      name='Account B',
+      marker_color='#add8e6',  # Light blue
+      hovertemplate='Account B: %{y:,.2f} ZAR'
+    )
+  
+    # 5. Create the line trace for the total value
+    trace_total = go.Scatter(
+      x=x_months,
+      y=total_value,
+      name='Total Value',
+      yaxis='y2',  # This line graph will use a secondary y-axis
+      mode='lines+markers',
+      line=dict(color='#663399', width=3), # Deep purple
+      hovertemplate='Total: %{y:,.2f} ZAR'
+    )
+  
+    # 6. Combine traces into a figure
+    fig = go.Figure(data=[trace_a, trace_b, trace_total])
+  
+    # 7. Customize layout and axes
+    fig.update_layout(
+      title='Account Performance: Last 12 Months',
+      barmode='group', # Set the bars side-by-side
+      xaxis_tickangle=-45,
+      xaxis_title='Month',
+      yaxis=dict(
+        title='Value (ZAR)',
+        title_font=dict(color='#1f77b4'),
+        tickformat='f'
       ),
-        go.Scatter(
-        x=self.x_months,
-        y=self.y_values[1],
-        fill="tonexty",
-        name="Product B"
-      )
-    ]
-
-  #Update the values in the line graph based on the selected value of the drop down menu
-  def drop_down_1_change(self, **event_args):
-    """This method is called when an item is selected"""
-    self.y_values = anvil.server.call('return_data', self.drop_down_1.selected_value)
-    self.create_line_graph()
-
-  def file_loader_1_change(self, file, **event_args):
-    print('hello?')
-    anvil.server.call('read_file',fn=file)
-    
-
+      yaxis2=dict(
+        title='Total Value (ZAR)',
+        title_font=dict(color='#663399'),
+        overlaying='y',
+        side='right',
+        tickformat='f'
+      ),
+      hovermode='x unified', # Show all traces on hover
+      legend=dict(x=0.01, y=0.99, bgcolor='rgba(255, 255, 255, 0.7)'),
+      height=500 # Set a fixed height for the plot
+    )
+  
+    return fig

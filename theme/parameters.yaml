@@ -304,9 +304,12 @@ roles:
   name: input-prompt
 - components: [RepeatingPanel, ColumnPanel]
   name: fixed-repeating-panel
-- components: [ColumnPanel, Link]
+- components: [ColumnPanel, Link, RepeatingPanel]
   name: fixed-holder
 - components: [ColumnPanel, Label, Form, Link]
   name: one-liner
 - components: [Link]
   name: card-link
+- components: [Label]
+  name: label-right
+- {name: boundary-horiz}

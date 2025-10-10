@@ -6,13 +6,15 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from ...Components.Transactions import Transactions
+from ...Components.Budget_mini import Budget_mini
+from ...Components.Reports_mini import Reports_mini
 
 
 class Dashboard_Screen(Dashboard_ScreenTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    self.load_transactions()
+    self.load_everything()
     # self.progress_bar_1.min_value = -100
     # self.progress_bar_1.max_value = 100
     
@@ -20,12 +22,18 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
     # self.negative_progress_bar_2.value = 50
     
 
-  def load_transactions(self, **event_args):
+  def load_everything(self, **event_args):
     self.link_transactions.add_component(Transactions())
+    self.link_budget.add_component(Budget_mini())
+    self.link_report.add_component(Reports_mini())
     
-    # self.progress_bar_1.max_value = 0
-    self.progress_bar_1.value = -83
 
   def link_transactions_click(self, **event_args):
     get_open_form().ping_ping("transactions")
+
+  def link_budget_click(self, **event_args):
+    get_open_form().ping_ping("budget")
+
+  def link_report_click(self, **event_args):
+    get_open_form().ping_ping("reports")
     

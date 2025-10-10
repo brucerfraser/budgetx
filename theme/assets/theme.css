@@ -272,17 +272,27 @@ input[disabled] ~ span {
   height: 250px; !important /* Set your desired fixed height */
   background: %color:Surface Variant%;
   padding: 8px 12px;
+  overflow-y: auto;
+  border-bottom: 1px solid white
 }
 
-
+.anvil-role-boundary-horiz {
+  background: %color:Surface Variant%;
+  border-bottom: 1px solid white;
+}
 
 .anvil-role-one-liner {
-  border-bottom: 1px solid white;
+  border-bottom: 0.5px solid grey;
   background: black;
 }
 
 .anvil-data-row-panel>.data-row-col:not(:last-child) {
   border-right: 1px solid %color:Primary Overlay 2%;
+}
+
+.progress-bar-component-wrapper {
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .progress-container {
@@ -329,6 +339,10 @@ input[disabled] ~ span {
   left: 50%; /* Variable zero position */
   width: 0%;
   transition: width 0.3s ease;
+}
+
+.anvil-role-label-right {
+  border-right: 1px solid white
 }
 
 /* Modals */

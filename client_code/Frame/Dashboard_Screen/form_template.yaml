@@ -1,18 +1,32 @@
 components:
 - components:
-  - components: []
+  - components:
+    - event_bindings: {click: link_report_click}
+      layout_properties: {full_width_row: true, grid_position: 'JZNWKZ,BGCHAB'}
+      name: link_report
+      properties: {}
+      type: Link
     layout_properties: {full_width_row: true, grid_position: 'AHYOMV,NPUOOS'}
     name: card_report
-    properties: {role: fixed-holder}
+    properties:
+      role: fixed-holder
+      spacing:
+        margin: [null, null, 9, null]
+        padding: [0, null, 0, null]
     type: ColumnPanel
   - components:
-    - layout_properties: {grid_position: 'BZQCTI,HKHAOR'}
-      name: progress_bar_1
+    - event_bindings: {click: link_budget_click}
+      layout_properties: {full_width_row: true, grid_position: 'WRNRFZ,PSIRLX'}
+      name: link_budget
       properties: {}
-      type: form:Components.ProgressBar
+      type: Link
     layout_properties: {full_width_row: true, grid_position: 'AHYOMV,ITEGUD'}
     name: card_budget
-    properties: {role: fixed-holder}
+    properties:
+      role: fixed-holder
+      spacing:
+        margin: [null, null, 9, null]
+        padding: [0, null, 0, null]
     type: ColumnPanel
   - components:
     - layout_properties: {grid_position: 'RNNWET,NNMCXP'}

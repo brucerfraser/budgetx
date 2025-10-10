@@ -2,10 +2,12 @@ components: []
 container:
   properties:
     html: |-
-      <center style="font-style:italic; color:#888; margin: 3em;">
-        <div class="progress-container">
-          <div class="progress-bar-negative" anvil-if="self.value < 0" anvil-name="progress-bar-negative"></div>
-          <div class="progress-bar-positive" anvil-if="self.value >= 0" anvil-name="progress-bar-positive"></div>
+      <center style="font-style:italic; color:#888; margin: 7px;">
+        <div class="progress-bar-component-wrapper">
+          <div class="progress-container">
+            <div class="progress-bar-negative" anvil-if="self.value < 0" anvil-name="progress-bar-negative"></div>
+            <div class="progress-bar-positive" anvil-if="self.value >= 0" anvil-name="progress-bar-positive"></div>
+          </div>
         </div>
       </center>
       <div anvil-slot="default"></div>

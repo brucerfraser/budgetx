@@ -6,9 +6,12 @@ unique_ids:
   forms:
     Components.Budget: '1760009239100838697726683.4298'
     Components.Budget_mini: '1760009251477119913161382.82027'
+    Components.Budget_mini.budget_glances: '1760103213610392837992932.3467'
     Components.ProgressBar: '1760096387154580309864952.9407'
-    Components.Reports: '1685452921916319245502744.5724'
-    Components.Reports_mini: '1685452827810810401583930.4839'
+    Components.Reports: '1760106948299698493925447.0276'
+    Components.Reports_mini: '1760106956159291139216614.45844'
+    Components.Reports_old: '1685452921916319245502744.5724'
+    Components.Reports_old2: '1685452827810810401583930.4839'
     Components.Transactions: '1759640236173825242359712.6605'
     Components.Transactions.one_transaction: '1759654767641900803673532.0245'
     Frame: W4AJINNNK6GE56SS5BBPZFEUYSYVUQXM
