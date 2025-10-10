@@ -53,7 +53,7 @@ class Reports_mini(Reports_miniTemplate):
       x=x_months,
       y=total_value,
       name='Total Value',
-      yaxis='y2',  # This line graph will use a secondary y-axis
+      # yaxis='y2',  # This line graph will use a secondary y-axis
       mode='lines+markers',
       line=dict(color='#663399', width=3), # Deep purple
       hovertemplate='Total: %{y:,.2f} ZAR'
@@ -73,16 +73,16 @@ class Reports_mini(Reports_miniTemplate):
         title_font=dict(color='#1f77b4'),
         tickformat='f'
       ),
-      yaxis2=dict(
-        title='Total Value (ZAR)',
-        title_font=dict(color='#663399'),
-        overlaying='y',
-        side='right',
-        tickformat='f'
-      ),
+      # yaxis2=dict(
+      #   title='Total Value (ZAR)',
+      #   title_font=dict(color='#663399'),
+      #   overlaying='y',
+      #   side='right',
+      #   tickformat='f'
+      # ),
       hovermode='x unified', # Show all traces on hover
       legend=dict(x=0.01, y=0.99, bgcolor='rgba(255, 255, 255, 0.7)'),
-      height=500 # Set a fixed height for the plot
+      height=300 # Set a fixed height for the plot
     )
   
     return fig
