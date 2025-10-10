@@ -285,30 +285,50 @@ input[disabled] ~ span {
   border-right: 1px solid %color:Primary Overlay 2%;
 }
 
-.bar-container {
-  display: flex;
+.progress-container {
+  /* display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 20px;
   background-color: #eee;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: hidden; */
+  width: 100%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden; /* This is key for rounded edges */
+  position: relative;
 }
 
 .progress-bar-negative {
-  height: 100%;
-  background-color: #ff6961; /* Negative progress color */
+  /* height: 100%;
+  background-color: #ff6961; /* Negative progress color
   border-radius: 10px 0 0 10px;
   transition: width 0.3s ease-in-out;
-  transform: translateX(100%);
+  transform: translateX(100%); */
+  height: 100%;
+  background-color: #f44336; /* Negative value color */
+  border-radius: 10px;
+  position: absolute;
+  right: 50%; /* Zero position anchor */
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 .progress-bar-positive {
-  height: 100%;
-  background-color: #77dd77; /* Positive progress color */
+  /* height: 100%;
+  background-color: #77dd77; /* Positive progress color
   border-radius: 0 10px 10px 0;
-  transition: width 0.3s ease-in-out;
+  transition: width 0.3s ease-in-out; */
+  height: 100%;
+  background-color: #4CAF50; /* Positive value color */
+  border-radius: 10px;
+  position: absolute;
+  left: 50%; /* Variable zero position */
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 /* Modals */
