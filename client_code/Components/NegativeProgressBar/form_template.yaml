@@ -1,0 +1,22 @@
+components: []
+container:
+  properties:
+    html: |-
+      <center style="font-style:italic; color:#888; margin: 3em;">
+        <div class="bar-container">
+          <div class="progress-bar-negative"></div>
+          <div class="progress-bar-positive"></div>
+        </div>
+      </center>
+      <div anvil-slot="default"></div>
+
+      <script>
+        function updateBarWidths(negPercent, posPercent) {
+          var negBar = document.querySelector('.progress-bar-negative');
+          var posBar = document.querySelector('.progress-bar-positive');
+          negBar.style.width = negPercent + '%';
+          posBar.style.width = posPercent + '%';
+        }
+      </script>
+  type: HtmlTemplate
+is_package: true

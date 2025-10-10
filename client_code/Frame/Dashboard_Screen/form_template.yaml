@@ -1,6 +1,7 @@
 components:
 - components:
-  - layout_properties: {full_width_row: true, grid_position: 'AHYOMV,NPUOOS'}
+  - components: []
+    layout_properties: {full_width_row: true, grid_position: 'AHYOMV,NPUOOS'}
     name: card_report
     properties: {role: fixed-holder}
     type: ColumnPanel

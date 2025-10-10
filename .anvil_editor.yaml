@@ -6,6 +6,7 @@ unique_ids:
   forms:
     Components.Budget: '1760009239100838697726683.4298'
     Components.Budget_mini: '1760009251477119913161382.82027'
+    Components.NegativeProgressBar: '1760096387154580309864952.9407'
     Components.Reports: '1685452921916319245502744.5724'
     Components.Reports_mini: '1685452827810810401583930.4839'
     Components.Transactions: '1759640236173825242359712.6605'

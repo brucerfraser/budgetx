@@ -13,6 +13,11 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
     self.load_transactions()
+    from ...Components.NegativeProgressBar import NegativeProgressBar
+    self.card_report.add_component(NegativeProgressBar(val=-30))
+    self.card_report.add_component(NegativeProgressBar(val=50))
+    # self.negative_progress_bar_1.value = -30
+    # self.negative_progress_bar_2.value = 50
     
 
   def load_transactions(self, **event_args):

@@ -285,6 +285,32 @@ input[disabled] ~ span {
   border-right: 1px solid %color:Primary Overlay 2%;
 }
 
+.bar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 20px;
+  background-color: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar-negative {
+  height: 100%;
+  background-color: #ff6961; /* Negative progress color */
+  border-radius: 10px 0 0 10px;
+  transition: width 0.3s ease-in-out;
+  transform: translateX(100%);
+}
+
+.progress-bar-positive {
+  height: 100%;
+  background-color: #77dd77; /* Positive progress color */
+  border-radius: 0 10px 10px 0;
+  transition: width 0.3s ease-in-out;
+}
+
 /* Modals */
 
 .modal-content {
