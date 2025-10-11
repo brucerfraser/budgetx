@@ -35,8 +35,7 @@ class Reports_mini(Reports_miniTemplate):
     # 3. Calculate the total value for the line graph
     total_value = [sum(x) for x in zip(data_a, data_b)]
 
-    for i in range(0,12):
-      print(data_a[i],data_b[i],total_value[i])
+    
   
     # 4. Create the bar traces for the two accounts
     trace_a = go.Bar(

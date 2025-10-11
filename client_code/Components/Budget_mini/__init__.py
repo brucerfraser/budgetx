@@ -14,6 +14,7 @@ class Budget_mini(Budget_miniTemplate):
     self.init_components(**properties)
     temp = []
     for i in range(0,5):
-      temp.append({'name':'Category ' + str(i),'val':random.randint(-100, 100)})
+      temp.append({'name':'Category ' + str(i),'val':random.randint(-100, 100),
+                  'min':-100,'max':100})
     self.repeating_panel_1.items = temp      
     # Any code you write here will run before the form opens.

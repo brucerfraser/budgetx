@@ -5,15 +5,16 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
+import anvil.js
 
 
 class ProgressBar(ProgressBarTemplate):
   def __init__(self, **properties):
     
     self.init_components(**properties)
-    self.min_value = -100
-    self.max_value = 100
-    self.value = 0
+    # self.min_value = -100
+    # self.max_value = 100
+    # self.value = 0
     self.zero_offset = 0 # Offset from center, if needed
     self.update_progress_bar()
     
@@ -112,14 +113,15 @@ class ProgressBar(ProgressBarTemplate):
       # Hide both bars if the range is invalid or not set
       positive_bar.style.width = "0%"
       negative_bar.style.width = "0%"
-      value_label.text = ""
+      value_label.text = "Testing"
       return
 
     # Ensure value stays within bounds
     value = max(min_v, min(max_v, value))
     # Format the currency value for the label
     # Use an f-string for formatting: 'R {value:,.2f}' will add commas for thousands and 2 decimal places
-    value_label.text = f"R {value:,.2f}" 
+    value_label.textContent = f"R {value:,.2f}" 
+    
 
     if min_v >= 0:
       # Case: Range is entirely non-negative (e.g., 0 to 100)

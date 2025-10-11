@@ -1,8 +1,4 @@
 components:
-- layout_properties: {grid_position: 'NVQMYF,KMSKPV'}
-  name: label_1
-  properties: {align: center, role: title, text: Top 5 or Worst variance (settings)}
-  type: Label
 - components:
   - layout_properties: {full_width_row: true, grid_position: 'KKKEFW,EFLBJV'}
     name: repeating_panel_1

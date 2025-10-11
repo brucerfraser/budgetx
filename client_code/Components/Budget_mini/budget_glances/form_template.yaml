@@ -1,16 +1,32 @@
 components:
-- data_bindings:
-  - {code: 'self.item[''name'']', property: text, writeback: false}
-  layout_properties: {full_width_row: true, grid_position: 'XCTWMY,GFLMFY'}
-  name: label_1
-  properties: {align: right, role: label-right}
-  type: Label
-- data_bindings:
-  - {code: 'self.item[''val'']', property: value, writeback: false}
-  layout_properties: {full_width_row: true, grid_position: 'XCTWMY,ETHNIK'}
-  name: progress_bar_1
-  properties: {}
-  type: form:Components.ProgressBar
+- components:
+  - data_bindings:
+    - {code: 'self.item[''name'']', property: text, writeback: false}
+    layout_properties: {full_width_row: true, grid_position: 'CTALDQ,KZBAON'}
+    name: label_1
+    properties: {align: right, role: label-right}
+    type: Label
+  - layout_properties: {grid_position: 'CTALDQ,HWTEBP RUFKBL,KJGWOI'}
+    name: spacer_1
+    properties: {height: '8', spacing_above: none, spacing_below: none}
+    type: Spacer
+  - data_bindings:
+    - {code: 'self.item[''val'']', property: value, writeback: false}
+    - {code: 'self.item[''max'']', property: max_value, writeback: false}
+    - {code: 'self.item[''min'']', property: min_value, writeback: false}
+    layout_properties: {grid_position: 'CTALDQ,HWTEBP XUZPXM,JRPWJT'}
+    name: progress_bar_1
+    properties: {}
+    type: form:Components.ProgressBar
+  layout_properties: {full_width_row: true, grid_position: 'JKGKVZ,XZGKBB'}
+  name: card_1
+  properties:
+    background: ''
+    role: card
+    spacing:
+      margin: [0, null, 0, null]
+      padding: [0, null, 0, null]
+  type: ColumnPanel
 container:
   properties:
     spacing:

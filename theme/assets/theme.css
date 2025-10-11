@@ -269,7 +269,7 @@ input[disabled] ~ span {
 }
 
 .anvil-role-fixed-holder {
-  height: 250px; !important /* Set your desired fixed height */
+  height: 300px; !important /* Set your desired fixed height */
   background: %color:Surface Variant%;
   padding: 8px 12px;
   overflow-y: auto;
@@ -346,11 +346,11 @@ input[disabled] ~ span {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%); /* Centering trick */
-  color: white;
-  font-size: 10px; /* Adjust as needed */
+  color: black; !important
+  font-size: 14px; /* Adjust as needed */
   font-weight: bold;
   white-space: nowrap; /* Prevent text from wrapping */
-  z-index: 10; /* Ensure text is above the bars */
+  z-index: 999; /* Ensure text is above the bars */
 }
 
 .anvil-role-label-right {
