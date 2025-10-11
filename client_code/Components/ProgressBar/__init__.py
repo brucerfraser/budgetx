@@ -98,9 +98,7 @@ class ProgressBar(ProgressBarTemplate):
       min_v = self.min_value
       max_v = self.max_value
       z_o = self.zero_offset
-      print("using real-value",self.value,self.min_value)
     except:
-      print("using fail-safe")
       value = 0
       min_v = -100
       max_v = 100
@@ -108,15 +106,20 @@ class ProgressBar(ProgressBarTemplate):
 
     positive_bar = self.dom_nodes["progress-bar-positive"]
     negative_bar = self.dom_nodes["progress-bar-negative"]
+    value_label = self.dom_nodes["progress-value-label"]
 
     if value is None or min_v is None or max_v is None or min_v >= max_v:
       # Hide both bars if the range is invalid or not set
       positive_bar.style.width = "0%"
       negative_bar.style.width = "0%"
+      value_label.text = ""
       return
 
     # Ensure value stays within bounds
     value = max(min_v, min(max_v, value))
+    # Format the currency value for the label
+    # Use an f-string for formatting: 'R {value:,.2f}' will add commas for thousands and 2 decimal places
+    value_label.text = f"R {value:,.2f}" 
 
     if min_v >= 0:
       # Case: Range is entirely non-negative (e.g., 0 to 100)

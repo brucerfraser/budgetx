@@ -341,6 +341,18 @@ input[disabled] ~ span {
   transition: width 0.3s ease;
 }
 
+.progress-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Centering trick */
+  color: white;
+  font-size: 10px; /* Adjust as needed */
+  font-weight: bold;
+  white-space: nowrap; /* Prevent text from wrapping */
+  z-index: 10; /* Ensure text is above the bars */
+}
+
 .anvil-role-label-right {
   border-right: 1px solid white
 }
