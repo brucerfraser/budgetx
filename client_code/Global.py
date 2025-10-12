@@ -12,5 +12,5 @@ accounts = anvil.server.call('get_accounts')
 keys = list(accounts.keys())
 ACCOUNTS = [(accounts[k],k) for k in keys]
 
-def ping_ping():
-  print('')
+def new_id_needed():
+  return str(uuid.uuid4())

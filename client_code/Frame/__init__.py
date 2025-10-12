@@ -20,21 +20,20 @@ class Frame(FrameTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
+    
     #Present users with a login form with just one line of code:
     #anvil.users.login_with_form()
-    # anvil.server.call('read_file')
-    #Set the Plotly plots template to match the theme of the app
-    Plot.templates.default = "rally"
-    #When the app starts up, the Transactions form will be added to the page
+    
+    #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
-    # self.load_transactions()
-    # self.content_panel.add_component(Sales())
-    #Change the color of the sales_page_link to indicate that the Sales page has been selected
-    # self.sales_page_link.background = app.theme_colors['Primary Container']
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
-    
+    # self.first_run_income()
+
+  def first_run_income(self,**event_args):
+    app_tables.categories.add_row(category_id=Global.new_id_needed(),
+                                 order=1,name="Income",colour="#1EB980")
 
   def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""

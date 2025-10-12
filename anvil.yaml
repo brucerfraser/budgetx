@@ -18,6 +18,23 @@ db_schema:
       type: simpleObject
     server: full
     title: accounts
+  categories:
+    client: full
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: category_id
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: name
+      type: string
+    - admin_ui: {order: 2, width: 200}
+      name: colour
+      type: string
+    - admin_ui: {order: 3, width: 200}
+      name: order
+      type: number
+    server: full
+    title: categories
   files:
     client: none
     columns:
@@ -42,6 +59,26 @@ db_schema:
       type: string
     server: full
     title: Files
+  sub_categories:
+    client: full
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: sub_category_id
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: icon
+      type: string
+    - admin_ui: {order: 2, width: 200}
+      name: name
+      type: string
+    - admin_ui: {order: 3, width: 200}
+      name: order
+      type: number
+    - admin_ui: {order: 4, width: 200}
+      name: belongs_to
+      type: string
+    server: full
+    title: sub_categories
   test_csv:
     client: none
     columns:
