@@ -2,33 +2,76 @@ components:
 - components:
   - components:
     - components:
-      - layout_properties: {grid_position: 'MOUXVZ,PESFVZ'}
-        name: link_3
-        properties: {}
-        type: Link
-      - layout_properties: {grid_position: 'MOUXVZ,TFXBSJ'}
-        name: link_1
-        properties: {align: center, role: title, text: October 2025}
-        type: Link
-      - layout_properties: {grid_position: 'MOUXVZ,ZEETTM'}
-        name: link_2
-        properties: {}
-        type: Link
-      layout_properties: {grid_position: 'ABRJPF,EHDCBW'}
-      name: card_month_picker
-      properties: {role: card}
+      - components:
+        - layout_properties: {grid_position: 'MOUXVZ,PESFVZ'}
+          name: link_3
+          properties:
+            align: right
+            font_size: 30
+            spacing:
+              margin: [0, null, 0, null]
+            spacing_above: none
+            spacing_below: none
+            text: <
+          type: Link
+        - layout_properties: {grid_position: 'MOUXVZ,TFXBSJ'}
+          name: link_1
+          properties:
+            align: center
+            role: title
+            spacing:
+              margin: [8, null, 0, null]
+            spacing_above: none
+            spacing_below: none
+            text: October 2025
+          type: Link
+        - layout_properties: {grid_position: 'MOUXVZ,ZEETTM'}
+          name: link_2
+          properties: {font_size: 30, spacing_above: none, spacing_below: none, text: '>'}
+          type: Link
+        layout_properties: {grid_position: 'ABRJPF,EHDCBW'}
+        name: card_month_picker
+        properties:
+          role: boundary-horiz
+          spacing:
+            margin: [0, null, 0, null]
+            padding: [0, null, 0, null]
+          spacing_above: none
+          spacing_below: none
+        type: ColumnPanel
+      - data_bindings: []
+        layout_properties: {grid_position: 'HXVYNA,BWGHNW'}
+        name: income_holder
+        properties: {category_name: Income}
+        type: form:Components.Budget.Category_holder
+      layout_properties: {full_width_row: true, grid_position: 'RFKSIC,DQKMNN'}
+      name: card_2
+      properties: {role: boundary-horiz}
       type: ColumnPanel
-    layout_properties: {full_width_row: true, grid_position: 'FAHOZH,BFOIAG'}
-    name: card_2
-    properties: {role: card}
+    - layout_properties: {grid_position: 'YKXTUA,CGOXGK'}
+      name: card_expenses
+      properties: {role: boundary-horiz}
+      type: ColumnPanel
+    layout_properties: {full_width_row: true, grid_position: 'FAHOZH,KSCTCA'}
+    name: column_panel_4
+    properties: {}
     type: ColumnPanel
-  - layout_properties: {grid_position: 'FAHOZH,IHJGYJ'}
-    name: card_1
-    properties: {role: card}
+  - components:
+    - components: []
+      layout_properties: {full_width_row: true, grid_position: 'UEQBKL,UCQTDA'}
+      name: card_1
+      properties:
+        role: card
+        spacing:
+          margin: [5, null, null, null]
+      type: ColumnPanel
+    layout_properties: {full_width_row: true, grid_position: 'FAHOZH,IHJGYJ'}
+    name: column_panel_3
+    properties: {}
     type: ColumnPanel
   layout_properties: {full_width_row: true, grid_position: 'DTBNAA,HDCWCY'}
   name: column_panel_1
-  properties: {col_widths: '{"BFOIAG":45,"IHJGYJ":15}'}
+  properties: {col_widths: '{"IHJGYJ":12,"KSCTCA":35}'}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

@@ -1,0 +1,33 @@
+components:
+- components:
+  - components:
+    - layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,DUXXAK'}
+      name: sub_cat_name
+      properties: {}
+      type: Link
+    - layout_properties: {grid_position: 'OXJHKJ,UTOQIZ'}
+      name: budget
+      properties: {align: center}
+      type: TextBox
+    - layout_properties: {grid_position: 'OXJHKJ,JVLNUI'}
+      name: actual
+      properties: {align: center}
+      type: Link
+    - layout_properties: {grid_position: 'OXJHKJ,MAQXHL JTFAWR,AMONTN'}
+      name: spacer_1
+      properties: {height: '6'}
+      type: Spacer
+    - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
+      name: progress_bar_1
+      properties: {max_value: 100, min_value: -100, value: 23}
+      type: form:Components.ProgressBar
+    layout_properties: {full_width_row: true, grid_position: 'HZIOTD,VQKSOK'}
+    name: column_panel_1
+    properties: {}
+    type: ColumnPanel
+  layout_properties: {full_width_row: true, grid_position: 'BJLQUD,INSXGY'}
+  name: card_1
+  properties: {role: card}
+  type: ColumnPanel
+container: {type: ColumnPanel}
+is_package: true
