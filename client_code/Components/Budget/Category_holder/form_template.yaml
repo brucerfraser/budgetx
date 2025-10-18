@@ -5,6 +5,7 @@ components:
       - {code: 'self.item[''name'']', property: text, writeback: false}
       - {code: 'self.item[''colour_text'']', property: foreground, writeback: false}
       - {code: 'self.item[''colour_back'']', property: background, writeback: false}
+      event_bindings: {click: link_1_click}
       layout_properties: {full_width_row: true, grid_position: 'ODFYXP,ETDMYT'}
       name: link_1
       properties:

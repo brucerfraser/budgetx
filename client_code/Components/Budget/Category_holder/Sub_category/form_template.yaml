@@ -1,21 +1,32 @@
 components:
 - components:
   - components:
-    - layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,DUXXAK'}
+    - data_bindings:
+      - {code: 'self.item[''name'']', property: text, writeback: false}
+      layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,DUXXAK'}
       name: sub_cat_name
-      properties: {}
+      properties: {spacing_above: none, spacing_below: none}
       type: Link
     - layout_properties: {grid_position: 'OXJHKJ,UTOQIZ'}
       name: budget
-      properties: {align: center}
+      properties:
+        align: center
+        margin: [0, null, 0, null]
+        spacing_above: none
+        spacing_below: none
       type: TextBox
     - layout_properties: {grid_position: 'OXJHKJ,JVLNUI'}
       name: actual
-      properties: {align: center}
+      properties:
+        align: center
+        spacing:
+          margin: [0, null, 0, null]
+        spacing_above: none
+        spacing_below: none
       type: Link
     - layout_properties: {grid_position: 'OXJHKJ,MAQXHL JTFAWR,AMONTN'}
       name: spacer_1
-      properties: {height: '6'}
+      properties: {height: '3'}
       type: Spacer
     - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
       name: progress_bar_1
@@ -27,7 +38,19 @@ components:
     type: ColumnPanel
   layout_properties: {full_width_row: true, grid_position: 'BJLQUD,INSXGY'}
   name: card_1
-  properties: {role: card}
+  properties:
+    role: card
+    spacing:
+      margin: [0, null, 0, null]
+      padding: [0, null, 0, null]
+    spacing_above: none
+    spacing_below: none
   type: ColumnPanel
-container: {type: ColumnPanel}
+container:
+  properties:
+    spacing:
+      margin: [0, null, 0, null]
+    spacing_above: none
+    spacing_below: none
+  type: ColumnPanel
 is_package: true
