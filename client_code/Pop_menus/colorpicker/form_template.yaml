@@ -1,0 +1,14 @@
+components: []
+container:
+  properties: {html: <input type = 'color'>}
+  type: HtmlTemplate
+custom_component: true
+events:
+- {default_event: true, name: change}
+is_package: true
+properties:
+- default_binding_prop: true
+  default_value: []
+  important: true
+  name: align
+  type: text[]

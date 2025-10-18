@@ -1,0 +1,64 @@
+components:
+- components:
+  - layout_properties: {grid_position: 'YMZBVN,BNVPNG'}
+    name: label_1
+    properties: {align: center, text: Text Colour}
+    type: Label
+  - event_bindings: {change: text_box_1_pressed_enter, lost_focus: text_box_1_pressed_enter, pressed_enter: text_box_1_pressed_enter}
+    layout_properties: {grid_position: 'YMZBVN,UUUASC'}
+    name: text_box_1
+    properties: {align: center, placeholder: Type a name}
+    type: TextBox
+  - layout_properties: {grid_position: 'YMZBVN,HRYJCQ'}
+    name: label_2
+    properties: {align: center, text: Background Colour}
+    type: Label
+  - components:
+    - event_bindings: {change: colorpicker_text_change}
+      layout_properties: {}
+      name: colorpicker_text
+      properties:
+        align: [center]
+      type: form:Pop_menus.colorpicker
+    layout_properties: {grid_position: 'LITIZW,WKDVTP'}
+    name: flow_panel_1
+    properties: {align: center}
+    type: FlowPanel
+  - layout_properties: {grid_position: 'LITIZW,PQLPPS'}
+    name: label
+    properties: {align: center, bold: true, font_size: 20, text: Are colour}
+    type: Label
+  - components:
+    - event_bindings: {change: colorpicker_back_change}
+      layout_properties: {}
+      name: colorpicker_back
+      properties:
+        align: [Center]
+      type: form:Pop_menus.colorpicker
+    layout_properties: {grid_position: 'LITIZW,UIFRFU'}
+    name: flow_panel_2
+    properties: {align: center}
+    type: FlowPanel
+  layout_properties: {grid_position: 'VETCRG,PNGPXS'}
+  name: column_panel_1
+  properties: {}
+  type: ColumnPanel
+- components:
+  - event_bindings: {click: button_1_click}
+    layout_properties: {grid_position: 'ZAAVOA,VPALHQ'}
+    name: button_1
+    properties:
+      text: |
+        Cancel
+    type: Button
+  - event_bindings: {click: button_2_click}
+    layout_properties: {grid_position: 'ZAAVOA,BLPGVX'}
+    name: button_2
+    properties: {background: '', text: SAVE}
+    type: Button
+  layout_properties: {grid_position: 'UANMTC,YLSCYO'}
+  name: card_1
+  properties: {border: Solid 1px, role: card}
+  type: ColumnPanel
+container: {type: ColumnPanel}
+is_package: true
