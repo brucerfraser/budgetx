@@ -11,9 +11,7 @@ class Category_holder(Category_holderTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    # print(self.my_identity)
     
-    # Any code you write here will run before the form opens.
 
   def link_2_click(self, **event_args):
     from ....Pop_menus.work_a_category import work_a_category
@@ -32,6 +30,7 @@ class Category_holder(Category_holderTemplate):
   def link_1_click(self, **event_args):
     if self.link_1.icon == 'fa:angle-right':
       self.link_1.icon = 'fa:angle-down'
+      
       self.repeating_panel_1.items = app_tables.sub_categories.search(belongs_to=self.item['category_id'])
       self.repeating_panel_1.visible = True
     else:

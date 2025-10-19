@@ -7,13 +7,15 @@ components:
       name: sub_cat_name
       properties: {spacing_above: none, spacing_below: none}
       type: Link
-    - layout_properties: {grid_position: 'OXJHKJ,UTOQIZ'}
+    - event_bindings: {lost_focus: budget_lost_focus}
+      layout_properties: {grid_position: 'OXJHKJ,UTOQIZ'}
       name: budget
       properties:
         align: center
         margin: [0, null, 0, null]
         spacing_above: none
         spacing_below: none
+        type: number
       type: TextBox
     - layout_properties: {grid_position: 'OXJHKJ,JVLNUI'}
       name: actual
@@ -26,7 +28,7 @@ components:
       type: Link
     - layout_properties: {grid_position: 'OXJHKJ,MAQXHL JTFAWR,AMONTN'}
       name: spacer_1
-      properties: {height: '3'}
+      properties: {height: '1'}
       type: Spacer
     - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
       name: progress_bar_1

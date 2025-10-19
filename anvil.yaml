@@ -18,6 +18,20 @@ db_schema:
       type: simpleObject
     server: full
     title: accounts
+  budgets:
+    client: full
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: belongs_to
+      type: string
+    - admin_ui: {order: 1, width: 200}
+      name: period
+      type: date
+    - admin_ui: {order: 2, width: 200}
+      name: budget_amount
+      type: number
+    server: full
+    title: budgets
   categories:
     client: full
     columns:
@@ -80,6 +94,10 @@ db_schema:
     - admin_ui: {order: 4, width: 200}
       name: belongs_to
       type: string
+    - admin_ui: {order: 5, width: 200}
+      name: budget
+      target: budgets
+      type: link_multiple
     server: full
     title: sub_categories
   test_csv:
