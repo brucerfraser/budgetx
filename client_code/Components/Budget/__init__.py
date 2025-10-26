@@ -20,24 +20,14 @@ class Budget(BudgetTemplate):
     self.card_2.add_component(Category_holder(item=inc_d))
     # self.income_holder.my_identity = app_tables.categories.search(name='Income')
     cats = []
-    for cat in app_tables.categories.search():
+    for cat in app_tables.categories.search(tables.order_by('order')):
       cat_d = {}
       cat_d = dict(cat)
       if cat_d['name'] != 'Income':
         cats.append(cat_d)
   
     self.expense_categories.items = cats
-    # for cat in app_tables.categories.search():
-    #   cat_d = {}
-    #   cat_d = dict(cat)
-    #   if cat_d['name'] != 'Income':
-    #     self.card_expenses.add_component(Category_holder(my_identity=cat_d))
     
-    # self.card_expenses.add_component(Category_holder(category_name="Other"))
-    # self.card_expenses.add_component(Category_holder(category_name="Mother"))
-    # self.card_expenses.add_component(Category_holder(category_name="Brother"))
-    # self.card_expenses.add_component(Category_holder(category_name="Wuther"))
-    # Any code you write here will run before the form opens.
 
   def add_category_click(self, **event_args):
     from ...Pop_menus.work_a_category import work_a_category
@@ -54,20 +44,26 @@ class Budget(BudgetTemplate):
   def test_me(self, **event_args):
     print("works!")
 
-  def load_category_right(self,cat,period, **event_args):
+  def load_category_right(self,cat,period,big_cat=False, **event_args):
     self.category_right,self.period_right = cat,period
-    nts = None
-    try:
-      nts = app_tables.budgets.get(period=period,
-                             belongs_to=cat)['notes']
-    except Exception as e:
-      print("error:",e)
+    if not big_cat:
+      nts = None
+      try:
+        nts = app_tables.budgets.get(period=period,
+                              belongs_to=cat)['notes']
+      except Exception as e:
+        print("error:",e)
+        
+      sc = app_tables.sub_categories.get(sub_category_id=cat)['name']
+      c_id = app_tables.sub_categories.get(sub_category_id=cat)['belongs_to']
+      c = app_tables.categories.get(category_id=c_id)['name']
+      self.label_2.text = c + " - " + sc
+      self.notes.text = nts
+      self.column_panel_2.visible = True
+    else:
+      self.label_2.text = app_tables.categories.get(category_id=self.category_right)['name']
+      self.column_panel_2.visible = False
       
-    sc = app_tables.sub_categories.get(sub_category_id=cat)['name']
-    c_id = app_tables.sub_categories.get(sub_category_id=cat)['belongs_to']
-    c = app_tables.categories.get(category_id=c_id)['name']
-    self.label_2.text = c + " - " + sc
-    self.notes.text = nts
 
   def reset_sub_categories(self,cat,**event_args):
     for category in self.expense_categories.get_components():

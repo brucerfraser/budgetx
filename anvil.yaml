@@ -169,7 +169,10 @@ db_schema:
       type: string
     server: full
     title: Users
-dependencies: []
+dependencies:
+- dep_id: dep_6plivhjd0selve
+  resolution_hints: {app_id: C6ZZPAPN4YYF5NVJ, name: Anvil Extras, package_name: anvil_extras}
+  version: {version_tag: v3.5.0}
 metadata: {logo_img: 'asset:Budget Tracker Icon Design.png', title: BudgetX}
 name: BudgetX
 native_deps: {head_html: '<link href="https://fonts.googleapis.com/css2?family=Eczar:wght@400;600&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet" rel="preload" as="font" crossorigin="anonymous">'}
