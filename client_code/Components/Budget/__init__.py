@@ -60,9 +60,14 @@ class Budget(BudgetTemplate):
       self.label_2.text = c + " - " + sc
       self.notes.text = nts
       self.column_panel_2.visible = True
+      self.edit_card.visible = True
     else:
       self.label_2.text = app_tables.categories.get(category_id=self.category_right)['name']
       self.column_panel_2.visible = False
+      if not self.label_2.text == "Income":
+        self.edit_card.visible = True
+      else:
+        self.edit_card.visible = False
       
 
   def reset_sub_categories(self,cat,**event_args):
@@ -79,5 +84,11 @@ class Budget(BudgetTemplate):
   def update_notes(self, **event_args):
     app_tables.budgets.get(belongs_to=self.category_right,
                            period=self.period_right)['notes'] = self.notes.text
+
+  def edit_switch_change(self, **event_args):
+    if self.edit_switch.checked:
+      self.edit_details.visible = True
+    else:
+      self.edit_details.visible = False
     
     

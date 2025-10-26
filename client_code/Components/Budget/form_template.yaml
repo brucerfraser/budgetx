@@ -100,13 +100,101 @@ components:
         properties: {role: card}
         type: ColumnPanel
       - components:
-        - layout_properties: {grid_position: 'HQRGTX,VFHNHC'}
-          name: radio_button_1
-          properties: {text: Edit, value: 'True'}
-          type: RadioButton
+        - components:
+          - layout_properties: {grid_position: 'PVYRJZ,REBSEK'}
+            name: label_4
+            properties:
+              bold: true
+              font_size: 17
+              role: null
+              spacing:
+                margin: [0, null, 0, null]
+                padding: [0, null, 0, null]
+              text: Edit
+              underline: true
+            type: Label
+          - event_bindings: {change: edit_switch_change}
+            layout_properties: {grid_position: 'PVYRJZ,BFPIFZ'}
+            name: edit_switch
+            properties:
+              align: right
+              checked: false
+              spacing:
+                margin: [0, null, 0, null]
+                padding: [3, null, 0, null]
+              text_pre: ''
+            type: form:dep_6plivhjd0selve:Switch
+          layout_properties: {grid_position: 'ZFRJDP,GGUMLS'}
+          name: column_panel_5
+          properties:
+            col_widths: '{"REBSEK":30,"BFPIFZ":30}'
+            spacing:
+              margin: [0, null, 0, null]
+            spacing_below: none
+          type: ColumnPanel
+        - components:
+          - layout_properties: {grid_position: 'FQUFCR,UDHLTY KVZXDL,DSPNYG'}
+            name: spacer_1
+            properties: {height: 9}
+            type: Spacer
+          - layout_properties: {grid_position: 'FQUFCR,UDHLTY FFMAHY,BMELZT'}
+            name: edit_name
+            properties: {}
+            type: TextBox
+          - layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ SUNOXC,LISCFO'}
+            name: button_1
+            properties:
+              border: solid grey 1px
+              icon: fa:angle-up
+              icon_align: top
+              spacing:
+                margin: [0, null, 0, null]
+                padding: [0, 0, 0, 0]
+              spacing_above: none
+              spacing_below: none
+              text: ''
+            type: Button
+          - layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ MRAPWQ,ZTGSZA'}
+            name: button_1_copy
+            properties:
+              border: solid grey 1px
+              icon: fa:angle-down
+              icon_align: top
+              spacing:
+                margin: [0, null, 0, null]
+                padding: [0, 0, 0, 0]
+              spacing_above: none
+              spacing_below: none
+              text: ''
+            type: Button
+          - layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,YQQMWO JGTUMN,YVBYHI'}
+            name: spacer_2
+            properties: {height: 3}
+            type: Spacer
+          - layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,YQQMWO UNSWJD,JFZZJM'}
+            name: button_2
+            properties:
+              border: solid grey 1px
+              foreground: theme:Error
+              icon: fa:trash
+              icon_align: top
+              spacing:
+                margin: [0, null, 0, null]
+                padding: [0, 0, 0, 0]
+              text: ''
+            type: Button
+          layout_properties: {grid_position: 'PEHDHT,VIVBTJ'}
+          name: edit_details
+          properties:
+            col_spacing: tiny
+            col_widths: '{"UDHLTY":45,"CTNBEW":15}'
+            spacing:
+              margin: [0, null, 0, null]
+            visible: false
+          type: ColumnPanel
         layout_properties: {grid_position: 'UTIRED,DGVWGK'}
         name: edit_card
-        properties: {role: card, visible: true}
+        properties: {role: card, visible: false}
         type: ColumnPanel
       layout_properties: {full_width_row: true, grid_position: 'UEQBKL,UCQTDA'}
       name: card_1
