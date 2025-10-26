@@ -22,7 +22,7 @@ class Sub_category(Sub_categoryTemplate):
     except:
       self.budget.text = 0
 
-  def budget_lost_focus(self, **event_args):
+  def budget_edit_lost_focus(self, **event_args):
     today = date.today()
     period = date(today.year, today.month, 1)
     if not self.budget.text == 0:
@@ -32,3 +32,13 @@ class Sub_category(Sub_categoryTemplate):
       except:
         app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
                                 period=period,budget_amount=self.budget.text)
+
+  def link_1_click(self, **event_args):
+    # Fire something to budget form for RH panel.
+
+    # Make all other sub_cats clickable again (links vis, edit invis)
+
+    # Edit column_panel becomes visual.
+    
+    """This method is called when the link is clicked"""
+    pass
