@@ -61,11 +61,13 @@ class Budget(BudgetTemplate):
       self.notes.text = nts
       self.column_panel_2.visible = True
       self.edit_card.visible = True
+      self.edit_name.text = app_tables.sub_categories.get(sub_category_id=self.category_right)['name']
     else:
       self.label_2.text = app_tables.categories.get(category_id=self.category_right)['name']
       self.column_panel_2.visible = False
       if not self.label_2.text == "Income":
         self.edit_card.visible = True
+        self.edit_name.text = app_tables.categories.get(category_id=self.category_right)['name']
       else:
         self.edit_card.visible = False
       
@@ -88,7 +90,42 @@ class Budget(BudgetTemplate):
   def edit_switch_change(self, **event_args):
     if self.edit_switch.checked:
       self.edit_details.visible = True
+      self.edit_name.select()
     else:
       self.edit_details.visible = False
+
+  def change_order(self, **event_args):
+    up = None
+    if event_args['sender'].icon == "fa:angle-up":
+      up = True
+    else:
+      up = False
+      
+    ret = anvil.server.call('order_change',up=up,cat_id=self.category_right)
+      #run a refresh of categories
+      # ret = 'cat' means it's a category, 'uy2346iuy...' = sub_category belongs_to, None means do noting
+    if ret == 'cat':
+      cats = []
+      for cat in app_tables.categories.search(tables.order_by('order')):
+        cat_d = {}
+        cat_d = dict(cat)
+        if cat_d['name'] != 'Income':
+          cats.append(cat_d)
+      open = False
+      for category in self.expense_categories.get_components():
+        #find if opened or not:
+        
+        if category.link_1.icon == "fa:angle-down" and category.item['category_id'] == self.category_right:
+          open = True
+      self.expense_categories.items = []
+      self.expense_categories.items = cats
+      if open:
+        for category in self.expense_categories.get_components():
+          if category.item['category_id'] == self.category_right:
+            category.link_1_click()
+    else:
+      #ret is belongs_to. Find object and reload.
+      for category in self.expense_categories.get_components():
+        if category.item['category_id'] == 
     
     

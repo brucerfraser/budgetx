@@ -141,7 +141,8 @@ components:
             name: edit_name
             properties: {}
             type: TextBox
-          - layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ SUNOXC,LISCFO'}
+          - event_bindings: {click: change_order}
+            layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ SUNOXC,LISCFO'}
             name: button_1
             properties:
               border: solid grey 1px
@@ -154,7 +155,8 @@ components:
               spacing_below: none
               text: ''
             type: Button
-          - layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ MRAPWQ,ZTGSZA'}
+          - event_bindings: {click: change_order}
+            layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ MRAPWQ,ZTGSZA'}
             name: button_1_copy
             properties:
               border: solid grey 1px
