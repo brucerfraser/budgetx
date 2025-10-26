@@ -42,7 +42,7 @@ class Sub_category(Sub_categoryTemplate):
     budg = frame.content_panel.get_components()[0]
     today = date.today()
     period = date(today.year, today.month, 1)
-    budg.load_category_right(self.item['sub_category_id'],period)
+    budg.load_category_right(self.item['sub_category_id'],period,False,self.item['belongs_to'])
     # Make all other sub_cats clickable again (links vis, edit invis)
     budg.reset_sub_categories(self.item['sub_category_id'])
 

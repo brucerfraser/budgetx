@@ -81,6 +81,17 @@ components:
           name: label_2
           properties: {align: center, role: title}
           type: Label
+        - event_bindings: {click: close_cat_click}
+          layout_properties: {grid_position: 'IAFYVU,TBPIJQ'}
+          name: close_cat
+          properties:
+            border: solid grey 1px
+            spacing:
+              margin: [0, null, 0, null]
+              padding: [0, 0, 0, 0]
+            text: X
+            visible: false
+          type: Button
         - components:
           - layout_properties: {grid_position: 'LQGXFM,TGNKYG'}
             name: label_3
@@ -97,7 +108,7 @@ components:
           type: ColumnPanel
         layout_properties: {grid_position: 'XKDAVS,XOZUWW'}
         name: category_view
-        properties: {role: card}
+        properties: {col_widths: '{"CBWLIP":50,"TBPIJQ":10}', role: card}
         type: ColumnPanel
       - components:
         - components:
@@ -137,7 +148,8 @@ components:
             name: spacer_1
             properties: {height: 9}
             type: Spacer
-          - layout_properties: {grid_position: 'FQUFCR,UDHLTY FFMAHY,BMELZT'}
+          - event_bindings: {change: live_name_update, lost_focus: name_change, pressed_enter: name_change}
+            layout_properties: {grid_position: 'FQUFCR,UDHLTY FFMAHY,BMELZT'}
             name: edit_name
             properties: {}
             type: TextBox

@@ -15,6 +15,7 @@ class Budget(BudgetTemplate):
     inc_d = {}
     self.category_right = ""
     self.period_right = None
+    self.cat_sub_cat = None
     for inc in app_tables.categories.search(name='Income'):
       inc_d = dict(inc)
     self.card_2.add_component(Category_holder(item=inc_d))
@@ -44,8 +45,9 @@ class Budget(BudgetTemplate):
   def test_me(self, **event_args):
     print("works!")
 
-  def load_category_right(self,cat,period,big_cat=False, **event_args):
+  def load_category_right(self,cat,period,big_cat=False,b_to='', **event_args):
     self.category_right,self.period_right = cat,period
+    self.cat_sub_cat = b_to
     if not big_cat:
       nts = None
       try:
@@ -55,8 +57,7 @@ class Budget(BudgetTemplate):
         print("error:",e)
         
       sc = app_tables.sub_categories.get(sub_category_id=cat)['name']
-      c_id = app_tables.sub_categories.get(sub_category_id=cat)['belongs_to']
-      c = app_tables.categories.get(category_id=c_id)['name']
+      c = app_tables.categories.get(category_id=b_to)['name']
       self.label_2.text = c + " - " + sc
       self.notes.text = nts
       self.column_panel_2.visible = True
@@ -70,6 +71,7 @@ class Budget(BudgetTemplate):
         self.edit_name.text = app_tables.categories.get(category_id=self.category_right)['name']
       else:
         self.edit_card.visible = False
+    self.close_cat.visible = True
       
 
   def reset_sub_categories(self,cat,**event_args):
@@ -84,8 +86,14 @@ class Budget(BudgetTemplate):
         
 
   def update_notes(self, **event_args):
-    app_tables.budgets.get(belongs_to=self.category_right,
-                           period=self.period_right)['notes'] = self.notes.text
+    if not self.notes.text == '':
+      try:
+        app_tables.budgets.get(belongs_to=self.category_right,
+                            period=self.period_right)['notes'] = self.notes.text
+      except:
+        app_tables.budgets.add_row(belongs_to=self.category_right,
+                                   period=self.period_right,budget_amount=0,
+                                  notes=self.notes.text)
 
   def edit_switch_change(self, **event_args):
     if self.edit_switch.checked:
@@ -126,6 +134,42 @@ class Budget(BudgetTemplate):
     else:
       #ret is belongs_to. Find object and reload.
       for category in self.expense_categories.get_components():
-        if category.item['category_id'] == 
-    
+        if category.item['category_id'] == ret:
+          category.refresh_sub_cats()
+          for sub_cat in category.repeating_panel_1.get_components():
+            if sub_cat.item['sub_category_id'] == self.category_right:
+              sub_cat.link_1_click()
+              break
+
+  def name_change(self, **event_args):
+    ret = anvil.server.call('name_change',cat_id=self.category_right,
+                     new_name=self.edit_name.text)
+    # if ret == 'cat':
+    #   for category in self.expense_categories.get_components():
+    #     category.refresh_data_bindings()
+
+  def live_name_update(self, **event_args):
+    if self.cat_sub_cat == '':
+      #update the category
+      for category in self.expense_categories.get_components():
+        if category.item['category_id'] == self.category_right:
+          category.link_1.text = self.edit_name.text
+          break
+    else:
+      #update the sub_category
+      for category in self.expense_categories.get_components():
+        if category.item['category_id'] == self.cat_sub_cat:
+          for sub_cat in category.repeating_panel_1.get_components():
+            if sub_cat.item['sub_category_id'] == self.category_right:
+              sub_cat.sub_cat_name_edit.text = self.edit_name.text
+              break
+
+  def close_cat_click(self, **event_args):
+    self.reset_sub_categories(cat='')
+    self.close_cat.visible = False
+    self.label_2.text = ""
+    self.column_panel_2.visible = False
+    self.edit_card.visible = False
+          
+          
     

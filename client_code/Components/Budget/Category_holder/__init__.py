@@ -29,6 +29,10 @@ class Category_holder(Category_holderTemplate):
                                                                         belongs_to=self.item['category_id'])
 
 
+  def refresh_sub_cats(self, **event_args):
+    self.repeating_panel_1.items = app_tables.sub_categories.search(tables.order_by('order'),
+                                                                    belongs_to=self.item['category_id'])
+  
   def link_1_click(self, **event_args):
     if self.link_1.icon == 'fa:angle-right':
       self.link_1.icon = 'fa:angle-down'

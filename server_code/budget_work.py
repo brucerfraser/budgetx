@@ -45,14 +45,15 @@ def order_change(up,cat_id):
       # don't bother running refresh on client
       return None
     else:
-      if order == 1 and up:
+      print(order,up)
+      if order == 0 and up:
         # first sub-cat, pressed up: order = count now
-        app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = count
+        app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = count - 1
         for row in app_tables.sub_categories.search(q.not_(sub_category_id=cat_id),belongs_to=b_to):
           row['order'] -= 1
-      elif order == count and not up:
+      elif order == count - 1 and not up:
         # last cat, pressed down: order = 1 now
-        app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = 1
+        app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = 0
         for row in app_tables.sub_categories.search(q.not_(sub_category_id=cat_id),belongs_to=b_to):
           row['order'] += 1
       else:
@@ -60,4 +61,14 @@ def order_change(up,cat_id):
         new = order - 1 if up else order + 1
         app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = new
         app_tables.sub_categories.get(q.not_(sub_category_id=cat_id),order=new,belongs_to=b_to)['order'] = order
-    return 'sub_cat'
+    return b_to
+
+@anvil.server.callable
+def name_change(cat_id,new_name):
+  try:
+    app_tables.categories.get(category_id=cat_id)['name'] = new_name
+    return 'cat'
+  except:
+    app_tables.sub_categories.get(sub_category_id=cat_id)['name'] = new_name
+    b_to = app_tables.sub_categories.get(sub_category_id=cat_id)['belongs_to']
+    return b_to
