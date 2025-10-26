@@ -71,7 +71,34 @@ components:
     properties: {}
     type: ColumnPanel
   - components:
-    - components: []
+    - components:
+      - layout_properties: {grid_position: 'IGQXBP,RUXYJY'}
+        name: top_line
+        properties: {role: card}
+        type: ColumnPanel
+      - components:
+        - layout_properties: {grid_position: 'IAFYVU,CBWLIP'}
+          name: label_2
+          properties: {role: title}
+          type: Label
+        - components:
+          - layout_properties: {grid_position: 'LQGXFM,TGNKYG'}
+            name: label_3
+            properties: {text: 'Notes:'}
+            type: Label
+          - event_bindings: {lost_focus: update_notes}
+            layout_properties: {grid_position: 'LQGXFM,QICDMB'}
+            name: notes
+            properties: {height: 74, text: Type notes here}
+            type: TextArea
+          layout_properties: {grid_position: 'OERUHS,UHDXZV'}
+          name: column_panel_2
+          properties: {col_widths: '{"TGNKYG":15,"QICDMB":45}'}
+          type: ColumnPanel
+        layout_properties: {grid_position: 'XKDAVS,XOZUWW'}
+        name: category_view
+        properties: {role: card}
+        type: ColumnPanel
       layout_properties: {full_width_row: true, grid_position: 'UEQBKL,UCQTDA'}
       name: card_1
       properties:

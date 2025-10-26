@@ -4,13 +4,23 @@ components:
     - components:
       - data_bindings:
         - {code: 'self.item[''name'']', property: text, writeback: false}
-        layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,DUXXAK'}
+        layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,EUDPDW'}
         name: sub_cat_name
-        properties: {spacing_above: none, spacing_below: none}
-        type: Link
+        properties:
+          spacing:
+            margin: [6, null, 0, null]
+            padding: [0, null, 0, null]
+          spacing_above: small
+          spacing_below: none
+        type: Label
       - layout_properties: {grid_position: 'OXJHKJ,XEJEMU'}
-        name: budgets
-        properties: {}
+        name: budget
+        properties:
+          align: center
+          spacing:
+            margin: [6, null, 0, null]
+            padding: [0, null, 0, null]
+          spacing_below: none
         type: Label
       - layout_properties: {grid_position: 'OXJHKJ,JVLNUI'}
         name: actual
@@ -60,7 +70,7 @@ components:
         type: number
       type: TextBox
     - layout_properties: {grid_position: 'OXJHKJ,JVLNUI'}
-      name: actual_copy
+      name: actual_edit
       properties:
         align: center
         spacing:
@@ -73,7 +83,7 @@ components:
       properties: {height: '1'}
       type: Spacer
     - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
-      name: progress_bar_1_copy
+      name: progress_bar_1_edit
       properties: {max_value: 100, min_value: -100, value: 23}
       type: form:Components.ProgressBar
     layout_properties: {full_width_row: true, grid_position: 'NKBVXG,VKGXVW'}
