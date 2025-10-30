@@ -46,7 +46,7 @@ components:
     name: column_panel_1
     properties: {}
     type: ColumnPanel
-  - layout_properties: {grid_position: 'SRXKND,EXQWNK'}
+  - layout_properties: {grid_position: 'SRXKND,EXQWNK', row_background: ''}
     name: repeating_panel_1
     properties: {item_template: Components.Budget.Category_holder.Sub_category, spacing_above: none, spacing_below: none, visible: false}
     type: RepeatingPanel

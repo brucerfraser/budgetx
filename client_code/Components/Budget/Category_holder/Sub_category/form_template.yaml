@@ -41,7 +41,7 @@ components:
         type: form:Components.ProgressBar
       layout_properties: {full_width_row: true, grid_position: 'EDIEGX,DEDJPQ'}
       name: current_column_panel
-      properties: {}
+      properties: {background: ''}
       type: ColumnPanel
     event_bindings: {click: link_1_click}
     layout_properties: {full_width_row: true, grid_position: 'UBUHDT,WJBCDD'}
@@ -89,6 +89,7 @@ components:
     layout_properties: {full_width_row: true, grid_position: 'NKBVXG,VKGXVW'}
     name: edit_column_panel
     properties:
+      background: ''
       spacing:
         margin: [0, null, 0, null]
       spacing_above: none
@@ -106,7 +107,11 @@ components:
     spacing_below: none
   type: ColumnPanel
 container:
+  data_bindings: []
+  event_bindings: {show: form_show}
   properties:
+    background: ''
+    role: boundary-horiz
     spacing:
       margin: [0, null, 0, null]
     spacing_above: none

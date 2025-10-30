@@ -27,17 +27,31 @@ class Category_holder(Category_holderTemplate):
       if self.link_1.icon == 'fa:angle-down':
         self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),tables.order_by("order"),
                                                                         belongs_to=self.item['category_id'])
-
+        odd = False
+        for sc in self.repeating_panel_1.get_components():
+          if odd:
+            sc.background = 'grey'
+          odd = not odd
 
   def refresh_sub_cats(self, **event_args):
     self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),
                                                                     tables.order_by('order'),
                                                                     belongs_to=self.item['category_id'])
+    odd = False
+    for sc in self.repeating_panel_1.get_components():
+      if odd:
+        sc.background = 'grey'
+      odd = not odd
   
   def link_1_click(self, **event_args):
     if self.link_1.icon == 'fa:angle-right':
       self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),tables.order_by('order'),
                                                                       belongs_to=self.item['category_id'])
+      # odd = False
+      # for sc in self.repeating_panel_1.get_components():
+      #   if odd:
+      #     sc.bg_set()
+      #   odd = not odd
       self.link_1.icon = 'fa:angle-down'
       self.repeating_panel_1.visible = True
     else:

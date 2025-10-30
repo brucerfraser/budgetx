@@ -64,6 +64,9 @@ class Frame(FrameTemplate):
     self.content_panel.add_component(Transactions())
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.transactions_page_link.background = app.theme_colors['Primary Container']
+    clear_list = [self.reports_page_link,self.budget_page_link,self.dashboard_page_link]
+    for obj in clear_list:
+      obj.background = "transparent"
     
 
   def load_transactions(self, **event_args):

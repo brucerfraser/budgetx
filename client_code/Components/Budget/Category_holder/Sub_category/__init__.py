@@ -51,3 +51,8 @@ class Sub_category(Sub_categoryTemplate):
     self.link_1.visible = False
     """This method is called when the link is clicked"""
     pass
+
+  def bg_set(self,**event_args):
+    self.current_column_panel.background = 'theme:Secondary Container'
+    self.edit_column_panel.background = 'theme:Secondary Container'
+
