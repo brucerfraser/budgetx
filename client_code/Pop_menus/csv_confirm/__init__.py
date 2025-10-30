@@ -67,7 +67,7 @@ class csv_confirm(csv_confirmTemplate):
       hashes = []
       for re in r:
         hashes.append(re['hash'])
-        self.duplicate.text = "Of the {l} transactions loaded,\
+      self.duplicate.text = "Of the {l} transactions loaded,\
  {d} are duplicates\
  and will be ignored".format(l=len(r),
               d=anvil.server.call('duplicate_check',hashes))

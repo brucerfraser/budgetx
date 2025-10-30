@@ -133,19 +133,31 @@ def make_ready(account,trans_list,accounts=None):
   if not accounts:
     accounts = account_finder(None,False)
   if account:
+    print("account good")
     try:
       deets = list(filter(lambda d: d['acc_id'] == account, accounts))      
       ready_transactions = []
+      print(len(trans_list))
+      t1 = 0
       for t in trans_list:
         d = {}
+        t2 = 0
         for key in all_trans_keys:
           if key in deets[0]['key_map']:
             d[key] = t[deets[0]['key_map'][key]]
+          t2 += 1
+          if t2 == 2000:
+            print('t2 auto stop')
+            break
         d['account'] = account
         # daymonthyearamountaccount
         d['hash'] = str(parse(d['date']).day) + str(parse(d['date']).month) + str(parse(d['date']).year) + d['amount'] + d['account']
         d['transaction_id'] = need_an_id()
         ready_transactions.append(d)
+        t1 += 1
+        if t1 == 2000:
+          print('t1 auto stop')
+          break
         # ready for transport back to client
       return ready_transactions,trans_list
     except:
