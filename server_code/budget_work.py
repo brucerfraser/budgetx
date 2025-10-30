@@ -13,7 +13,7 @@ def order_change(up,cat_id):
   try:
     order = app_tables.categories.get(category_id=cat_id)['order']
     count = -1
-    for row in app_tables.categories.search():
+    for row in app_tables.categories.search(q.not_(order=-1)):
       count += 1
     if count == 1:
       # don't bother running refresh on client
@@ -22,12 +22,16 @@ def order_change(up,cat_id):
       if order == 1 and up:
         # first cat, pressed up: order = count now
         app_tables.categories.get(category_id=cat_id)['order'] = count
-        for row in app_tables.categories.search(q.not_(category_id=cat_id),q.not_(name="Income")):
+        for row in app_tables.categories.search(q.not_(category_id=cat_id),
+                                                q.not_(name="Income"),
+                                               q.not_(order=-1)):
           row['order'] -= 1
       elif order == count and not up:
         # last cat, pressed down: order = 1 now
         app_tables.categories.get(category_id=cat_id)['order'] = 1
-        for row in app_tables.categories.search(q.not_(category_id=cat_id),q.not_(name="Income")):
+        for row in app_tables.categories.search(q.not_(category_id=cat_id),
+                                                q.not_(name="Income"),
+                                               q.not_(order=-1)):
           row['order'] += 1
       else:
         # any cat moving into middle of cats
@@ -39,22 +43,24 @@ def order_change(up,cat_id):
     order = app_tables.sub_categories.get(sub_category_id=cat_id)['order']
     b_to = app_tables.sub_categories.get(sub_category_id=cat_id)['belongs_to']
     count = 0
-    for row in app_tables.sub_categories.search(belongs_to=b_to):
+    for row in app_tables.sub_categories.search(q.not_(order=-1),belongs_to=b_to):
       count += 1
     if count == 1:
       # don't bother running refresh on client
       return None
     else:
-      print(order,up)
+      # print(order,up)
       if order == 0 and up:
         # first sub-cat, pressed up: order = count now
         app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = count - 1
-        for row in app_tables.sub_categories.search(q.not_(sub_category_id=cat_id),belongs_to=b_to):
+        for row in app_tables.sub_categories.search(q.not_(sub_category_id=cat_id),
+                                                    q.not_(order=-1),belongs_to=b_to):
           row['order'] -= 1
       elif order == count - 1 and not up:
         # last cat, pressed down: order = 1 now
         app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = 0
-        for row in app_tables.sub_categories.search(q.not_(sub_category_id=cat_id),belongs_to=b_to):
+        for row in app_tables.sub_categories.search(q.not_(sub_category_id=cat_id),
+                                                    q.not_(order=-1),belongs_to=b_to):
           row['order'] += 1
       else:
         # any cat moving into middle of cats
@@ -72,3 +78,17 @@ def name_change(cat_id,new_name):
     app_tables.sub_categories.get(sub_category_id=cat_id)['name'] = new_name
     b_to = app_tables.sub_categories.get(sub_category_id=cat_id)['belongs_to']
     return b_to
+
+@anvil.server.callable
+def archive(b_to,cat_id):
+  if b_to == '':
+    ord = app_tables.categories.get(category_id=cat_id)['order']
+    app_tables.categories.get(category_id=cat_id)['order'] = -1
+    for cat in app_tables.categories.search(order=q.greater_than(ord)):
+      cat['order'] -= 1
+  else:
+    ord = app_tables.sub_categories.get(sub_category_id=cat_id)['order']
+    app_tables.sub_categories.get(sub_category_id=cat_id)['order'] = -1
+    for cat in app_tables.sub_categories.search(order=q.greater_than(ord),
+                                               belongs_to=b_to):
+      cat['order'] -= 1

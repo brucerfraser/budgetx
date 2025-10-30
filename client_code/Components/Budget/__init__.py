@@ -24,7 +24,7 @@ class Budget(BudgetTemplate):
     for cat in app_tables.categories.search(tables.order_by('order')):
       cat_d = {}
       cat_d = dict(cat)
-      if cat_d['name'] != 'Income':
+      if cat_d['name'] != 'Income' and cat_d['order'] != -1:
         cats.append(cat_d)
   
     self.expense_categories.items = cats
@@ -78,7 +78,7 @@ class Budget(BudgetTemplate):
     for category in self.expense_categories.get_components():
       # print(category)
       if category.link_1.icon == "fa:angle-down":
-        #sub-cates are open
+        #sub-cats are open
         for sub_cat in category.repeating_panel_1.get_components():
           if sub_cat.item["sub_category_id"] != cat:
             sub_cat.edit_column_panel.visible = False
@@ -114,7 +114,7 @@ class Budget(BudgetTemplate):
       # ret = 'cat' means it's a category, 'uy2346iuy...' = sub_category belongs_to, None means do noting
     if ret == 'cat':
       cats = []
-      for cat in app_tables.categories.search(tables.order_by('order')):
+      for cat in app_tables.categories.search(q.not_(order=-1),tables.order_by('order')):
         cat_d = {}
         cat_d = dict(cat)
         if cat_d['name'] != 'Income':
@@ -170,6 +170,38 @@ class Budget(BudgetTemplate):
     self.label_2.text = ""
     self.column_panel_2.visible = False
     self.edit_card.visible = False
+
+  def archive_click(self, **event_args):
+    if alert("Archive {c}? You can undo this in settings later.".format(c=self.label_2.text),
+              title="Archive a category",buttons=[("Cancel",False),("Archive",True)]):
+      anvil.server.call('archive',b_to=self.cat_sub_cat,cat_id=self.category_right)
+      self.close_cat_click()
+      #run a refresh of categories
+      # use cat_sub_cat for knowing if cat or sub_cat
+      if self.cat_sub_cat == '':
+        cats = []
+        for cat in app_tables.categories.search(q.not_(order=-1),tables.order_by('order')):
+          cat_d = {}
+          cat_d = dict(cat)
+          if cat_d['name'] != 'Income':
+            cats.append(cat_d)
+        open = False
+        for category in self.expense_categories.get_components():
+          #find if opened or not:
+          if category.link_1.icon == "fa:angle-down" and category.item['category_id'] == self.category_right:
+            open = True
+        self.expense_categories.items = []
+        self.expense_categories.items = cats
+        if open:
+          for category in self.expense_categories.get_components():
+            if category.item['category_id'] == self.category_right:
+              category.link_1_click()
+      else:
+        # Sub_cat. Find it and reload.
+        for category in self.expense_categories.get_components():
+          if category.item['category_id'] == self.cat_sub_cat:
+            category.refresh_sub_cats()
+            
           
           
     

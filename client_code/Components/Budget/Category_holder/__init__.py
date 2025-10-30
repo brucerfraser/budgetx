@@ -25,24 +25,21 @@ class Category_holder(Category_holderTemplate):
         del result[a]
       app_tables.sub_categories.add_row(**result)
       if self.link_1.icon == 'fa:angle-down':
-        self.repeating_panel_1.items = app_tables.sub_categories.search(tables.order_by("order"),
+        self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),tables.order_by("order"),
                                                                         belongs_to=self.item['category_id'])
 
 
   def refresh_sub_cats(self, **event_args):
-    self.repeating_panel_1.items = app_tables.sub_categories.search(tables.order_by('order'),
+    self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),
+                                                                    tables.order_by('order'),
                                                                     belongs_to=self.item['category_id'])
   
   def link_1_click(self, **event_args):
     if self.link_1.icon == 'fa:angle-right':
-      self.link_1.icon = 'fa:angle-down'
-      
-      self.repeating_panel_1.items = app_tables.sub_categories.search(tables.order_by('order'),
+      self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),tables.order_by('order'),
                                                                       belongs_to=self.item['category_id'])
+      self.link_1.icon = 'fa:angle-down'
       self.repeating_panel_1.visible = True
-      
-      
-      
     else:
       self.link_1.icon = 'fa:angle-right'
       self.repeating_panel_1.visible = False
