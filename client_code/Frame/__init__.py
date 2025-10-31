@@ -97,6 +97,9 @@ class Frame(FrameTemplate):
                    buttons=[])
     if result:
       anvil.server.call('save_transactions',ready_list=result)
+      self.file_loader_1.clear()
+    else:
+      self.file_loader_1.clear()
     # print(result)
 
   def dashboard_page_link_click(self, **event_args):

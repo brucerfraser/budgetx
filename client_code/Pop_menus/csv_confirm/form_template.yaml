@@ -27,7 +27,8 @@ components:
     name: duplicate
     properties: {text: Of the x transactions...}
     type: Label
-  - layout_properties: {grid_position: 'JQEURP,AXRJCA'}
+  - event_bindings: {click: cancel_click}
+    layout_properties: {grid_position: 'JQEURP,AXRJCA'}
     name: cancel
     properties: {text: cancel}
     type: Button

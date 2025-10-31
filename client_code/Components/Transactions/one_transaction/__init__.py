@@ -23,7 +23,14 @@ class one_transaction(one_transactionTemplate):
         break
     self.account.text = self.account_name
     
-
+  def set_bg(self,odd,**event_args):
+    objs = [self.account,self.date,self.amount,self.category,self.description,self.card_1,
+           self.card_2,self.card_3,self.card_4,self.card_5,self.card_6]
+    for obj in objs:
+      if odd:
+        obj.background = "#2B383E"
+      else:
+        obj.background = "#595A3B"
 
   def click_date(self, **event_args):
     self.date_picker_1.visible = True

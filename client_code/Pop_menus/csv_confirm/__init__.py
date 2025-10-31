@@ -71,3 +71,6 @@ class csv_confirm(csv_confirmTemplate):
  {d} are duplicates\
  and will be ignored".format(l=len(r),
               d=anvil.server.call('duplicate_check',hashes))
+
+  def cancel_click(self, **event_args):
+    self.raise_event("x-close-alert",value=None)

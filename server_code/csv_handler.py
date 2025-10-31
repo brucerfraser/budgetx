@@ -21,7 +21,6 @@ def read_file(fn):
 
   # Convert bytes to a string.
   mString = str(mBytes, "utf-8")
-  #   app_tables.flights.get(uid=anvil.users.get_user()['uid'])['log_string'] = mString
   # Create a list of lines split on \n
   line_list = mString.split('\n')
   # which line is the header?
@@ -58,7 +57,7 @@ def header_words(csv_output, header):
   word_list = []
   for l in csv_output[0:header]:
     for word in re.findall(r'[a-zA-Z0-9]+', l):
-      word_list.append(word)
+      word_list.append(word.lower())
   return word_list
 
 @anvil.server.callable
@@ -79,7 +78,7 @@ def account_finder(keys=None,match=True):
       match = True
       if len(acc['acc_keywords']) > 0:
         for key in acc['acc_keywords']:
-          if not key in keys:
+          if key.lower() not in keys:
             match = False
         if match:
           acc_id = acc['acc_id']
