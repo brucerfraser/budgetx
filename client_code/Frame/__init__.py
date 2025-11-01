@@ -23,13 +23,13 @@ class Frame(FrameTemplate):
     
     #Present users with a login form with just one line of code:
     #anvil.users.login_with_form()
-    
+    Global.make_date()
     #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
-    # self.first_run_income()
+    
 
   def first_run_income(self,**event_args):
     app_tables.categories.add_row(category_id=Global.new_id_needed(),
