@@ -10,16 +10,21 @@ import calendar
 from datetime import date
 
 class Transactions(TransactionsTemplate):
-  def __init__(self, **properties):
+  def __init__(self,dash=False, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    p = Global.PERIOD
-    days_in_month = calendar.monthrange(p[1], p[0])[1]
-    last_day = date(p[1], p[0], days_in_month)
-    first_day = date(p[1], p[0], 1)
-    print(days_in_month,last_day, first_day)
+    self.load_me(dash)
+    if dash:
+      self.card_3.role = 'fixed-holder'
+      self.card_header.visible = False
+    else:
+      self.card_3.role = 'fixed-holder-page'
+    
+
+  def load_me(self,dash,**event_args):
+    fd,ld = self.date_me(dash)
     self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
-                                                                 date=q.between(first_day,last_day,True,True))
+                                                                  date=q.between(fd,ld,True,True))
     odd = True
     for trans in self.repeating_panel_1.get_components():
       if odd:
@@ -27,6 +32,17 @@ class Transactions(TransactionsTemplate):
       else:
         trans.set_bg(False)
       odd = not odd
-    # Any code you write here will run before the form opens.
+  
+  def date_me(self,dash,**event_args):
+    m,y = None,None
+    if dash:
+      m = date.today().month
+      y = date.today().year
+    else:
+      p = Global.PERIOD
+      m = p[0]
+      y = p[1]
+    days_in_month = calendar.monthrange(y, m)[1]
+    return date(y,m,1),date(y,m,days_in_month)
 
 

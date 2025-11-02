@@ -23,7 +23,7 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
     
 
   def load_everything(self, **event_args):
-    self.link_transactions.add_component(Transactions())
+    self.link_transactions.add_component(Transactions(dash=True))
     self.link_budget.add_component(Budget_mini())
     self.link_report.add_component(Reports_mini())
     

@@ -22,7 +22,7 @@ def new_id_needed():
 def make_date(m=None,y=None):
   global PERIOD
   if m:
-    pass
+    PERIOD = (m,y)
   else:
     t = date.today()
     PERIOD = (t.month-2,t.year)

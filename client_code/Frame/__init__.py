@@ -29,12 +29,16 @@ class Frame(FrameTemplate):
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
+    # self.update_numbers()
     
 
-  def first_run_income(self,**event_args):
-    app_tables.categories.add_row(category_id=Global.new_id_needed(),
-                                 order=1,name="Income",colour="#1EB980")
-
+  def update_numbers(self,**event_args):
+    for row in app_tables.transactions.search():
+      amt = row['amount']
+      
+      
+  
+  
   def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Sales Form

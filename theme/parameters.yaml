@@ -313,3 +313,5 @@ roles:
 - components: [Label]
   name: label-right
 - {name: boundary-horiz}
+- components: [Link, RepeatingPanel, ColumnPanel]
+  name: fixed-holder-page

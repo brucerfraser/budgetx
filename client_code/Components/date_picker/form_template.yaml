@@ -1,0 +1,31 @@
+components:
+- components:
+  - components:
+    - event_bindings: {click: prev_click}
+      layout_properties: {}
+      name: prev
+      properties: {font_size: 18, icon: 'fa:chevron-left', text: PREV}
+      type: Button
+    - event_bindings: {change: drop_down_1_change}
+      layout_properties: {}
+      name: drop_down_1
+      properties: {font_size: 18}
+      type: DropDown
+    - event_bindings: {click: next_click}
+      layout_properties: {}
+      name: next
+      properties: {font_size: 18, icon: 'fa:chevron-right', icon_align: right, text: NEXT}
+      type: Button
+    layout_properties: {full_width_row: true, grid_position: 'LSULLT,DVVLDQ'}
+    name: flow_panel_1
+    properties: {align: center}
+    type: FlowPanel
+  layout_properties: {full_width_row: true, grid_position: 'OEPGWV,HUMYUA'}
+  name: card_1
+  properties: {role: card}
+  type: ColumnPanel
+container:
+  event_bindings: {show: form_show}
+  type: ColumnPanel
+custom_component: true
+is_package: true

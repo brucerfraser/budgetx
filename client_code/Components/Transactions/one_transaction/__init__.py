@@ -58,4 +58,9 @@ class one_transaction(one_transactionTemplate):
     # have to change the hash here
     self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year)+ str(self.item['amount']) + self.item['account']
 
+  def amount_click(self, **event_args):
+    self.text_box_1.visible = True
+    self.text_box_1.focus()
+    self.amount.visible = False
+
   

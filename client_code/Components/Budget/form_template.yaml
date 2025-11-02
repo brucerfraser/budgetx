@@ -3,32 +3,10 @@ components:
   - components:
     - components:
       - components:
-        - layout_properties: {grid_position: 'MOUXVZ,PESFVZ'}
-          name: link_3
-          properties:
-            align: right
-            font_size: 30
-            spacing:
-              margin: [0, null, 0, null]
-            spacing_above: none
-            spacing_below: none
-            text: <
-          type: Link
-        - layout_properties: {grid_position: 'MOUXVZ,TFXBSJ'}
-          name: link_1
-          properties:
-            align: center
-            role: title
-            spacing:
-              margin: [8, null, 0, null]
-            spacing_above: none
-            spacing_below: none
-            text: October 2025
-          type: Link
-        - layout_properties: {grid_position: 'MOUXVZ,ZEETTM'}
-          name: link_2
-          properties: {font_size: 30, spacing_above: none, spacing_below: none, text: '>'}
-          type: Link
+        - layout_properties: {grid_position: 'JMRLBA,QGCDCG'}
+          name: date_picker_1
+          properties: {}
+          type: form:Components.date_picker
         layout_properties: {grid_position: 'ABRJPF,EHDCBW'}
         name: card_month_picker
         properties:

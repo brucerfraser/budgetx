@@ -30,6 +30,9 @@ class Budget(BudgetTemplate):
     self.expense_categories.items = cats
     
 
+  def load_me(self,dash,**event_args):
+    pass
+  
   def add_category_click(self, **event_args):
     from ...Pop_menus.work_a_category import work_a_category
     c = work_a_category()
