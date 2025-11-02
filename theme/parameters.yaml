@@ -29,6 +29,7 @@ color_scheme:
   - {color: 'rgba(30, 185, 128, 0.05)', name: Primary Overlay 1}
   - {color: 'rgba(30, 185, 128, 0.08)', name: Primary Overlay 2}
   - {color: 'rgba(30, 185, 128, 0.11)', name: Primary Overlay 3}
+  - {color: '#B87C4C', name: Amount Negative}
   preset_groups:
   - name: Colour Scheme
     options:

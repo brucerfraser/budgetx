@@ -7,6 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from .... import Global
 from datetime import date, datetime
+import math
 
 
 
@@ -16,12 +17,27 @@ class one_transaction(one_transactionTemplate):
     self.dd_list = Global.ACCOUNTS
     self.init_components(**properties)
     self.date.tag = 'date'
-    self.account_name = '
+    self.account_name = ''
+    # date checker for when date drop down is "changed"...it still fires even if the date 
+    # comes back the same, which would waste time refreshing the page
+    self.check_date_change = date(2000,1,1)
     for f in self.dd_list:
       if self.item['account'] == f[1]:
         self.account_name = f[0]
         break
     self.account.text = self.account_name
+    self.categorise()
+
+    
+  def categorise(self,**event_args):
+    names_list = sorted(list(map(lambda x: x['display'], Global.CATEGORIES.values())))
+    self.autocomplete_1.suggestions = names_list
+    if self.item['category'] == None:
+      self.category.text = "None"
+    else:
+      self.category.text = Global.CATEGORIES[self.item['category']][0]
+      self.category.background = Global.CATEGORIES[self.item['category']][1]
+      self.autocomplete_1.text = self.category.text
     
   def set_bg(self,odd,**event_args):
     objs = [self.account,self.date,self.amount,self.category,self.description,self.card_1,
@@ -31,20 +47,31 @@ class one_transaction(one_transactionTemplate):
         obj.background = "#2B383E"
       else:
         obj.background = "#595A3B"
+    if self.item['amount'] < 0:
+      self.amount.foreground = 'theme:Amount Negative'
+    if self.item['category'] == None:
+      self.category.background = 'theme:Amount Negative'
 
   def click_date(self, **event_args):
+    self.check_date_change = self.item['date']
     self.date_picker_1.visible = True
     self.date_picker_1.focus()
     self.date.visible = False
 
   def date_picker_1_change(self, **event_args):
-    self.parent.items = app_tables.transactions.search()
+    # we should re-load if date has actually changed
+    if self.item['date'] != self.check_date_change:
+      frame = get_open_form()
+      frm = frame.content_panel.get_components()[0]
+      frm.load_me(False)
     self.date_picker_1.visible = False
     self.date.visible = True
+    
 
   def click_account(self, **event_args):
     self.drop_down_1.visible = True
     self.drop_down_1.focus()
+    # self.drop_down_1.
     self.account.visible = False
 
   def drop_down_1_change(self, **event_args):
@@ -57,10 +84,42 @@ class one_transaction(one_transactionTemplate):
     self.drop_down_1.visible = False
     # have to change the hash here
     self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year)+ str(self.item['amount']) + self.item['account']
-
+  
   def amount_click(self, **event_args):
     self.text_box_1.visible = True
     self.text_box_1.focus()
     self.amount.visible = False
 
+  def some_lose_focus(self,**event_args):
+    # must update here...
+    self.item['amount'] = int(math.floor(self.text_box_1.text*100))
+    self.amount.visible = True
+    self.text_box_1.visible = False
+
+  def drop_down_1_hide(self, **event_args):
+    print('fired')
+
+  def description_click(self, **event_args):
+    self.text_box_2.visible = True
+    self.text_box_2.focus()
+    self.description.visible = False
+
+  def desc_lose_focus(self, **event_args):
+    self.refresh_data_bindings()
+    self.description.visible = True
+    self.text_box_2.visible = False
+
+  def category_click(self, **event_args):
+    self.autocomplete_1.visible = True
+    if self.autocomplete_1.text == '':
+      self.autocomplete_1.focus()
+    self.category.visible = False
+
+  def category_choose(self,**event_args):
+    self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
+    print(self.item['category'])
+    self.category.text = self.autocomplete_1.text
+    self.category.background = Global.CATEGORIES[self.item['category']][1]
+    self.category.visible = True
+    self.autocomplete_1.visible = False
   

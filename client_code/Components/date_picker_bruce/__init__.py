@@ -1,4 +1,4 @@
-from ._anvil_designer import date_pickerTemplate
+from ._anvil_designer import date_picker_bruceTemplate
 from anvil import *
 import anvil.server
 import anvil.users
@@ -9,7 +9,7 @@ from ... import Global
 import calendar
 from datetime import date
 
-class date_picker(date_pickerTemplate):
+class date_picker_bruce(date_picker_bruceTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)

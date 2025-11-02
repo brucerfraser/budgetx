@@ -12,6 +12,7 @@ from .Dashboard_Screen import Dashboard_Screen
 from ..Components.Transactions import Transactions
 from ..Components.Budget import Budget
 from ..Components.Reports import Reports
+import math
 
 from .. import Global
 
@@ -32,9 +33,12 @@ class Frame(FrameTemplate):
     # self.update_numbers()
     
 
-  def update_numbers(self,**event_args):
-    for row in app_tables.transactions.search():
-      amt = row['amount']
+  # def update_numbers(self,**event_args):
+  #   for row in app_tables.transactions.search():
+  #     amt = row['amount']
+  #     amt = int(math.floor(amt*100))
+  #     row['amount'] = amt
+      
       
       
   

@@ -3,5 +3,10 @@ components:
   name: label_1
   properties: {text: Hello world}
   type: Label
+- event_bindings: {pressed_enter: autocomplete_1_pressed_enter, suggestion_clicked: autocomplete_1_pressed_enter}
+  layout_properties: {grid_position: 'HBANPG,TGGDJN'}
+  name: autocomplete_1
+  properties: {suggest_if_empty: true}
+  type: form:dep_6plivhjd0selve:Autocomplete
 container: {type: ColumnPanel}
 is_package: true

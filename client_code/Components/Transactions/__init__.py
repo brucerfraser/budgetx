@@ -25,13 +25,19 @@ class Transactions(TransactionsTemplate):
     fd,ld = self.date_me(dash)
     self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
                                                                   date=q.between(fd,ld,True,True))
-    odd = True
+    odd,i,o = True,0,0
     for trans in self.repeating_panel_1.get_components():
       if odd:
         trans.set_bg(True)
       else:
         trans.set_bg(False)
       odd = not odd
+      if trans.item['amount'] < 0:
+        o += trans.item['amount']
+      else:
+        i += trans.item['amount']
+    self.inflow.text = "Inflow: R{a:.2f}".format(a=i/100)
+    self.outflow.text = "Outflow: R{a:.2f}".format(a=o/100)
   
   def date_me(self,dash,**event_args):
     m,y = None,None

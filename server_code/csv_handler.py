@@ -10,6 +10,7 @@ import re
 import uuid
 from dateutil.parser import parse
 from datetime import date, datetime
+import math
 
 transaction_keys = {'date':'Value Date','description':'Description','amount':'Amount'}
 all_trans_keys = ['date','description','amount','account','notes','hash']
@@ -180,9 +181,11 @@ def save_transactions(ready_list):
   for t in ready_list:
     if len(list(app_tables.transactions.search(hash=t['hash']))) == 0:
       t['date'] = parse(t['date']).date()
-      t['amount'] = float(t['amount'])
+      t['amount'] = update_numbers(t['amount'])
       app_tables.transactions.add_row(**t)
-          
+
+def update_numbers(num):
+  return int(math.floor(num*100))
 
 def find_sep_quote(list_obj):
   s_c = 0

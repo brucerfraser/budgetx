@@ -4,9 +4,9 @@ components:
     - components:
       - components:
         - layout_properties: {grid_position: 'JMRLBA,QGCDCG'}
-          name: date_picker_1
+          name: date_picker_bruce_1
           properties: {}
-          type: form:Components.date_picker
+          type: form:Components.date_picker_bruce
         layout_properties: {grid_position: 'ABRJPF,EHDCBW'}
         name: card_month_picker
         properties:
