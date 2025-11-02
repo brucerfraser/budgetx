@@ -35,8 +35,9 @@ class one_transaction(one_transactionTemplate):
     if self.item['category'] == None:
       self.category.text = "None"
     else:
-      self.category.text = Global.CATEGORIES[self.item['category']][0]
-      self.category.background = Global.CATEGORIES[self.item['category']][1]
+      print(Global.CATEGORIES[self.item['category']])
+      self.category.text = Global.CATEGORIES[self.item['category']]['display']
+      self.category.background = Global.CATEGORIES[self.item['category']]['colour']
       self.autocomplete_1.text = self.category.text
     
   def set_bg(self,odd,**event_args):
@@ -51,6 +52,8 @@ class one_transaction(one_transactionTemplate):
       self.amount.foreground = 'theme:Amount Negative'
     if self.item['category'] == None:
       self.category.background = 'theme:Amount Negative'
+    else:
+      self.category.background = Global.CATEGORIES[self.item['category']]['colour']
 
   def click_date(self, **event_args):
     self.check_date_change = self.item['date']
@@ -117,9 +120,19 @@ class one_transaction(one_transactionTemplate):
 
   def category_choose(self,**event_args):
     self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
-    print(self.item['category'])
     self.category.text = self.autocomplete_1.text
-    self.category.background = Global.CATEGORIES[self.item['category']][1]
+    self.category.background = Global.CATEGORIES[self.item['category']]['colour']
     self.category.visible = True
     self.autocomplete_1.visible = False
+
+  def autocomplete_1_lost_focus(self, **event_args):
+    if self.item['category']:
+      self.autocomplete_1.text = self.category.text
+      self.category.visible = True
+      self.autocomplete_1.visible = False
+    else:
+      self.category.text = "None"
+      self.category.background = 'theme:Amount Negative'
+      self.category.visible = True
+      self.autocomplete_1.visible = False
   

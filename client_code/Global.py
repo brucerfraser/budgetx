@@ -39,7 +39,7 @@ def make_date(m=None,y=None):
     PERIOD = (m,y)
   else:
     t = date.today()
-    PERIOD = (t.month-2,t.year)
+    PERIOD = (t.month,t.year)
 
 all_categories()
 

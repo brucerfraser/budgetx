@@ -22,6 +22,7 @@ components:
     layout_properties: {grid_position: 'JDVOSO,CQSMXF'}
     name: column_panel_2
     properties:
+      background: theme:Surface
       spacing:
         margin: [0, null, 0, null]
       spacing_above: none
@@ -36,7 +37,7 @@ components:
     - components:
       - components:
         - data_bindings: []
-          event_bindings: {click: click_date}
+          event_bindings: {}
           layout_properties: {grid_position: 'HGNXIH,NLPWFV'}
           name: date
           properties:
@@ -61,7 +62,7 @@ components:
         type: ColumnPanel
       - components:
         - data_bindings: []
-          event_bindings: {click: click_account}
+          event_bindings: {}
           layout_properties: {grid_position: 'ZTGZZC,XCSHEU', row_background: ''}
           name: account
           properties:
@@ -87,7 +88,7 @@ components:
         type: ColumnPanel
       - components:
         - data_bindings: []
-          event_bindings: {click: amount_click}
+          event_bindings: {}
           layout_properties: {grid_position: 'WNTNHE,UFSQYS'}
           name: amount
           properties: {background: '', bold: true, font_size: 12, foreground: 'theme:Tertiary', spacing_above: none, spacing_below: none, text: AMOUNT}
@@ -104,10 +105,11 @@ components:
         type: ColumnPanel
       - components:
         - data_bindings: []
-          event_bindings: {click: description_click}
+          event_bindings: {}
           layout_properties: {grid_position: 'ZGHVTN,WMGROZ'}
           name: description
           properties:
+            background: ''
             bold: true
             font_size: 12
             foreground: theme:Tertiary
@@ -128,10 +130,10 @@ components:
           spacing_below: none
         type: ColumnPanel
       - components:
-        - event_bindings: {click: category_click}
+        - event_bindings: {}
           layout_properties: {grid_position: 'KINLCT,RZNWRY'}
           name: category
-          properties: {bold: true, font_size: 12, foreground: 'theme:Tertiary', spacing_above: none, spacing_below: none, text: CATEGORY}
+          properties: {background: '', bold: true, font_size: 12, foreground: 'theme:Tertiary', spacing_above: none, spacing_below: none, text: CATEGORY}
           type: Link
         layout_properties: {grid_position: 'NWTHGK,IHUSGZ'}
         name: card_6

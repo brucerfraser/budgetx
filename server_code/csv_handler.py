@@ -181,7 +181,7 @@ def save_transactions(ready_list):
   for t in ready_list:
     if len(list(app_tables.transactions.search(hash=t['hash']))) == 0:
       t['date'] = parse(t['date']).date()
-      t['amount'] = update_numbers(t['amount'])
+      t['amount'] = update_numbers(float(t['amount']))
       app_tables.transactions.add_row(**t)
 
 def update_numbers(num):
