@@ -48,9 +48,9 @@ class Transactions(TransactionsTemplate):
       return date(y,m,1),date(y,m,days_in_month)
     else:
       p = Global.PERIOD
-      if p[2]:
+      if p[0] + p[1] == 0:
         #we have a custom
-        return p[0],p[1]
+        return Global.CUSTOM[0],Global.CUSTOM[1]
       else:
         m = p[0]
         y = p[1]

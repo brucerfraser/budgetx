@@ -16,6 +16,9 @@ CATEGORIES = {}
 global PERIOD
 PERIOD = (0,0)
 
+global CUSTOM
+CUSTOM = (None,None)
+
 accounts = anvil.server.call('get_accounts')
 keys = list(accounts.keys())
 ACCOUNTS = [(accounts[k],k) for k in keys]
@@ -34,15 +37,16 @@ def new_id_needed():
   return str(uuid.uuid4())
 
 def make_date(m=None,y=None,custom=False):
-  global PERIOD
+  global PERIOD,CUSTOM
   if custom:
-    PERIOD = (m,y,True)
+    PERIOD = (0,0)
+    CUSTOM = (m,y)
   else:
     if m:
-      PERIOD = (m,y,False)
+      PERIOD = (m,y)
     else:
       t = date.today()
-      PERIOD = (t.month,t.year,False)
+      PERIOD = (t.month,t.year)
 
 all_categories()
 
