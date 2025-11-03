@@ -57,4 +57,38 @@ class Transactions(TransactionsTemplate):
         days_in_month = calendar.monthrange(y, m)[1]
         return date(y,m,1),date(y,m,days_in_month)
 
-
+  def quick_sort(self,**event_args):
+    fd,ld = self.date_me(False)
+    #we need the sorter, and sorter state
+    k = event_args['sender'].text.lower()
+    #cycle order: None,Up,Down
+    s = {"fa:chevron-up":[k,"fa:chevron-down",False],
+         "fa:chevron-down":["date","",False],
+        "":[k,"fa:chevron-up",True]}
+    key = s[event_args['sender'].icon][0]
+    i = s[event_args['sender'].icon][1]
+    a = s[event_args['sender'].icon][2]
+    if key == "date" and i == "fa:chevron-down":
+      i = ""
+    if key == 'account':
+      self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
+                                                                    tables.order_by("date",ascending=False),
+                                                                   date=q.between(fd,ld,True,True))
+    else:
+      self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
+                                                                   date=q.between(fd,ld,True,True))
+    event_args['sender'].icon = i
+    for obj in [self.date,self.account,self.amount,self.description]:
+      if obj.text != event_args['sender'].text:
+        obj.icon = ''
+    odd,i,o = True,0,0
+    for trans in self.repeating_panel_1.get_components():
+      if odd:
+        trans.set_bg(True)
+      else:
+        trans.set_bg(False)
+      odd = not odd
+      if trans.item['amount'] < 0:
+        o += trans.item['amount']
+      else:
+        i += trans.item['amount']
