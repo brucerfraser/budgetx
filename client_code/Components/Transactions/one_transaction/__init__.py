@@ -99,9 +99,6 @@ class one_transaction(one_transactionTemplate):
     self.amount.visible = True
     self.text_box_1.visible = False
 
-  def drop_down_1_hide(self, **event_args):
-    print('fired')
-
   def description_click(self, **event_args):
     self.text_box_2.visible = True
     self.text_box_2.focus()

@@ -33,13 +33,16 @@ def all_categories():
 def new_id_needed():
   return str(uuid.uuid4())
 
-def make_date(m=None,y=None):
+def make_date(m=None,y=None,custom=False):
   global PERIOD
-  if m:
-    PERIOD = (m,y)
+  if custom:
+    PERIOD = (m,y,True)
   else:
-    t = date.today()
-    PERIOD = (t.month,t.year)
+    if m:
+      PERIOD = (m,y,False)
+    else:
+      t = date.today()
+      PERIOD = (t.month,t.year,False)
 
 all_categories()
 

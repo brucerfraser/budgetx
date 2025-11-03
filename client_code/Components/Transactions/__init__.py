@@ -44,11 +44,17 @@ class Transactions(TransactionsTemplate):
     if dash:
       m = date.today().month
       y = date.today().year
+      days_in_month = calendar.monthrange(y, m)[1]
+      return date(y,m,1),date(y,m,days_in_month)
     else:
       p = Global.PERIOD
-      m = p[0]
-      y = p[1]
-    days_in_month = calendar.monthrange(y, m)[1]
-    return date(y,m,1),date(y,m,days_in_month)
+      if p[2]:
+        #we have a custom
+        return p[0],p[1]
+      else:
+        m = p[0]
+        y = p[1]
+        days_in_month = calendar.monthrange(y, m)[1]
+        return date(y,m,1),date(y,m,days_in_month)
 
 
