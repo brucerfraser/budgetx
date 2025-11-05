@@ -25,6 +25,8 @@ class Frame(FrameTemplate):
     #Present users with a login form with just one line of code:
     #anvil.users.login_with_form()
     Global.make_date()
+    Global.all_categories()
+    # Global.smarter()
     #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
     self.paths = {"transactions":self.transactions_page_link,
@@ -124,8 +126,7 @@ class Frame(FrameTemplate):
     obj.raise_event("click")
 
   def signout_link_click(self, **event_args):
-    """This method is called when the button is clicked"""
-    pass
+    anvil.server.call('clear_cats')
 
   
 

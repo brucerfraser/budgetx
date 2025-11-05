@@ -27,6 +27,8 @@ class one_transaction(one_transactionTemplate):
         break
     self.account.text = self.account_name
     self.categorise()
+    # self.am_i_smart()
+    
 
     
   def categorise(self,**event_args):
@@ -35,7 +37,7 @@ class one_transaction(one_transactionTemplate):
     if self.item['category'] == None:
       self.category.text = "None"
     else:
-      print(Global.CATEGORIES[self.item['category']])
+      # print(Global.CATEGORIES[self.item['category']])
       self.category.text = Global.CATEGORIES[self.item['category']]['display']
       self.category.background = Global.CATEGORIES[self.item['category']]['colour']
       self.autocomplete_1.text = self.category.text
@@ -118,9 +120,13 @@ class one_transaction(one_transactionTemplate):
   def category_choose(self,**event_args):
     self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
     self.category.text = self.autocomplete_1.text
+    Global.smarter(first=False,update=(self.item['category'],self.item['description']))
     self.category.background = Global.CATEGORIES[self.item['category']]['colour']
     self.category.visible = True
     self.autocomplete_1.visible = False
+    frame = get_open_form()
+    frm = frame.content_panel.get_components()[0]
+    frm.smart_cat_update()
 
   def autocomplete_1_lost_focus(self, **event_args):
     if self.item['category']:
@@ -132,4 +138,14 @@ class one_transaction(one_transactionTemplate):
       self.category.background = 'theme:Amount Negative'
       self.category.visible = True
       self.autocomplete_1.visible = False
+
+  def am_i_smart(self,**event_args):
+    if not self.item['category'] or self.category.border != "":
+      #below is a problem - doing a server call regardless of return.
+      self.item['category'] = Global.is_it_smart(self.item['description'])
+      if self.item['category']:
+        #we must outline in correct colour
+        c = Global.CATEGORIES[self.item['category']]['colour']
+        self.category.border = "solid {b} 1px".format(b=c)
+        self.category.text = Global.CATEGORIES[self.item['category']]['display']
   

@@ -92,3 +92,7 @@ class Transactions(TransactionsTemplate):
         o += trans.item['amount']
       else:
         i += trans.item['amount']
+
+  def smart_cat_update(self,**event_args):
+    for trans in self.repeating_panel_1.get_components():
+      trans.am_i_smart()

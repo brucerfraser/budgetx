@@ -11,3 +11,8 @@ from datetime import date, datetime
 @anvil.server.callable
 def get_hash_date(date):
   return str(parse(date).day) + str(parse(date).month) + str(parse(date).year)
+
+@anvil.server.callable
+def clear_cats():
+  for row in app_tables.transactions.search():
+    row['category'] = None
