@@ -115,6 +115,11 @@ class Budget(BudgetTemplate):
           if sub_cat.item["sub_category_id"] != cat:
             sub_cat.edit_column_panel.visible = False
             sub_cat.link_1.visible = True
+    for inc in self.card_2.get_components()[-1].repeating_panel_1.get_components():
+      # print(inc.item)
+      if inc.item["sub_category_id"] != cat:
+        inc.edit_column_panel.visible = False
+        inc.link_1.visible = True
         
 
   def update_notes(self, **event_args):
@@ -129,6 +134,11 @@ class Budget(BudgetTemplate):
 
   def edit_switch_change(self, **event_args):
     if self.edit_switch.checked:
+      if self.cat_sub_cat:
+        self.roll_over.enabled = True
+        self.roll_over.checked = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over']
+      else:
+        self.roll_over.enabled,self.roll_over.checked = False,False
       self.edit_details.visible = True
       self.edit_name.select()
     else:
@@ -176,9 +186,7 @@ class Budget(BudgetTemplate):
   def name_change(self, **event_args):
     ret = anvil.server.call('name_change',cat_id=self.category_right,
                      new_name=self.edit_name.text)
-    # if ret == 'cat':
-    #   for category in self.expense_categories.get_components():
-    #     category.refresh_data_bindings()
+    
 
   def live_name_update(self, **event_args):
     if self.cat_sub_cat == '':
@@ -233,6 +241,19 @@ class Budget(BudgetTemplate):
         for category in self.expense_categories.get_components():
           if category.item['category_id'] == self.cat_sub_cat:
             category.refresh_sub_cats()
+
+  def roll_over_change(self, **event_args):
+    app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over'] = self.roll_over.checked
+
+  def roll_date_setter(self,**event_args):
+    for row in app_tables.transactions.search(tables.order_by('date',ascending=True)):
+      self.budget_x_first_date = row['date']
+      break
+    m = date.today().month
+    y = date.today().year
+    d = calendar.monthrange(y,m)[1]
+    self.budget_x_last_date = date(y,m,d)
+    self.set_drop_down()
             
           
           

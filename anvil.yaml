@@ -101,6 +101,12 @@ db_schema:
       name: budget
       target: budgets
       type: link_multiple
+    - admin_ui: {order: 6, width: 200}
+      name: roll_over
+      type: bool
+    - admin_ui: {order: 7, width: 200}
+      name: roll_over_date
+      type: date
     server: full
     title: sub_categories
   test_csv:

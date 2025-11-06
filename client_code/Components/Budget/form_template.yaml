@@ -176,6 +176,20 @@ components:
                 padding: [0, 0, 0, 0]
               text: ''
             type: Button
+          - layout_properties: {grid_position: 'FPQZWN,NUCMGJ'}
+            name: label_5
+            properties: {text: Roll-Over}
+            type: Label
+          - components:
+            - event_bindings: {change: roll_over_change}
+              layout_properties: {grid_position: 'EMCBFL,VSOHMK'}
+              name: roll_over
+              properties: {align: right}
+              type: form:dep_6plivhjd0selve:Switch
+            layout_properties: {grid_position: 'FPQZWN,VJGWGQ'}
+            name: column_panel_6
+            properties: {}
+            type: ColumnPanel
           layout_properties: {grid_position: 'PEHDHT,VIVBTJ'}
           name: edit_details
           properties:
