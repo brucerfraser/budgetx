@@ -103,6 +103,8 @@ class Budget(BudgetTemplate):
         self.edit_name.text = app_tables.categories.get(category_id=self.category_right)['name']
       else:
         self.edit_card.visible = False
+    self.edit_details.visible,self.edit_switch.checked,self.drop_down_1.visible = False,False,False
+    self.drop_down_1.selected_value = None
     self.close_cat.visible = True
       
 
@@ -136,7 +138,15 @@ class Budget(BudgetTemplate):
     if self.edit_switch.checked:
       if self.cat_sub_cat:
         self.roll_over.enabled = True
+        self.drop_down_1.items = self.date_picker_bruce_1.drop_down_1.items
         self.roll_over.checked = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over']
+        if self.roll_over.checked:
+          r_o_d = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over_date']
+          if r_o_d:
+            m = r_o_d.month
+            y = r_o_d.year
+            self.drop_down_1.selected_value = (m,y)
+          self.drop_down_1.visible = True
       else:
         self.roll_over.enabled,self.roll_over.checked = False,False
       self.edit_details.visible = True
@@ -244,16 +254,19 @@ class Budget(BudgetTemplate):
 
   def roll_over_change(self, **event_args):
     app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over'] = self.roll_over.checked
+    if self.roll_over.checked:
+      self.drop_down_1.visible = True
+    else:
+      self.drop_down_1.visible = False
+      app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over_date'] = None
 
-  def roll_date_setter(self,**event_args):
-    for row in app_tables.transactions.search(tables.order_by('date',ascending=True)):
-      self.budget_x_first_date = row['date']
-      break
-    m = date.today().month
-    y = date.today().year
-    d = calendar.monthrange(y,m)[1]
-    self.budget_x_last_date = date(y,m,d)
-    self.set_drop_down()
+  def drop_down_1_change(self, **event_args):
+    r_o_d = date(self.drop_down_1.selected_value[1],self.drop_down_1.selected_value[0],1)
+    app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over_date'] = r_o_d
+
+  
+
+  
             
           
           

@@ -190,6 +190,11 @@ components:
             name: column_panel_6
             properties: {}
             type: ColumnPanel
+          - event_bindings: {change: drop_down_1_change}
+            layout_properties: {grid_position: 'TKIICM,NNDDOM'}
+            name: drop_down_1
+            properties: {visible: false}
+            type: DropDown
           layout_properties: {grid_position: 'PEHDHT,VIVBTJ'}
           name: edit_details
           properties:

@@ -49,8 +49,7 @@ class Sub_category(Sub_categoryTemplate):
     # Edit column_panel becomes visual.
     self.edit_column_panel.visible = True
     self.link_1.visible = False
-    """This method is called when the link is clicked"""
-    pass
+    
 
   def bg_set(self,**event_args):
     self.current_column_panel.background = 'theme:Secondary Container'
