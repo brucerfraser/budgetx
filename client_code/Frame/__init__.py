@@ -108,9 +108,16 @@ class Frame(FrameTemplate):
     if result:
       anvil.server.call('save_transactions',ready_list=result)
       self.file_loader_1.clear()
+      # we need to refresh whichever page is loaded here.
+      clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link,self.dashboard_page_link]
+      for obj in clear_list:
+        if obj.background != 'transparent':
+          obj.raise_event('click')
     else:
       self.file_loader_1.clear()
-    # print(result)
+    
+    
+    
 
   def dashboard_page_link_click(self, **event_args):
     self.content_panel.clear()
@@ -126,7 +133,13 @@ class Frame(FrameTemplate):
     obj.raise_event("click")
 
   def signout_link_click(self, **event_args):
-    anvil.server.call('clear_cats')
+    clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link,self.dashboard_page_link]
+    for obj in clear_list:
+      print(obj.background)
+      if obj.background != 'transparent':
+        print("fired")
+        obj.raise_event('click')
+        break
 
   
 
