@@ -26,7 +26,7 @@ class Frame(FrameTemplate):
     #anvil.users.login_with_form()
     Global.make_date()
     Global.all_categories()
-    # Global.smarter()
+    Global.smarter()
     #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
     self.paths = {"transactions":self.transactions_page_link,

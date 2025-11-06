@@ -63,6 +63,7 @@ def smarter(first=True,update=None):
   if first:
     for row in app_tables.transactions.search(q.not_(category=None)):
       words = row['description'].split()
+      words = [word for word in words if len(word) >= 3]
       if row['category'] not in SMART:
         SMART[row['category']] = []
       for word in words:
@@ -70,6 +71,7 @@ def smarter(first=True,update=None):
           SMART[row['category']].append(word)
   else:
     words = update[1].split()
+    words = [word for word in words if len(word) >= 3]
     if update[0] not in SMART:
       SMART[update[0]] = []
     for word in words:
@@ -85,6 +87,7 @@ def is_it_smart(description):
   
   global SMART
   words = description.split()
+  words = [word for word in words if len(word) >= 3]
   leader = {}
   for k,v in SMART.items():
     m = 0

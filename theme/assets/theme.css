@@ -294,6 +294,11 @@ input[disabled] ~ span {
   background: black;
 }
 
+.anvil-role-category-link {
+  border-radius: 12px;
+  padding: 1px 1px 1px 5px;    /* Adds space around the text */
+}
+
 .anvil-data-row-panel>.data-row-col:not(:last-child) {
   border-right: 1px solid %color:Primary Overlay 2%;
 }

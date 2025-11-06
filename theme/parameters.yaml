@@ -316,3 +316,5 @@ roles:
 - {name: boundary-horiz}
 - components: [Link, RepeatingPanel, ColumnPanel]
   name: fixed-holder-page
+- components: [Link]
+  name: category-link
