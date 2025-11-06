@@ -66,3 +66,6 @@ class Category_holder(Category_holderTemplate):
     budg.load_category_right(self.item['category_id'],period,True)
     # Make all other sub_cats clickable again (links vis, edit invis)
     budg.reset_sub_categories("")
+
+  def calculate_me(self,info,**event_args):
+    pass

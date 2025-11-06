@@ -6,6 +6,9 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from .Category_holder import Category_holder
+import calendar
+from datetime import date
+from ... import Global
 
 
 class Budget(BudgetTemplate):
@@ -31,7 +34,33 @@ class Budget(BudgetTemplate):
     
 
   def load_me(self,dash,**event_args):
-    pass
+    # get date
+    fd,ld = self.date_me(dash)
+    # load transactions into dict
+    transactions = app_tables.transactions.search(date=q.between(fd,ld,True,True))
+    transaction_list = []
+    for row in transactions:
+      transaction_list.append(dict(row))
+    # go through cats
+    
+
+  def date_me(self,dash,**event_args):
+    m,y = None,None
+    if dash:
+      m = date.today().month
+      y = date.today().year
+      days_in_month = calendar.monthrange(y, m)[1]
+      return date(y,m,1),date(y,m,days_in_month)
+    else:
+      p = Global.PERIOD
+      if p[0] + p[1] == 0:
+        #we have a custom
+        return Global.CUSTOM[0],Global.CUSTOM[1]
+      else:
+        m = p[0]
+        y = p[1]
+        days_in_month = calendar.monthrange(y, m)[1]
+        return date(y,m,1),date(y,m,days_in_month)
   
   def add_category_click(self, **event_args):
     from ...Pop_menus.work_a_category import work_a_category
