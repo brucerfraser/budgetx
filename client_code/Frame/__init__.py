@@ -32,14 +32,7 @@ class Frame(FrameTemplate):
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
-    # self.update_numbers()
     
-
-  # def update_numbers(self,**event_args):
-  #   for row in app_tables.transactions.search():
-  #     amt = row['amount']
-  #     amt = int(math.floor(amt*100))
-  #     row['amount'] = amt
       
       
       

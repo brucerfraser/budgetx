@@ -48,7 +48,10 @@ components:
   type: Image
 - layout_properties: {slot: default}
   name: content_panel
-  properties: {}
+  properties:
+    col_spacing: tiny
+    spacing:
+      padding: [null, 0, null, 0]
   type: ColumnPanel
 container:
   properties: {html: '@theme:standard-page.html'}
