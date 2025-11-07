@@ -74,6 +74,13 @@ class Budget(BudgetTemplate):
     # get date
     fd,ld = self.date_me(dash)
     # go through cats and update any open sub_cats
+    for category in self.expense_categories.get_components():
+      if category.link_1.icon == "fa:angle-down":
+        #sub-cats are open
+        for sub_cat in category.repeating_panel_1.get_components():
+          sub_cat.form_show()
+    for inc in self.card_2.get_components()[-1].repeating_panel_1.get_components():
+      inc.form_show()
     
 
   def date_me(self,dash,**event_args):

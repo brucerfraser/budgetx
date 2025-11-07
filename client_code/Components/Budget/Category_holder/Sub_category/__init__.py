@@ -15,22 +15,24 @@ class Sub_category(Sub_categoryTemplate):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
     # Get correct date
+    
+
+  def form_show(self, **event_args):
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
     try:
       self.budget.text = str(app_tables.budgets.search(period=period,
-                            belongs_to=self.item['sub_category_id'])[0]['budget_amount'])
+                                                       belongs_to=self.item['sub_category_id'])[0]['budget_amount'])
       self.budget_edit.text = float(self.budget.text)
     except:
       self.budget.text = "0"
       self.budget_edit.text = 0
 
   def budget_edit_lost_focus(self, **event_args):
-    today = date.today()
-    period = date(today.year, today.month, 1)
+    period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
     if not self.budget_edit.text == 0:
       try:
         app_tables.budgets.get(period=period,
-                               belongs_to=self.item['sub_category_id'])[0]['budget_amount'] = self.budget_edit.text
+                               belongs_to=self.item['sub_category_id'])['budget_amount'] = self.budget_edit.text
       except:
         app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
                                 period=period,budget_amount=self.budget_edit.text)
@@ -61,4 +63,6 @@ class Sub_category(Sub_categoryTemplate):
   def bg_set(self,**event_args):
     self.current_column_panel.background = 'theme:Secondary Container'
     self.edit_column_panel.background = 'theme:Secondary Container'
+
+  
 

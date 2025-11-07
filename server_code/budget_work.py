@@ -5,7 +5,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import anvil.server
-from datetime import datetime
+from datetime import datetime,date
 
 @anvil.server.callable
 def order_change(up,cat_id):
@@ -96,9 +96,20 @@ def archive(b_to,cat_id):
 
 @anvil.server.callable
 def load_budget_data():
-  #test
-  start_time = datetime.now()
-  print("server start:",start_time)
+  # if new month and no entries, copy prev month entries
+  today = date.today()
+  period = date(today.year,today.month,1)
+  if len(app_tables.budgets.search(period=period)) == 0:
+    # we must copy
+    m = today.month - 1
+    y = today.year
+    if m == 0:
+      m = 12
+      y -= 1
+    last_month = date(y,m,1)
+    for row in app_tables.budgets.search(period=last_month):
+      app_tables.budgets.add_row(period=period,budget_amount=row['budget_amount'],belongs_to=row['belongs_to'])
+  
   t = app_tables.transactions.search()
   c = app_tables.categories.search()
   s = app_tables.sub_categories.search()
@@ -112,6 +123,5 @@ def load_budget_data():
     all_sub_cats.append(dict(row))
   for row in b:
     all_budgets.append(dict(row))
-  end_time = datetime.now()
-  print("server duration:",end_time - start_time)
+  
   return all_trans, all_cats, all_sub_cats, all_budgets
