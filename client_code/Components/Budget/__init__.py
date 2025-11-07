@@ -20,14 +20,14 @@ class Budget(BudgetTemplate):
     self.period_right = None
     self.cat_sub_cat = None
     #get data
-    start_time = datetime.now()
-    print("local start:",start_time)
+    # start_time = datetime.now()
+    # print("local start:",start_time)
     """
     METHOD SERVER
     """
-    all_trans, all_cats, all_sub_cats, all_budgets = anvil.server.call('load_budget_data')
-    end_time = datetime.now()
-    print("local duration:",end_time - start_time)
+    self.all_trans, self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
+    # end_time = datetime.now()
+    # print("local duration:",end_time - start_time)
     
     inc_d = {}
     cats = []
@@ -35,14 +35,14 @@ class Budget(BudgetTemplate):
     METHOD LOCAL with backup
     """
     try:
-      inc_d = [c for c in all_cats if c['name'] == "Income"][0]
+      inc_d = [c for c in self.all_cats if c['name'] == "Income"][0]
     except Exception as e:
       for inc in app_tables.categories.search(name='Income'):
         inc_d = dict(inc)
       print("Budget form: Income backup table search use because of \n",e)
     self.card_2.add_component(Category_holder(item=inc_d))
     try:
-      cats = sorted([c for c in all_cats if not c['name'] == "Income" and not c['order'] == -1],
+      cats = sorted([c for c in self.all_cats if not c['name'] == "Income" and not c['order'] == -1],
                     key = lambda x: x['order'])
     except Exception as e:
       for cat in app_tables.categories.search(tables.order_by('order')):
@@ -66,12 +66,10 @@ class Budget(BudgetTemplate):
     END local load methods
     """
     self.expense_categories.items = cats
-    real_end = datetime.now()
-    print("local load duration:",real_end - end_time)
+    # real_end = datetime.now()
+    # print("local load duration:",real_end - end_time)
     
     
-    
-
   def load_me(self,dash,**event_args):
     # get date
     fd,ld = self.date_me(dash)
@@ -107,14 +105,27 @@ class Budget(BudgetTemplate):
     result = alert(c,title="Add a category",buttons=[],large=True)
     # print(result)
     if result:
-      cat_d = {}
+      # we need an order first
+      print(max(self.all_cats, key=lambda x: x["order"]))
+      result['order'] = max(self.all_cats, key=lambda x: x["order"])['order'] + 1
       app_tables.categories.add_row(**result)
-      for cat in app_tables.categories.search(q.not_(name='Income')):
-        cat_d = dict(cat)
-        self.card_expenses.add_component(Category_holder(my_identity=cat_d))
+      self.all_cats.append(result)
+      self.expense_categories.items = sorted([c for c in self.all_cats if not c['name'] == "Income" and not c['order'] == -1],
+                                             key = lambda x: x['order'])
+      # for cat in app_tables.categories.search(q.not_(name='Income')):
+      #   cat_d = dict(cat)
+      #   self.card_expenses.add_component(Category_holder(my_identity=cat_d))
+
+  
     
-  def test_me(self, **event_args):
-    print("works!")
+  def get_me_max_order(self,res, **event_args):
+    if len([s for s in self.all_sub_cats if s['belongs_to'] == res['belongs_to']]) > 0:
+      res['order'] = max([s for s in self.all_sub_cats if s['belongs_to'] == res['belongs_to']], 
+                        key=lambda x: x["order"])['order'] + 1
+    else:
+      res['order'] = 0
+    self.all_sub_cats.append(res)
+    return res
 
   def load_category_right(self,cat,period,big_cat=False,b_to='', **event_args):
     self.category_right,self.period_right = cat,period

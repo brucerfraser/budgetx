@@ -23,7 +23,11 @@ class Category_holder(Category_holderTemplate):
       result['belongs_to'] = self.item['category_id']
       for a in ['colour_back','colour_text']:
         del result[a]
+      # find the max order in this category, add to result, add to all_sub_cats in main form
+      frm = get_open_form().content_panel.get_components()[0]
+      result = frm.get_me_max_order(res=result)
       app_tables.sub_categories.add_row(**result)
+      # both app_tables and all_sub_cats updated
       if self.link_1.icon == 'fa:angle-down':
         self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),tables.order_by("order"),
                                                                         belongs_to=self.item['category_id'])
