@@ -6,6 +6,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import date
+from ..... import Global
 
 
 
@@ -13,9 +14,8 @@ class Sub_category(Sub_categoryTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    # Get today's date
-    today = date.today()
-    period = date(today.year, today.month, 1)
+    # Get correct date
+    period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
     try:
       self.budget.text = str(app_tables.budgets.search(period=period,
                             belongs_to=self.item['sub_category_id'])[0]['budget_amount'])

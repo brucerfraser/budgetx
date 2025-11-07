@@ -73,12 +73,7 @@ class Budget(BudgetTemplate):
   def load_me(self,dash,**event_args):
     # get date
     fd,ld = self.date_me(dash)
-    # load transactions into dict
-    transactions = app_tables.transactions.search(date=q.between(fd,ld,True,True))
-    transaction_list = []
-    for row in transactions:
-      transaction_list.append(dict(row))
-    # go through cats
+    # go through cats and update any open sub_cats
     
 
   def date_me(self,dash,**event_args):
