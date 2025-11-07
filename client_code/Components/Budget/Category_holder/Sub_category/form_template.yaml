@@ -59,7 +59,7 @@ components:
       name: sub_cat_name_edit
       properties: {}
       type: Label
-    - event_bindings: {lost_focus: budget_edit_lost_focus}
+    - event_bindings: {lost_focus: budget_edit_lost_focus, pressed_enter: budget_edit_lost_focus}
       layout_properties: {grid_position: 'OXJHKJ,UTOQIZ'}
       name: budget_edit
       properties:

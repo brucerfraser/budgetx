@@ -35,6 +35,11 @@ class Sub_category(Sub_categoryTemplate):
         app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
                                 period=period,budget_amount=self.budget_edit.text)
       self.budget.text = str(self.budget_edit.text)
+    frame = anvil.get_open_form()
+    budg = frame.content_panel.get_components()[0]
+    budg.close_cat_click()
+    self.edit_column_panel.visible = False
+    self.link_1.visible = True
 
   def link_1_click(self, **event_args):
     # Fire something to budget form for RH panel.
@@ -49,6 +54,8 @@ class Sub_category(Sub_categoryTemplate):
     # Edit column_panel becomes visual.
     self.edit_column_panel.visible = True
     self.link_1.visible = False
+    self.budget_edit.focus()
+    self.budget_edit.select()
     
 
   def bg_set(self,**event_args):

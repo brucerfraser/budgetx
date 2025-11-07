@@ -7,7 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from .Category_holder import Category_holder
 import calendar
-from datetime import date
+from datetime import date, datetime, timedelta
 from ... import Global
 
 
@@ -15,22 +15,61 @@ class Budget(BudgetTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    inc_d = {}
+    
     self.category_right = ""
     self.period_right = None
     self.cat_sub_cat = None
-    for inc in app_tables.categories.search(name='Income'):
-      inc_d = dict(inc)
-    self.card_2.add_component(Category_holder(item=inc_d))
-    # self.income_holder.my_identity = app_tables.categories.search(name='Income')
+    #get data
+    start_time = datetime.now()
+    print("local start:",start_time)
+    """
+    METHOD SERVER
+    """
+    all_trans, all_cats, all_sub_cats, all_budgets = anvil.server.call('load_budget_data')
+    end_time = datetime.now()
+    print("local duration:",end_time - start_time)
+    
+    inc_d = {}
     cats = []
-    for cat in app_tables.categories.search(tables.order_by('order')):
-      cat_d = {}
-      cat_d = dict(cat)
-      if cat_d['name'] != 'Income' and cat_d['order'] != -1:
-        cats.append(cat_d)
-  
+    """
+    METHOD LOCAL with backup
+    """
+    try:
+      inc_d = [c for c in all_cats if c['name'] == "Income"][0]
+    except Exception as e:
+      for inc in app_tables.categories.search(name='Income'):
+        inc_d = dict(inc)
+      print("Budget form: Income backup table search use because of \n",e)
+    self.card_2.add_component(Category_holder(item=inc_d))
+    try:
+      cats = sorted([c for c in all_cats if not c['name'] == "Income" and not c['order'] == -1],
+                    key = lambda x: x['order'])
+    except Exception as e:
+      for cat in app_tables.categories.search(tables.order_by('order')):
+        cat_d = {}
+        cat_d = dict(cat)
+        if cat_d['name'] != 'Income' and cat_d['order'] != -1:
+          cats.append(cat_d)
+      print("Budget form: Expesnse backup table search use because of \n",e)
+    """
+    METHOD SERVER
+    """
+    # for inc in app_tables.categories.search(name='Income'):
+    #   inc_d = dict(inc)
+    # self.card_2.add_component(Category_holder(item=inc_d))
+    # for cat in app_tables.categories.search(tables.order_by('order')):
+    #   cat_d = {}
+    #   cat_d = dict(cat)
+    #   if cat_d['name'] != 'Income' and cat_d['order'] != -1:
+    #     cats.append(cat_d)
+    """
+    END local load methods
+    """
     self.expense_categories.items = cats
+    real_end = datetime.now()
+    print("local load duration:",real_end - end_time)
+    
+    
     
 
   def load_me(self,dash,**event_args):
