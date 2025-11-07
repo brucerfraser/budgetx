@@ -19,7 +19,7 @@ class Budget(BudgetTemplate):
     self.category_right = ""
     self.period_right = None
     self.cat_sub_cat = None
-    
+    self.which_form = 'budget'
     """
     METHOD SERVER
     """
@@ -51,9 +51,7 @@ class Budget(BudgetTemplate):
     END local load methods
     """
     self.expense_categories.items = cats
-    self.month_label.text = date(Global.PERIOD[1],Global.PERIOD[0],1).strftime("%B %Y")
-    
-    
+
   def load_me(self,dash,**event_args):
     # this happens after date selection changes at top
     # get date

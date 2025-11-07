@@ -137,14 +137,30 @@ class date_picker_bruce(date_picker_bruceTemplate):
         next = current_date.year + 1
         current_date = date(next,1,1)
     self.custom_set()
-    result.append(["Custom",(0,0)])
+    # we have to check iif this date_picker is on budget page. We cannot have custom 
+    # dates on budget
+    if get_open_form().content_panel.get_components()[0].which_form == 'budget':
+      if Global.PERIOD == (0,0):
+        Global.make_date()
+    else:
+      result.append(["Custom",(0,0)])
     self.drop_down_1.items = result
     self.drop_down_1.selected_value = Global.PERIOD
-    if self.drop_down_1.selected_value == result[-2][1]:
-      #selected is last month in drop down
-      self.next.enabled = False
+    if get_open_form().content_panel.get_components()[0].which_form == 'budget':
+      get_open_form().content_panel.get_components()[0].month_label.text = date(Global.PERIOD[1],
+                                                                                Global.PERIOD[0],
+                                                                                1).strftime("%B %Y")
+      if self.drop_down_1.selected_value == result[-1][1]:
+        #selected is last month in drop down
+        self.next.enabled = False
+      else:
+        self.next.enabled = True
     else:
-      self.next.enabled = True
+      if self.drop_down_1.selected_value == result[-2][1]:
+        #selected is last month in drop down
+        self.next.enabled = False
+      else:
+        self.next.enabled = True
     if self.drop_down_1.selected_value == result[0][1]:
       #selected is first month in drop down
       self.prev.enabled = False

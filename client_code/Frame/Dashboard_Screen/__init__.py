@@ -14,6 +14,7 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
+    self.which_form = 'dashboard'
     self.load_everything()
     # self.progress_bar_1.min_value = -100
     # self.progress_bar_1.max_value = 100

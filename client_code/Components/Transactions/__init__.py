@@ -19,7 +19,7 @@ class Transactions(TransactionsTemplate):
       self.card_header.visible = False
     else:
       self.card_3.role = 'fixed-holder-page'
-    
+    self.which_form = 'transactions'
 
   def load_me(self,dash,**event_args):
     fd,ld = self.date_me(dash)
