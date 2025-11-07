@@ -31,10 +31,6 @@ components:
           spacing_above: none
           spacing_below: none
         type: Link
-      - layout_properties: {grid_position: 'OXJHKJ,MAQXHL JTFAWR,AMONTN'}
-        name: spacer_1
-        properties: {height: '1'}
-        type: Spacer
       - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
         name: progress_bar_1
         properties: {max_value: 100, min_value: -100, value: 23}
@@ -78,10 +74,6 @@ components:
         spacing_above: none
         spacing_below: none
       type: Link
-    - layout_properties: {grid_position: 'OXJHKJ,MAQXHL JTFAWR,AMONTN'}
-      name: spacer_1_copy
-      properties: {height: '1'}
-      type: Spacer
     - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
       name: progress_bar_1_edit
       properties: {max_value: 100, min_value: -100, value: 23}

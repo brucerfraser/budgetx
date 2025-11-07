@@ -20,6 +20,7 @@ class Sub_category(Sub_categoryTemplate):
   def form_show(self, **event_args):
     # get budget
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
+    b = 0
     try:
       b = app_tables.budgets.search(period=period,
                                     belongs_to=self.item['sub_category_id'])[0]['budget_amount']
@@ -27,13 +28,47 @@ class Sub_category(Sub_categoryTemplate):
       self.budget.foreground = 'theme:Amount Negative' if b < 0 else ''
       self.budget_edit.text = float(b/100)
     except:
-      self.budget.text = "0"
-      self.budget_edit.text = 0
+      b = 0
+      self.budget.text = str(b)
+      self.budget_edit.text = b
     # get actual
     a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
     self.actual.text = "R {actual:.2f}".format(actual=a)
     self.actual.foreground = 'theme:Amount Negative' if a < 0 else ''
+    self.update_bars(b/100,a)
 
+  def update_bars(self,b,a,**event_args):
+    #income bars are different
+    print(b,a)
+    maxi,min,v = 0,0,0
+    if get_open_form().content_panel.get_components()[0].is_income(self.item['belongs_to']):
+      self.progress_bar_1.min_value = 0
+      self.progress_bar_1.max_value = max(b,a)
+      self.progress_bar_1.value = a
+    else:
+      # if still have budget, set a standard zero point at 25% of the bar.
+      # if budget exceeded, set equal min point to max, zero halfway
+      # if spend exceeds double of budget, set zero at 75%
+      if a >= b:
+        maxi = -b
+        min = b/4
+        v = -(b-a)
+      elif a < b and a >= 2*b:
+        maxi = -b
+        min = b
+        v = a - b
+      elif a < b and a < 2*b:
+        maxi = -a/4
+        min = a
+        v = a
+      elif a == 0 and b == 0:
+        maxi = 10
+        min = 10
+        v = 0
+      self.progress_bar_1.min_value = min
+      self.progress_bar_1.max_value = maxi
+      self.progress_bar_1.value = v
+  
   def budget_edit_lost_focus(self, **event_args):
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
     self.budget_edit.text = get_open_form().content_panel.get_components()[0].neg_pos(self.budget_edit.text,
@@ -54,6 +89,8 @@ class Sub_category(Sub_categoryTemplate):
     frame = anvil.get_open_form()
     budg = frame.content_panel.get_components()[0]
     budg.close_cat_click()
+    a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    self.update_bars(self.budget_edit.text,a)
     self.edit_column_panel.visible = False
     self.link_1.visible = True
 

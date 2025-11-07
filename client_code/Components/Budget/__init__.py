@@ -19,9 +19,7 @@ class Budget(BudgetTemplate):
     self.category_right = ""
     self.period_right = None
     self.cat_sub_cat = None
-    # from ...Pop_menus.please_wait import please_wait
-    # FORM = please_wait()
-    alert(FORM,buttons=[],large=True,dismissible=True)
+    
     """
     METHOD SERVER
     """
@@ -54,7 +52,6 @@ class Budget(BudgetTemplate):
     """
     self.expense_categories.items = cats
     self.month_label.text = date(Global.PERIOD[1],Global.PERIOD[0],1).strftime("%B %Y")
-    # FORM.close_me()
     
     
   def load_me(self,dash,**event_args):
@@ -88,7 +85,9 @@ class Budget(BudgetTemplate):
     elif not i and amount >0:
       amount = -1 * amount
     return amount
-    
+
+  def is_income(self,b_to,**event_args):
+    return [c for c in self.all_cats if c['name'] == 'Income'][0]['category_id'] == b_to
 
   def date_me(self,dash,**event_args):
     m,y = None,None
