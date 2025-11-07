@@ -1,0 +1,13 @@
+components:
+- layout_properties: {grid_position: 'FOQIOH,LRVMUP'}
+  name: label_1
+  properties: {align: center, role: title, text: 'Please wait, budget magic is loading'}
+  type: Label
+- layout_properties: {grid_position: 'LOQERH,BSGDNT'}
+  name: determinate_1
+  properties: {height: '35'}
+  type: form:dep_6plivhjd0selve:ProgressBar.Determinate
+container:
+  event_bindings: {show: form_show}
+  type: ColumnPanel
+is_package: true

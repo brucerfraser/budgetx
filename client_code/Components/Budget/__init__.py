@@ -19,15 +19,13 @@ class Budget(BudgetTemplate):
     self.category_right = ""
     self.period_right = None
     self.cat_sub_cat = None
-    #get data
-    # start_time = datetime.now()
-    # print("local start:",start_time)
+    # from ...Pop_menus.please_wait import please_wait
+    # FORM = please_wait()
+    alert(FORM,buttons=[],large=True,dismissible=True)
     """
     METHOD SERVER
     """
     self.all_trans, self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
-    # end_time = datetime.now()
-    # print("local duration:",end_time - start_time)
     
     inc_d = {}
     cats = []
@@ -52,35 +50,44 @@ class Budget(BudgetTemplate):
           cats.append(cat_d)
       print("Budget form: Expesnse backup table search use because of \n",e)
     """
-    METHOD SERVER
-    """
-    # for inc in app_tables.categories.search(name='Income'):
-    #   inc_d = dict(inc)
-    # self.card_2.add_component(Category_holder(item=inc_d))
-    # for cat in app_tables.categories.search(tables.order_by('order')):
-    #   cat_d = {}
-    #   cat_d = dict(cat)
-    #   if cat_d['name'] != 'Income' and cat_d['order'] != -1:
-    #     cats.append(cat_d)
-    """
     END local load methods
     """
     self.expense_categories.items = cats
-    # real_end = datetime.now()
-    # print("local load duration:",real_end - end_time)
+    self.month_label.text = date(Global.PERIOD[1],Global.PERIOD[0],1).strftime("%B %Y")
+    # FORM.close_me()
     
     
   def load_me(self,dash,**event_args):
+    # this happens after date selection changes at top
     # get date
     fd,ld = self.date_me(dash)
+    self.month_label.text = fd.strftime("%B %Y")
     # go through cats and update any open sub_cats
+    for inc in self.card_2.get_components()[-1].repeating_panel_1.get_components():
+      inc.form_show()
     for category in self.expense_categories.get_components():
       if category.link_1.icon == "fa:angle-down":
         #sub-cats are open
         for sub_cat in category.repeating_panel_1.get_components():
           sub_cat.form_show()
-    for inc in self.card_2.get_components()[-1].repeating_panel_1.get_components():
-      inc.form_show()
+    
+  def get_actual(self,id,**event_args):
+    fd,ld = self.date_me(False)
+    trans_list = [
+      t for t in self.all_trans if t['date'] >= fd and t['date'] <= ld and t['category'] == id
+    ]
+    a = 0.0
+    for t in trans_list:
+      a += t['amount']
+    return a/100
+
+  def neg_pos(self,amount,b_to,**event_args):
+    i = True if [c for c in self.all_cats if c['category_id'] == b_to][0]['name'] == "Income" else False
+    if i and amount < 0:
+      amount = -1 * amount
+    elif not i and amount >0:
+      amount = -1 * amount
+    return amount
     
 
   def date_me(self,dash,**event_args):
@@ -128,6 +135,7 @@ class Budget(BudgetTemplate):
       res['order'] = 0
     self.all_sub_cats.append(res)
     return res
+
 
   def load_category_right(self,cat,period,big_cat=False,b_to='', **event_args):
     self.category_right,self.period_right = cat,period

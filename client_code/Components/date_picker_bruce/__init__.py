@@ -32,6 +32,7 @@ class date_picker_bruce(date_picker_bruceTemplate):
       self.flow_panel_2.visible = True
     
     
+    
 
   def drop_down_1_change(self, **event_args):
     m = self.drop_down_1.selected_value[0]
