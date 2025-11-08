@@ -42,10 +42,57 @@ class Category_holder(Category_holderTemplate):
                                                                     tables.order_by('order'),
                                                                     belongs_to=self.item['category_id'])
     odd = False
+    total_b,total_a = 0,0
     for sc in self.repeating_panel_1.get_components():
       if odd:
         sc.background = 'grey'
       odd = not odd
+      total_a += sc.a
+      total_b += sc.b
+    self.budget.text = "({b:.2f})".format(b=total_b/100) if total_b < 0 else "{b:.2f}".format(b=total_b/100)
+    self.budget.foreground = 'theme:Amount Negative' if total_b < 0 else ''
+    self.actual.text = "R {actual:.2f}".format(actual=total_a)
+    self.actual.foreground = 'theme:Amount Negative' if total_a < 0 else ''
+    self.update_bars(total_b,total_a)
+
+  def update_bars(self,b,a,**event_args):
+    #income bars are different
+    maxi,min,v = 0,0,0
+    if get_open_form().content_panel.get_components()[0].is_income(self.item['belongs_to']):
+      self.progress_bar_1.min_value = 0
+      self.progress_bar_1_edit.min_value = 0
+      self.progress_bar_1.max_value = max(b,a)
+      self.progress_bar_1_edit.max_value = max(b,a)
+      self.progress_bar_1.value = a
+      self.progress_bar_1_edit.value = a
+    else:
+      # if still have budget, set a standard zero point at 25% of the bar.
+      # if budget exceeded, set equal min point to max, zero halfway
+      # if spend exceeds double of budget, set zero at 75%
+      if a >= b and b != 0:
+        maxi = -b
+        min = b/4
+        v = -(b-a)
+      elif a < b and a >= 2*b:
+        maxi = -b
+        min = b
+        v = a - b
+      elif a < b and a < 2*b:
+        maxi = -a/4
+        min = a
+        v = a
+      elif a == 0 and b == 0:
+        maxi = 10.0
+        min = -10.0
+        v = 0.0
+      else:
+        maxi = 10.0
+        min = -10.0
+        v = 0.0
+      self.progress_bar_1.min_value,self.progress_bar_1_edit.min_value = min,min
+      self.progress_bar_1.max_value,self.progress_bar_1_edit._max_value = maxi,maxi
+      self.progress_bar_1.value,self.progress_bar_1_edit.value = v,v
+      self.progress_bar_1.refresh_data_bindings()
   
   def link_1_click(self, **event_args):
     if self.link_1.icon == 'fa:angle-right':

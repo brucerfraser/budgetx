@@ -14,30 +14,29 @@ class Sub_category(Sub_categoryTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    # Get correct date
+    self.a = 0
+    self.b = 0
     
 
   def form_show(self, **event_args):
     # get budget
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
-    b = 0
     try:
-      b = app_tables.budgets.search(period=period,
+      self.b = app_tables.budgets.search(period=period,
                                     belongs_to=self.item['sub_category_id'])[0]['budget_amount']
-      self.budget.text = "({b:.2f})".format(b=b/100) if b < 0 else "{b:.2f}".format(b=b/100)
-      self.budget.foreground = 'theme:Amount Negative' if b < 0 else ''
-      self.budget_edit.text = float(b/100)
+      self.budget.text = "({b:.2f})".format(b=self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
+      self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
+      self.budget_edit.text = float(self.b/100)
     except:
-      b = 0
-      self.budget.text = str(b)
-      self.budget_edit.text = b
+      self.budget.text = str(self.b)
+      self.budget_edit.text = self.b
     # get actual
-    a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
-    a_t = "R {actual:.2f}".format(actual=a)
+    self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    a_t = "R {actual:.2f}".format(actual=self.a)
     self.actual.text,self.actual_edit.text = a_t,a_t
-    self.actual.foreground = 'theme:Amount Negative' if a < 0 else ''
-    self.actual_edit.foreground = 'theme:Amount Negative' if a < 0 else ''
-    self.update_bars(b/100,a)
+    self.actual.foreground = 'theme:Amount Negative' if self.a < 0 else ''
+    self.actual_edit.foreground = 'theme:Amount Negative' if self.a < 0 else ''
+    self.update_bars(self.b/100,self.a)
 
   def update_bars(self,b,a,**event_args):
     #income bars are different
@@ -82,23 +81,24 @@ class Sub_category(Sub_categoryTemplate):
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
     self.budget_edit.text = get_open_form().content_panel.get_components()[0].neg_pos(self.budget_edit.text,
                                                                                       self.item['belongs_to'])
+    self.b = self.budget_edit.text
     try:
       app_tables.budgets.get(period=period,
-                              belongs_to=self.item['sub_category_id'])['budget_amount'] = self.budget_edit.text * 100
+                              belongs_to=self.item['sub_category_id'])['budget_amount'] = self.b * 100
     except:
       app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
-                              period=period,budget_amount=self.budget_edit.text * 100)
-    if self.budget_edit.text < 0:
-      self.budget.text = "({b:.2f})".format(b=self.budget_edit.text)
+                              period=period,budget_amount=self.b * 100)
+    if self.b < 0:
+      self.budget.text = "({b:.2f})".format(b=self.b)
       self.budget.foreground = 'theme:Amount Negative'
     else:
-      self.budget.text = "{b:.2f}".format(b=self.budget_edit.text)
+      self.budget.text = "{b:.2f}".format(b=self.b)
       self.budget.foreground = ''
     frame = anvil.get_open_form()
     budg = frame.content_panel.get_components()[0]
     budg.close_cat_click()
-    a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
-    self.update_bars(self.budget_edit.text,a)
+    self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    self.update_bars(self.b,self.a)
     self.edit_column_panel.visible = False
     self.link_1.visible = True
 
@@ -124,15 +124,15 @@ class Sub_category(Sub_categoryTemplate):
     self.edit_column_panel.background = 'theme:Secondary Container'
 
   def budget_edit_change(self, **event_args):
-    a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
-    b = self.budget_edit.text
+    self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    self.b = self.budget_edit.text
     if get_open_form().content_panel.get_components()[0].is_income(self.item['belongs_to']):
-      if b < 0:
-        b = b * -1
+      if self.b < 0:
+        self.b = self.b * -1
     else:
-      if b > 0:
-        b = b * -1
-    self.update_bars(b,a)
+      if self.b > 0:
+        self.b = self.b * -1
+    self.update_bars(self.b,self.a)
     
 
   
