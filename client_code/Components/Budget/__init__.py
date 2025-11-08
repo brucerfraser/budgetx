@@ -20,6 +20,7 @@ class Budget(BudgetTemplate):
     self.period_right = None
     self.cat_sub_cat = None
     self.which_form = 'budget'
+    self.drop_down_1.selected_value = None
     """
     METHOD SERVER
     """
@@ -51,6 +52,7 @@ class Budget(BudgetTemplate):
     END local load methods
     """
     self.expense_categories.items = cats
+    self.update_numbers()
 
   def load_me(self,dash,**event_args):
     # this happens after date selection changes at top
@@ -58,6 +60,7 @@ class Budget(BudgetTemplate):
     fd,ld = self.date_me(dash)
     self.month_label.text = fd.strftime("%B %Y")
     # go through cats and update any open sub_cats
+    self.update_numbers()
     for inc in self.card_2.get_components()[-1].repeating_panel_1.get_components():
       inc.form_show()
     for category in self.expense_categories.get_components():
@@ -66,8 +69,11 @@ class Budget(BudgetTemplate):
         for sub_cat in category.repeating_panel_1.get_components():
           sub_cat.form_show()
     
-  def get_actual(self,id,**event_args):
-    fd,ld = self.date_me(False)
+  def get_actual(self,id,period=None,**event_args):
+    if not period:
+      fd,ld = self.date_me(False)
+    else:
+      fd,ld = period[0],period[1]
     trans_list = [
       t for t in self.all_trans if t['date'] >= fd and t['date'] <= ld and t['category'] == id
     ]
@@ -313,6 +319,7 @@ class Budget(BudgetTemplate):
     app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over'] = self.roll_over.checked
     if self.roll_over.checked:
       self.drop_down_1.visible = True
+      self.drop_down_1.selected_value = None
     else:
       self.drop_down_1.visible = False
       app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over_date'] = None
@@ -321,10 +328,146 @@ class Budget(BudgetTemplate):
     r_o_d = date(self.drop_down_1.selected_value[1],self.drop_down_1.selected_value[0],1)
     app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over_date'] = r_o_d
 
+  def update_a_budget(self,amount,period,id,**event_args):
+    try:
+      i = self.all_budgets.index([b for b in self.all_budgets if b['period'] == period and b['belongs_to'] == id][0])
+      self.all_budgets[i]['budget_amount'] = amount * 100
+    except:
+      self.all_budgets.append({'belongs_to':id,
+                              'budget_amount':amount * 100,
+                              'period':period,
+                              'notes':None})
   
+  def update_numbers(self,**event_args):
+    """
+    Called when needed - budget updated etc
+    1. Goes through each cat holder and works out:
+      a. Actual spent/earned
+      b. Total budget
+      c. Adjusts total budget for any roll-overs
+      d. Updates category prog bar
+    """
+    fd,ld = self.date_me(False)
+    cat = self.card_2.get_components()[-1]
+    a,b = 0,0
+    for sub_cat in [s for s in self.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
+      a += self.get_actual(id=sub_cat['sub_category_id'])
+      try:
+        b += [budget for budget in self.all_budgets if budget['period'] == fd and budget['belongs_to'] == sub_cat['sub_category_id']][0]['budget_amount']
+        # roll-over function. Nah - not sure what to do with roll_over on income
+      except:
+        b += 0
+    self.update_number_writer(b/100,a,cat)
+    
+    for cat in self.expense_categories.get_components():
+      a,b = 0,0
+      for sub_cat in [s for s in self.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
+        a += self.get_actual(id=sub_cat['sub_category_id'])
+        try:
+          b += [budget for budget in self.all_budgets if budget['period'] == fd and budget['belongs_to'] == sub_cat['sub_category_id']][0]['budget_amount']
+          # roll-over function
+          if self.roll_over_calc(id=sub_cat['sub_category_id']) != 0:
+            print("Budget this month =",b,"\n","Roll_over from previous =",self.roll_over_calc(id=sub_cat['sub_category_id']))
+            b += self.roll_over_calc(id=sub_cat['sub_category_id'])
+            print("Updated Budget this month =",b)
+        except:
+          b += 0
+      self.update_number_writer(b/100,a,cat)
+      
+    
 
-  
-            
+  def update_number_writer(self,b,a,comp,**event_args):
+    """
+    Writes a Category holders header bar
+    comp is the actual instance of the category bar
+    a is the total actual spent/earned for the cat
+    b is the total budgeted for the cat
+    """
+    comp.actual.text = "(R {actual:.2f})".format(actual=-a) if a < 0 else "R {actual:.2f}".format(actual=a)
+    comp.budget.text = "({b:.2f})".format(b=-b) if b < 0 else "{b:.2f}".format(b=b)
+    #income bars are different
+    maxi,min,v = 0,0,0
+    if self.is_income(comp.item['category_id']):
+      comp.progress_bar_1.min_value = 0
+      comp.progress_bar_1.max_value = max(b,a)
+      comp.progress_bar_1.value = a
+    else:
+      # if still have budget, set a standard zero point at 25% of the bar.
+      # if budget exceeded, set equal min point to max, zero halfway
+      # if spend exceeds double of budget, set zero at 75%
+      if a >= b and b != 0:
+        maxi = -b
+        min = b/4
+        v = -(b-a)
+      elif a < b and a >= 2*b:
+        maxi = -b
+        min = b
+        v = a - b
+      elif a < b and a < 2*b:
+        maxi = -a/4
+        min = a
+        v = a
+      elif a == 0 and b == 0:
+        maxi = 10.0
+        min = -10.0
+        v = 0.0
+      else:
+        maxi = 10.0
+        min = -10.0
+        v = 0.0
+      comp.progress_bar_1.min_value = min
+      comp.progress_bar_1.max_value = maxi
+      comp.progress_bar_1.value = v
+    
+  def roll_over_calc(self,id,**event_args):
+    """
+    Takes a sub cat and works out roll-over budget accumulation as a top-up amount to be returned.
+    Returns 0 if roll-over is nill
+    """
+    sub_cat = [s for s in self.all_sub_cats if s['sub_category_id'] == id][0]
+    if sub_cat['roll_over']:
+      # make list of dates to check
+      date_list = self.roll_date_list(fd=sub_cat['roll_over_date'])
+      b = 0 
+      for period in date_list:
+        a = 0
+        try:
+          # this amount is int (ie x 100)
+          b = [budget for budget in self.all_budgets if budget['belongs_to'] == id and budget['period'] == period[0]][0]['budget_amount']
+        except:
+          b = 0
+        # this amount is actual float
+        a = self.get_actual(id=id,period=period)
+        #MAGIC
+        if b < 0: #we have an expense
+          if b < a: # we have leftover
+            b += b - a
+          else: #nothing left over, overspent whatever - goes to zero
+            b = 0
+        elif b > 0: #we have an income
+          pass # what do we actually do here???
+      print(b,sub_cat['name'])
+      return b
+    else:
+      return 0
+    pass        
           
-          
+  def roll_date_list(self,fd,**event_args):
+    date_list = []
+    ld = date(Global.PERIOD[1],Global.PERIOD[0],1)
+    cd = fd
+    while cd < ld:
+      # Format the string: %B is full month name, %y is two-digit year
+      d = calendar.monthrange(cd.year,cd.month)[1]
+      date_list.append((cd,date(cd.year,cd.month,d)))
+      # Move to the first day of the next month
+      next = cd.month + 1
+      try:
+        #If below doesn't work, we've gone to next year
+        cd = date(cd.year, next,1)
+      except:
+        #go to next year
+        next = cd.year + 1
+        cd = date(next,1,1)
+    return date_list
     

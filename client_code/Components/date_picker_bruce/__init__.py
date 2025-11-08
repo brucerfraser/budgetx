@@ -49,11 +49,18 @@ class date_picker_bruce(date_picker_bruceTemplate):
       frm = frame.content_panel.get_components()[0]
       frm.load_me(False)
       result = self.drop_down_1.items
-      if self.drop_down_1.selected_value == result[-2][1]:
-        #selected is last month in drop down
-        self.next.enabled = False
+      if frm.which_form == 'budget':
+        if self.drop_down_1.selected_value == result[-1][1]:
+          #selected is last month in drop down
+          self.next.enabled = False
+        else:
+          self.next.enabled = True
       else:
-        self.next.enabled = True
+        if self.drop_down_1.selected_value == result[-2][1]:
+          #selected is last month in drop down
+          self.next.enabled = False
+        else:
+          self.next.enabled = True
       if self.drop_down_1.selected_value == result[0][1]:
         #selected is first month in drop down
         self.prev.enabled = False
@@ -139,11 +146,15 @@ class date_picker_bruce(date_picker_bruceTemplate):
     self.custom_set()
     # we have to check iif this date_picker is on budget page. We cannot have custom 
     # dates on budget
-    if get_open_form().content_panel.get_components()[0].which_form == 'budget':
-      if Global.PERIOD == (0,0):
-        Global.make_date()
-    else:
-      result.append(["Custom",(0,0)])
+    try:
+      if get_open_form().content_panel.get_components()[0].which_form == 'budget':
+        if Global.PERIOD == (0,0):
+          Global.make_date()
+      else:
+        result.append(["Custom",(0,0)])
+    except Exception as e:
+      Global.make_date()
+      print(e)
     self.drop_down_1.items = result
     self.drop_down_1.selected_value = Global.PERIOD
     if get_open_form().content_panel.get_components()[0].which_form == 'budget':

@@ -14,17 +14,19 @@ class Sub_category(Sub_categoryTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    self.a = 0
-    self.b = 0
+    
     
 
   def form_show(self, **event_args):
     # get budget
+    self.a = 0
+    self.b = 0
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
     try:
       self.b = app_tables.budgets.search(period=period,
                                     belongs_to=self.item['sub_category_id'])[0]['budget_amount']
-      self.budget.text = "({b:.2f})".format(b=self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
+      # roll-over function in main form
+      self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
       self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
       self.budget_edit.text = float(self.b/100)
     except:
@@ -32,7 +34,7 @@ class Sub_category(Sub_categoryTemplate):
       self.budget_edit.text = self.b
     # get actual
     self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
-    a_t = "R {actual:.2f}".format(actual=self.a)
+    a_t = "(R {actual:.2f})".format(actual=-self.a) if self.a < 0 else "R {actual:.2f}".format(actual=self.a)
     self.actual.text,self.actual_edit.text = a_t,a_t
     self.actual.foreground = 'theme:Amount Negative' if self.a < 0 else ''
     self.actual_edit.foreground = 'theme:Amount Negative' if self.a < 0 else ''
@@ -79,8 +81,9 @@ class Sub_category(Sub_categoryTemplate):
   
   def budget_edit_lost_focus(self, **event_args):
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
-    self.budget_edit.text = get_open_form().content_panel.get_components()[0].neg_pos(self.budget_edit.text,
-                                                                                      self.item['belongs_to'])
+    budg = anvil.get_open_form().content_panel.get_components()[0]
+    self.budget_edit.text = budg.neg_pos(self.budget_edit.text,
+                                        self.item['belongs_to'])
     self.b = self.budget_edit.text
     try:
       app_tables.budgets.get(period=period,
@@ -88,17 +91,16 @@ class Sub_category(Sub_categoryTemplate):
     except:
       app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
                               period=period,budget_amount=self.b * 100)
+    budg.update_a_budget(self.b,period,self.item['sub_category_id'])
     if self.b < 0:
-      self.budget.text = "({b:.2f})".format(b=self.b)
+      self.budget.text = "({b:.2f})".format(b=-self.b)
       self.budget.foreground = 'theme:Amount Negative'
     else:
       self.budget.text = "{b:.2f}".format(b=self.b)
       self.budget.foreground = ''
-    frame = anvil.get_open_form()
-    budg = frame.content_panel.get_components()[0]
-    budg.close_cat_click()
-    self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    self.a = budg.get_actual(self.item['sub_category_id'])
     self.update_bars(self.b,self.a)
+    budg.update_numbers()
     self.edit_column_panel.visible = False
     self.link_1.visible = True
 
