@@ -331,10 +331,10 @@ class Budget(BudgetTemplate):
   def update_a_budget(self,amount,period,id,**event_args):
     try:
       i = self.all_budgets.index([b for b in self.all_budgets if b['period'] == period and b['belongs_to'] == id][0])
-      self.all_budgets[i]['budget_amount'] = amount * 100
+      self.all_budgets[i]['budget_amount'] = amount
     except:
       self.all_budgets.append({'belongs_to':id,
-                              'budget_amount':amount * 100,
+                              'budget_amount':amount,
                               'period':period,
                               'notes':None})
   
@@ -364,14 +364,15 @@ class Budget(BudgetTemplate):
       for sub_cat in [s for s in self.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
         a += self.get_actual(id=sub_cat['sub_category_id'])
         try:
-          b += [budget for budget in self.all_budgets if budget['period'] == fd and budget['belongs_to'] == sub_cat['sub_category_id']][0]['budget_amount']
-          # roll-over function
-          if self.roll_over_calc(id=sub_cat['sub_category_id']) != 0:
-            print("Budget this month =",b,"\n","Roll_over from previous =",self.roll_over_calc(id=sub_cat['sub_category_id']))
-            b += self.roll_over_calc(id=sub_cat['sub_category_id'])
-            print("Updated Budget this month =",b)
-        except:
+          """
+          We go straight to roll-over function
+          this function checks if it's roll-over and calcs the whole line. if it is not RO,
+          just returns current period budget.
+          """
+          b += self.roll_over_calc(id=sub_cat['sub_category_id'])
+        except Exception as e:
           b += 0
+          print(e,"\non line 372 of Budget form (roll_over_calc function error)")
       self.update_number_writer(b/100,a,cat)
       
     
@@ -421,42 +422,54 @@ class Budget(BudgetTemplate):
     
   def roll_over_calc(self,id,**event_args):
     """
-    Takes a sub cat and works out roll-over budget accumulation as a top-up amount to be returned.
-    Returns 0 if roll-over is nill
+    Takes a sub cat and works out:
+    1. if roll-over budget: accumulation as a total amount to be returned.
+    2. if not roll-over, returns current period (as per Global) budget, or 0 if none saved.
+    3. Works from main form or from sub-cat. 
     """
     sub_cat = [s for s in self.all_sub_cats if s['sub_category_id'] == id][0]
     if sub_cat['roll_over']:
       # make list of dates to check
       date_list = self.roll_date_list(fd=sub_cat['roll_over_date'])
+      # for p in date_list:
+      #   print(p)
       b = 0 
       for period in date_list:
         a = 0
         try:
           # this amount is int (ie x 100)
-          b = [budget for budget in self.all_budgets if budget['belongs_to'] == id and budget['period'] == period[0]][0]['budget_amount']
+          b += [budget for budget in self.all_budgets if budget['belongs_to'] == id and budget['period'] == period[0]][0]['budget_amount']
         except:
-          b = 0
+          b += 0
         # this amount is actual float
-        a = self.get_actual(id=id,period=period)
+        a = self.get_actual(id=id,period=period)*100
+        # print("Budget step for {n} in {d}: {bud} set, {act} used and...\n".format(n=sub_cat['name'],
+        #                                                                          d=period[0],
+        #                                                                          bud=b,act=a))
         #MAGIC
-        if b < 0: #we have an expense
+        if b < 0: #we have budget, either this month or cumulative
           if b < a: # we have leftover
-            b += b - a
+            b = b - a
           else: #nothing left over, overspent whatever - goes to zero
             b = 0
         elif b > 0: #we have an income
           pass # what do we actually do here???
-      print(b,sub_cat['name'])
-      return b
+        # print("...Roll-over Budget for next month: {bud}.\n________________________".format(bud=b))
+      
+      return b + (self.get_actual(id=id,period=date_list[-1])*100)
     else:
-      return 0
-    pass        
+      try:
+        fd = date(Global.PERIOD[1],Global.PERIOD[0],1)
+        return [budget for budget in self.all_budgets if budget['period'] == fd and budget['belongs_to'] == sub_cat['sub_category_id']][0]['budget_amount']
+      except:
+        return 0
+            
           
   def roll_date_list(self,fd,**event_args):
     date_list = []
     ld = date(Global.PERIOD[1],Global.PERIOD[0],1)
     cd = fd
-    while cd < ld:
+    while cd <= ld:
       # Format the string: %B is full month name, %y is two-digit year
       d = calendar.monthrange(cd.year,cd.month)[1]
       date_list.append((cd,date(cd.year,cd.month,d)))

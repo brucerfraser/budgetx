@@ -18,28 +18,37 @@ class Sub_category(Sub_categoryTemplate):
     
 
   def form_show(self, **event_args):
-    # get budget
     self.a = 0
     self.b = 0
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
+    budg = anvil.get_open_form().content_panel.get_components()[0]
+    # get budget
     try:
-      self.b = app_tables.budgets.search(period=period,
-                                    belongs_to=self.item['sub_category_id'])[0]['budget_amount']
-      # roll-over function in main form
-      self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
-      self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
-      self.budget_edit.text = float(self.b/100)
-    except:
-      self.budget.text = str(self.b)
-      self.budget_edit.text = self.b
+      self.b = [b for b in budg.all_budgets if b['belongs_to'] == self.item['sub_category_id'] and b['period'] == period][0]['budget_amount']
+    except Exception as e:
+      print(e)
     # get actual
     self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    # budget incl roll-over will be obtained in the below function
+    self.update_the_show()
+
+  def update_the_show(self,**event_args):
+    #we have to do roll-over calc here, because a budget update is cool but must update roll-over
+    budg = anvil.get_open_form().content_panel.get_components()[0]
+    if self.b != budg.roll_over_calc(id=self.item['sub_category_id']):
+      self.budget.underline = True
+    else:
+      self.budget.underline = False
+    bar_b = budg.roll_over_calc(id=self.item['sub_category_id'])
+    self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
+    self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
+    self.budget_edit.text = float(self.b/100)
     a_t = "(R {actual:.2f})".format(actual=-self.a) if self.a < 0 else "R {actual:.2f}".format(actual=self.a)
     self.actual.text,self.actual_edit.text = a_t,a_t
     self.actual.foreground = 'theme:Amount Negative' if self.a < 0 else ''
     self.actual_edit.foreground = 'theme:Amount Negative' if self.a < 0 else ''
-    self.update_bars(self.b/100,self.a)
-
+    self.update_bars(bar_b/100,self.a)
+  
   def update_bars(self,b,a,**event_args):
     #income bars are different
     maxi,min,v = 0,0,0
@@ -84,22 +93,16 @@ class Sub_category(Sub_categoryTemplate):
     budg = anvil.get_open_form().content_panel.get_components()[0]
     self.budget_edit.text = budg.neg_pos(self.budget_edit.text,
                                         self.item['belongs_to'])
-    self.b = self.budget_edit.text
+    self.b = self.budget_edit.text * 100
     try:
       app_tables.budgets.get(period=period,
-                              belongs_to=self.item['sub_category_id'])['budget_amount'] = self.b * 100
+                              belongs_to=self.item['sub_category_id'])['budget_amount'] = self.b
     except:
       app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
-                              period=period,budget_amount=self.b * 100)
+                              period=period,budget_amount=self.b)
     budg.update_a_budget(self.b,period,self.item['sub_category_id'])
-    if self.b < 0:
-      self.budget.text = "({b:.2f})".format(b=-self.b)
-      self.budget.foreground = 'theme:Amount Negative'
-    else:
-      self.budget.text = "{b:.2f}".format(b=self.b)
-      self.budget.foreground = ''
     self.a = budg.get_actual(self.item['sub_category_id'])
-    self.update_bars(self.b,self.a)
+    self.update_the_show()
     budg.update_numbers()
     self.edit_column_panel.visible = False
     self.link_1.visible = True
