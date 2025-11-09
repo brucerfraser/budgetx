@@ -248,6 +248,41 @@ components:
                 padding: [0, 0, 0, 0]
               text: ''
             type: Button
+          - components:
+            - layout_properties: {grid_position: 'DZXRHC,NGUVUG VNUQKW,OSDRVF'}
+              name: label_11
+              properties: {text: Text colour}
+              type: Label
+            - components:
+              - layout_properties: {}
+                name: text_colour
+                properties: {}
+                type: form:Pop_menus.colorpicker
+              layout_properties: {grid_position: 'DZXRHC,NGUVUG SGDTZP,NKCSYN'}
+              name: flow_panel_2
+              properties: {align: center}
+              type: FlowPanel
+            - layout_properties: {grid_position: 'DZXRHC,KTPLSG TBZWWO,XUTLSJ'}
+              name: label_12
+              properties: {text: Back Colour}
+              type: Label
+            - components:
+              - layout_properties: {}
+                name: bg_colour
+                properties:
+                  align: []
+                type: form:Pop_menus.colorpicker
+              layout_properties: {grid_position: 'DZXRHC,KTPLSG WMPRWC,WREZSX'}
+              name: flow_panel_1
+              properties:
+                align: center
+                spacing:
+                  margin: [null, null, 0, null]
+              type: FlowPanel
+            layout_properties: {grid_position: 'ILPFNS,ZDABOE'}
+            name: colours
+            properties: {visible: false}
+            type: ColumnPanel
           - layout_properties: {grid_position: 'FPQZWN,NUCMGJ'}
             name: label_5
             properties: {text: Roll-Over}

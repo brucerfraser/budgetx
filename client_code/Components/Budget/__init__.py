@@ -202,16 +202,20 @@ class Budget(BudgetTemplate):
       if self.cat_sub_cat:
         self.roll_over.enabled = True
         self.drop_down_1.items = self.date_picker_bruce_1.drop_down_1.items
-        self.roll_over.checked = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over']
+        self.roll_over.checked = [s for s in self.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over']
+        # self.roll_over.checked = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over']
         if self.roll_over.checked:
-          r_o_d = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over_date']
+          r_o_d = [s for s in self.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over_date']
           if r_o_d:
             m = r_o_d.month
             y = r_o_d.year
             self.drop_down_1.selected_value = (m,y)
           self.drop_down_1.visible = True
+        self.colours.visible = False
       else:
         self.roll_over.enabled,self.roll_over.checked = False,False
+        
+        self.colours.visible = True
       self.edit_details.visible = True
       self.edit_name.select()
     else:
@@ -431,8 +435,6 @@ class Budget(BudgetTemplate):
     if sub_cat['roll_over']:
       # make list of dates to check
       date_list = self.roll_date_list(fd=sub_cat['roll_over_date'])
-      # for p in date_list:
-      #   print(p)
       b = 0 
       for period in date_list:
         a = 0
@@ -443,9 +445,6 @@ class Budget(BudgetTemplate):
           b += 0
         # this amount is actual float
         a = self.get_actual(id=id,period=period)*100
-        # print("Budget step for {n} in {d}: {bud} set, {act} used and...\n".format(n=sub_cat['name'],
-        #                                                                          d=period[0],
-        #                                                                          bud=b,act=a))
         #MAGIC
         if b < 0: #we have budget, either this month or cumulative
           if b < a: # we have leftover
