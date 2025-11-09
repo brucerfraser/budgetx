@@ -214,7 +214,8 @@ class Budget(BudgetTemplate):
         self.colours.visible = False
       else:
         self.roll_over.enabled,self.roll_over.checked = False,False
-        
+        self.bg_colour.set_color([c for c in self.all_cats if c['category_id'] == self.category_right][0]['colour_back'])
+        self.text_colour.set_color([c for c in self.all_cats if c['category_id'] == self.category_right][0]['colour_text'])
         self.colours.visible = True
       self.edit_details.visible = True
       self.edit_name.select()
@@ -354,6 +355,7 @@ class Budget(BudgetTemplate):
     fd,ld = self.date_me(False)
     cat = self.card_2.get_components()[-1]
     a,b = 0,0
+    income_budget,income_actual = 0,0
     for sub_cat in [s for s in self.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
       a += self.get_actual(id=sub_cat['sub_category_id'])
       try:
@@ -361,8 +363,12 @@ class Budget(BudgetTemplate):
         # roll-over function. Nah - not sure what to do with roll_over on income
       except:
         b += 0
-    self.update_number_writer(b/100,a,cat)
+    income_actual += a
+    income_budget += b
     
+    self.update_number_writer(b/100,a,cat)
+
+    expense_budget,expense_actual = 0,0
     for cat in self.expense_categories.get_components():
       a,b = 0,0
       for sub_cat in [s for s in self.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
@@ -377,10 +383,27 @@ class Budget(BudgetTemplate):
         except Exception as e:
           b += 0
           print(e,"\non line 372 of Budget form (roll_over_calc function error)")
+      expense_actual += a
+      expense_budget += b
       self.update_number_writer(b/100,a,cat)
-      
-    
+    self.update_rh_header(income_actual,income_budget,expense_actual,expense_budget)
 
+  def update_rh_header(self,i_a,i_b,e_a,e_b,**event_args):
+    e_v = e_a - (e_b/100)
+    i_v = i_a - (i_b/100)
+    self.budget_in.text = "(R{b:,.2f})".format(b=-i_b/100) if i_b < 0 else "R{b:,.2f}".format(b=i_b/100)
+    self.variance_in.text = "(R{b:,.2f})".format(b=-i_v) if i_v < 0 else "R{b:,.2f}".format(b=i_v)
+    self.actual_in.text = "(R{b:,.2f})".format(b=-i_a) if i_a < 0 else "R{b:,.2f}".format(b=i_a)
+    self.variance_in.foreground = 'theme:Amount Negative' if i_v < 0 else 'theme:Primary'
+    
+    self.budget_out.text = "(R{b:,.2f})".format(b=-e_b/100) if e_b < 0 else "R{b:,.2f}".format(b=e_b/100)
+    self.variance_out.text = "(R{b:,.2f})".format(b=-e_v) if e_v < 0 else "R{b:,.2f}".format(b=e_v)
+    self.actual_out.text = "(R{b:,.2f})".format(b=-e_a) if e_a < 0 else "R{b:,.2f}".format(b=e_a)
+    self.budget_out.foreground = 'theme:Amount Negative' if e_b < 0 else 'theme:Primary'
+    self.variance_out.foreground = 'theme:Amount Negative' if e_v < 0 else 'theme:Primary'
+    self.actual_out.foreground = 'theme:Amount Negative' if e_a < 0 else 'theme:Primary'
+    
+     
   def update_number_writer(self,b,a,comp,**event_args):
     """
     Writes a Category holders header bar
@@ -482,4 +505,19 @@ class Budget(BudgetTemplate):
         next = cd.year + 1
         cd = date(next,1,1)
     return date_list
+
+  def a_colour_change(self, **event_args):
+    for cat in self.expense_categories.get_components():
+      if cat.item['category_id'] == self.category_right:
+        #we have our category
+        new = {'colour_text':self.text_colour.get_color(),
+              'colour_back':self.bg_colour.get_color()}
+        app_tables.categories.get(category_id=self.category_right).update(**new)
+        cat.item['colour_back'] = new['colour_back']
+        cat.item['colour_text'] = new['colour_text']
+        cat.form_show()
+        i = self.all_cats.index([c for c in self.all_cats if c['category_id'] == self.category_right][0])
+        self.all_cats[i]['colour_back'] = new['colour_back']
+        self.all_cats[i]['colour_text'] = new['colour_text']
+        break
     

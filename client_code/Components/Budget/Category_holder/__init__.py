@@ -13,7 +13,6 @@ class Category_holder(Category_holderTemplate):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
     
-
   def link_2_click(self, **event_args):
     from ....Pop_menus.work_a_category import work_a_category
     c = work_a_category(cat=False)
@@ -70,3 +69,9 @@ class Category_holder(Category_holderTemplate):
 
   def calculate_me(self,info,**event_args):
     pass
+
+  def form_show(self, **event_args):
+    for obj in [self.name_label,self.budget,self.actual]:
+      obj.foreground = self.item['colour_text']
+
+
