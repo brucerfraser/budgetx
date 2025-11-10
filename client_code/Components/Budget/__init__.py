@@ -399,7 +399,7 @@ class Budget(BudgetTemplate):
   def update_cat_warning(self,**event_args):
     fd,ld = self.date_me(False)
     un_cat = len([t for t in Global.Transactions_Form.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == None])
-    warning = "There are {n} uncategorised transactions for this month".format(n=un_cat)
+    warning = "{n} uncategorised transactions for this month".format(n=un_cat)
     self.label_uncat.text = "All transactions categorised!" if un_cat == 0 else warning
     self.label_uncat.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
     self.fix_it.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
