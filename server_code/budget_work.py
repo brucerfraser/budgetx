@@ -95,7 +95,7 @@ def archive(b_to,cat_id):
       cat['order'] -= 1
 
 @anvil.server.callable
-def load_budget_data():
+def load_budget_data(only_t=False):
   # if new month and no entries, copy prev month entries
   today = date.today()
   period = date(today.year,today.month,1)
@@ -110,18 +110,21 @@ def load_budget_data():
     for row in app_tables.budgets.search(period=last_month):
       app_tables.budgets.add_row(period=period,budget_amount=row['budget_amount'],belongs_to=row['belongs_to'])
   
-  t = app_tables.transactions.search()
-  c = app_tables.categories.search()
-  s = app_tables.sub_categories.search()
-  b = app_tables.budgets.search()
-  all_trans, all_cats, all_sub_cats, all_budgets = [],[],[],[]
-  for row in t:
-    all_trans.append(dict(row))
-  for row in c:
-    all_cats.append(dict(row))
-  for row in s:
-    all_sub_cats.append(dict(row))
-  for row in b:
-    all_budgets.append(dict(row))
-  
-  return all_trans, all_cats, all_sub_cats, all_budgets
+  if only_t:
+    t = app_tables.transactions.search()
+    all_trans = []
+    for row in t:
+      all_trans.append(dict(row))
+    return all_trans
+  else:
+    c = app_tables.categories.search()
+    s = app_tables.sub_categories.search()
+    b = app_tables.budgets.search()
+    all_cats, all_sub_cats, all_budgets = [],[],[]
+    for row in c:
+      all_cats.append(dict(row))
+    for row in s:
+      all_sub_cats.append(dict(row))
+    for row in b:
+      all_budgets.append(dict(row))
+    return all_cats, all_sub_cats, all_budgets

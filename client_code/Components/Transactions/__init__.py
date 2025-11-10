@@ -13,18 +13,24 @@ class Transactions(TransactionsTemplate):
   def __init__(self,dash=False, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    self.load_me(dash)
-    if dash:
+    self.all_transactions = anvil.server.call('load_budget_data',True)
+    self.dash = dash
+    self.form_show()
+    
+  def load_me(self,dash,**event_args):
+    fd,ld = self.date_me(dash)
+    # print(self.all_transactions[0])
+    self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
+                                          key = lambda x: x['date'],reverse=True)
+    # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
+    #                                                               date=q.between(fd,ld,True,True))
+    if self.dash:
       self.card_3.role = 'fixed-holder'
       self.card_header.visible = False
     else:
       self.card_3.role = 'fixed-holder-page'
+      self.card_header.visible = True
     self.which_form = 'transactions'
-
-  def load_me(self,dash,**event_args):
-    fd,ld = self.date_me(dash)
-    self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
-                                                                  date=q.between(fd,ld,True,True))
     self.rake_page()
     
   
@@ -60,12 +66,16 @@ class Transactions(TransactionsTemplate):
     if key == "date" and i == "fa:chevron-down":
       i = ""
     if key == 'account':
-      self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
-                                                                    tables.order_by("date",ascending=False),
-                                                                   date=q.between(fd,ld,True,True))
+      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
+                                            key = lambda x: (x[key],x['date']),reverse = not a)
+      # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
+      #                                                               tables.order_by("date",ascending=False),
+      #                                                              date=q.between(fd,ld,True,True))
     else:
-      self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
-                                                                   date=q.between(fd,ld,True,True))
+      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
+                                            key = lambda x: x[key],reverse = not a)
+      # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
+      #                                                              date=q.between(fd,ld,True,True))
     event_args['sender'].icon = i
     for obj in [self.date,self.account,self.amount,self.description]:
       if obj.text != event_args['sender'].text:
@@ -91,4 +101,8 @@ class Transactions(TransactionsTemplate):
       trans.am_i_smart()
     self.inflow.text = "Inflow: R{a:.2f}".format(a=i/100)
     self.outflow.text = "Outflow: R{a:.2f}".format(a=o/100)
+
+  def form_show(self, **event_args):
+    self.load_me(self.dash)
+    
     

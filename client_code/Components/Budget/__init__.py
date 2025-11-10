@@ -24,7 +24,7 @@ class Budget(BudgetTemplate):
     """
     METHOD SERVER
     """
-    self.all_trans, self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
+    self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
     
     inc_d = {}
     cats = []
@@ -75,7 +75,7 @@ class Budget(BudgetTemplate):
     else:
       fd,ld = period[0],period[1]
     trans_list = [
-      t for t in self.all_trans if t['date'] >= fd and t['date'] <= ld and t['category'] == id
+      t for t in Global.Transactions_Form.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == id
     ]
     a = 0.0
     for t in trans_list:

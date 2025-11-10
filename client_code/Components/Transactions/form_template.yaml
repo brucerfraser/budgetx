@@ -30,8 +30,12 @@ components:
     type: ColumnPanel
   - components:
     - layout_properties: {grid_position: 'IANMMY,WGVIFN'}
-      name: button_1
+      name: search_button
       properties: {icon: 'fa:search', text: SEARCH}
+      type: Button
+    - layout_properties: {grid_position: 'IANMMY,BPMICV'}
+      name: un_cat_button
+      properties: {text: Uncategorised}
       type: Button
     layout_properties: {grid_position: 'JDVOSO,CQSMXF LZAOUP,JIKXCG'}
     name: column_panel_3
@@ -192,5 +196,7 @@ components:
   name: column_panel_1
   properties: {}
   type: ColumnPanel
-container: {type: ColumnPanel}
+container:
+  event_bindings: {show: form_show}
+  type: ColumnPanel
 is_package: true

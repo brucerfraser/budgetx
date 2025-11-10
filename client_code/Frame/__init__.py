@@ -27,6 +27,7 @@ class Frame(FrameTemplate):
     Global.make_date()
     Global.all_categories()
     Global.smarter()
+    Global.open_transactions_instance()
     #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
     self.paths = {"transactions":self.transactions_page_link,
@@ -63,8 +64,9 @@ class Frame(FrameTemplate):
   def transactions_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Reports Form
+    Global.Transactions_Form.dash = False
     self.content_panel.clear()
-    self.content_panel.add_component(Transactions())
+    self.content_panel.add_component(Global.Transactions_Form)
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.transactions_page_link.background = app.theme_colors['Primary Container']
     clear_list = [self.reports_page_link,self.budget_page_link,self.dashboard_page_link]

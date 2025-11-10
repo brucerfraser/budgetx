@@ -21,12 +21,17 @@ PERIOD = (0,0)
 global CUSTOM
 CUSTOM = (None,None)
 
+global Transactions_Form
+Transactions_Form = None
+
 accounts = anvil.server.call('get_accounts')
 keys = list(accounts.keys())
 ACCOUNTS = [(accounts[k],k) for k in keys]
 
-# for row in app_tables.transactions.search():
-#   row['category'] = None
+def open_transactions_instance():
+  global Transactions_Form
+  from .Components.Transactions import Transactions
+  Transactions_Form = Transactions(dash=True)
 
 def all_categories():
   global CATEGORIES
