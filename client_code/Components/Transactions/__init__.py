@@ -42,7 +42,7 @@ class Transactions(TransactionsTemplate):
       self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and search.lower() in t['description'].lower() or search.lower() in str(t['amount']).lower()],
                                             key = lambda x: x['date'],reverse=True)
     elif sub_cat:
-      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and (t[sub_cat[0]] == sub_cat[1] or Global.is_it_smart(t['description']) == t['category'])],
+      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and (t[sub_cat[0]] == sub_cat[1] or Global.is_it_smart(t['description']) == sub_cat[1])],
                                             key = lambda x: x['date'],reverse=True)
     # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
     #                                                               date=q.between(fd,ld,True,True))

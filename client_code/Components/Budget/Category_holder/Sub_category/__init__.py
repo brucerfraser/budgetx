@@ -150,6 +150,7 @@ class Sub_category(Sub_categoryTemplate):
                    large=True)
     if trigger:
       Global.Transactions_Form.remove_from_parent()
+      Global.Transactions_Form.sub_cat = None
       get_open_form().transactions_page_link_click()
     
     

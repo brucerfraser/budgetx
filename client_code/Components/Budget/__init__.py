@@ -65,6 +65,7 @@ class Budget(BudgetTemplate):
     # get date
     fd,ld = self.date_me(dash)
     self.month_label.text = fd.strftime("%B %Y")
+    un_cat = len([t for t in Global.Transaction_Form.all_transactions if t['date'] >= fd and t['date'] <= ld])
     # go through cats and update any open sub_cats
     self.update_numbers()
     for inc in self.card_2.get_components()[-1].repeating_panel_1.get_components():

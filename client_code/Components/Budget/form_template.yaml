@@ -23,18 +23,38 @@ components:
       type: ColumnPanel
     - components:
       - components:
-        - layout_properties: {grid_position: 'EIYUUF,IGMTLJ'}
-          name: label_1
-          properties: {text: Total Expenses etc}
-          type: Label
+        - components:
+          - layout_properties: {grid_position: 'UCFXUT,XAPWOO'}
+            name: label_uncat
+            properties: {text: Total Expenses etc}
+            type: Label
+          - layout_properties: {grid_position: 'UCFXUT,VKRWQT'}
+            name: fix_it
+            properties: {text: fix it!}
+            type: Button
+          layout_properties: {grid_position: 'EIYUUF,AOEFPP'}
+          name: card_3
+          properties:
+            col_widths: '{"XAPWOO":40,"VKRWQT":20}'
+            role: card
+            spacing:
+              padding: [0, null, 0, null]
+          type: ColumnPanel
         - event_bindings: {click: add_category_click}
           layout_properties: {grid_position: 'EIYUUF,WMEBCH'}
           name: add_category
-          properties: {text: Add Category}
+          properties:
+            spacing:
+              margin: [12, null, null, null]
+            text: Add Category
           type: Button
         layout_properties: {grid_position: 'OUVEOM,GHWXTE'}
         name: card_exp_header
-        properties: {role: card}
+        properties:
+          col_widths: '{"AOEFPP":40,"WMEBCH":20}'
+          role: card
+          spacing:
+            padding: [0, null, 0, null]
         type: ColumnPanel
       - layout_properties: {grid_position: 'VTICVQ,RHQMGY'}
         name: expense_categories
