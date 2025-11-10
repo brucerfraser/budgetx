@@ -141,11 +141,13 @@ class Sub_category(Sub_categoryTemplate):
 
   def actual_click(self, **event_args):
     """We need to call a pop-up"""
+    frm = get_open_form().content_panel.get_components()[0]
+    fd,ld = frm.date_me(False)
     Global.Transactions_Form.remove_from_parent()
     Global.Transactions_Form.dash = False
     Global.Transactions_Form.sub_cat = ('category',self.item['sub_category_id'])
     trigger = alert(Global.Transactions_Form,
-                    title='category',
+                    title='{c} transactions for {f} to {l}'.format(c=Global.CATEGORIES[self.item['sub_category_id']]['display'],f=fd,l=ld),
                    buttons=[("Done",False),("Go to Transactions",True)],
                    large=True)
     if trigger:

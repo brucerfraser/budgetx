@@ -537,4 +537,18 @@ class Budget(BudgetTemplate):
         self.all_cats[i]['colour_back'] = new['colour_back']
         self.all_cats[i]['colour_text'] = new['colour_text']
         break
+
+  def fix_it_click(self, **event_args):
+    fd,ld = self.date_me(False)
+    Global.Transactions_Form.remove_from_parent()
+    Global.Transactions_Form.dash = False
+    Global.Transactions_Form.sub_cat = ('category',None)
+    trigger = alert(Global.Transactions_Form,
+                    title='Uncategorised transactions for {f} to {l}'.format(f=fd,l=ld),
+                    buttons=[("Done",False),("Go to Transactions",True)],
+                    large=True)
+    if trigger:
+      Global.Transactions_Form.remove_from_parent()
+      Global.Transactions_Form.sub_cat = None
+      get_open_form().transactions_page_link_click()
     

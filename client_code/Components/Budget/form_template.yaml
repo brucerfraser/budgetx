@@ -28,7 +28,8 @@ components:
             name: label_uncat
             properties: {text: Total Expenses etc}
             type: Label
-          - layout_properties: {grid_position: 'UCFXUT,VKRWQT'}
+          - event_bindings: {click: fix_it_click}
+            layout_properties: {grid_position: 'UCFXUT,VKRWQT'}
             name: fix_it
             properties: {text: fix it!}
             type: Button
