@@ -65,7 +65,7 @@ class Budget(BudgetTemplate):
     # get date
     fd,ld = self.date_me(dash)
     self.month_label.text = fd.strftime("%B %Y")
-    un_cat = len([t for t in Global.Transaction_Form.all_transactions if t['date'] >= fd and t['date'] <= ld])
+    
     # go through cats and update any open sub_cats
     self.update_numbers()
     for inc in self.card_2.get_components()[-1].repeating_panel_1.get_components():
@@ -394,6 +394,16 @@ class Budget(BudgetTemplate):
       expense_budget += b
       self.update_number_writer(b/100,a,cat)
     self.update_rh_header(income_actual,income_budget,expense_actual,expense_budget)
+    self.update_cat_warning()
+
+  def update_cat_warning(self,**event_args):
+    fd,ld = self.date_me(False)
+    un_cat = len([t for t in Global.Transactions_Form.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == None])
+    warning = "There are {n} uncategorised transactions for this month".format(n=un_cat)
+    self.label_uncat.text = "All transactions categorised!" if un_cat == 0 else warning
+    self.label_uncat.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
+    self.fix_it.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
+    self.fix_it.enabled = True if un_cat > 0 else False
 
   def update_rh_header(self,i_a,i_b,e_a,e_b,**event_args):
     e_v = e_a - (e_b/100)
