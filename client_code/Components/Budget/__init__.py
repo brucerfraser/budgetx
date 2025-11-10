@@ -124,6 +124,8 @@ class Budget(BudgetTemplate):
     result = alert(c,title="Add a category",buttons=[],large=True)
     # print(result)
     if result:
+      for a in ['roll_over','roll_over_date']:
+        del result[a]
       # we need an order first
       print(max(self.all_cats, key=lambda x: x["order"]))
       result['order'] = max(self.all_cats, key=lambda x: x["order"])['order'] + 1
@@ -278,7 +280,7 @@ class Budget(BudgetTemplate):
       #update the category
       for category in self.expense_categories.get_components():
         if category.item['category_id'] == self.category_right:
-          category.link_1.text = self.edit_name.text
+          category.name_label.text = self.edit_name.text
           break
     else:
       #update the sub_category

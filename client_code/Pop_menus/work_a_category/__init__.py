@@ -38,6 +38,7 @@ class work_a_category(work_a_categoryTemplate):
       self.raise_event('x-close-alert',value={'name':self.label.text,
                                               'colour_back':self.colorpicker_back.get_color(),
                                              'colour_text':self.colorpicker_text.get_color(),
+                                              'roll_over':False,'roll_over_date':None,
                                              id:Global.new_id_needed(),
                                              'order':0})
     else:
