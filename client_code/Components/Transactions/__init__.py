@@ -25,6 +25,9 @@ class Transactions(TransactionsTemplate):
       self.card_header.visible = False
     else:
       self.load_me(self.dash)
+
+  def reload(self,**event_args):
+    self.all_transactions = anvil.server.call('load_budget_data',True)
       
 
   def load_me(self,dash,uncat=False,search=False,sub_cat=None,**event_args):

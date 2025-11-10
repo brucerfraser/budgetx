@@ -237,7 +237,8 @@ class Budget(BudgetTemplate):
       up = True
     else:
       up = False
-      
+
+    
     ret = anvil.server.call('order_change',up=up,cat_id=self.category_right)
       #run a refresh of categories
       # ret = 'cat' means it's a category, 'uy2346iuy...' = sub_category belongs_to, None means do noting
