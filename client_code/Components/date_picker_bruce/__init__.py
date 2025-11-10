@@ -19,7 +19,10 @@ class date_picker_bruce(date_picker_bruceTemplate):
 
   def form_show(self, **event_args):
     # get transaction start and end date:
-    for row in app_tables.transactions.search(tables.order_by('date',ascending=True)):
+    
+    for row in sorted(Global.Transactions_Form.all_transactions,
+                      key = lambda x: x['date'],reverse=False):
+      print (row['date'])
       self.budget_x_first_date = row['date']
       break
     m = date.today().month

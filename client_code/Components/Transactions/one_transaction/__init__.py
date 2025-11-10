@@ -135,20 +135,21 @@ class one_transaction(one_transactionTemplate):
     print(self.item['category'])
     self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
     self.category.text = self.autocomplete_1.text
+    
     if self.item['category']:
       Global.smarter(first=False,update=(self.item['category'],self.item['description']))
       self.category.background = Global.CATEGORIES[self.item['category']]['colour']
       self.category.foreground = 'theme:Surface'
       self.category.border = ''
     else:
-      self.category.text = "None"
-      self.category.foreground = ''
+      self.categorise()
     self.category.visible = True
     self.autocomplete_1.visible = False
     self.confirm.visible = False
-    frame = get_open_form()
-    frm = frame.content_panel.get_components()[0]
-    frm.smart_cat_update()
+    if self.item['category']:
+      frame = get_open_form()
+      frm = frame.content_panel.get_components()[0]
+      frm.smart_cat_update()
 
   def autocomplete_1_lost_focus(self, **event_args):
     if self.item['category']:

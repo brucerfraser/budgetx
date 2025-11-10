@@ -16,7 +16,10 @@ class Transactions(TransactionsTemplate):
     self.all_transactions = anvil.server.call('load_budget_data',True)
     self.dash = dash
     self.form_show()
-    
+
+  def form_show(self, **event_args):
+    self.load_me(self.dash)
+
   def load_me(self,dash,**event_args):
     fd,ld = self.date_me(dash)
     # print(self.all_transactions[0])
@@ -102,7 +105,5 @@ class Transactions(TransactionsTemplate):
     self.inflow.text = "Inflow: R{a:.2f}".format(a=i/100)
     self.outflow.text = "Outflow: R{a:.2f}".format(a=o/100)
 
-  def form_show(self, **event_args):
-    self.load_me(self.dash)
-    
+  
     
