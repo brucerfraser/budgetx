@@ -54,6 +54,9 @@ class Budget(BudgetTemplate):
     self.expense_categories.items = cats
     self.update_numbers()
 
+  def form_show(self,**event_args):
+    self.load_me(False)
+
   def load_me(self,dash,**event_args):
     # this happens after date selection changes at top
     # get date
