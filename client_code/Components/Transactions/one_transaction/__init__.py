@@ -27,12 +27,20 @@ class one_transaction(one_transactionTemplate):
         break
     self.account.text = self.account_name
     self.categorise()
+    if 'lyceum' in self.item['description'].lower():
+      print("local:",self.item)
+      res = app_tables.transactions.search(description=q.ilike(f"%{'lyceum'}%"))
+      for r in res:
+        rd = dict(r)
+        print("table seacrh:",rd)
+      
     # self.am_i_smart()
     
 
     
   def categorise(self,**event_args):
     names_list = sorted(list(map(lambda x: x['display'], Global.CATEGORIES.values())))
+    names_list.insert(0,"None")
     self.autocomplete_1.suggestions = names_list
     if self.item['category'] == None:
       self.category.text = "None"
@@ -69,6 +77,7 @@ class one_transaction(one_transactionTemplate):
       frame = get_open_form()
       frm = frame.content_panel.get_components()[0]
       frm.load_me(False)
+      self.update_a_transaction('date',self.item['date'],self.item['transaction_id'])
     self.date_picker_1.visible = False
     self.date.visible = True
     
@@ -88,8 +97,8 @@ class one_transaction(one_transactionTemplate):
     self.account.visible = True
     self.drop_down_1.visible = False
     # have to change the hash here
-    self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year)+ str(self.item['amount']) + self.item['account']
-  
+    self.update_a_transaction('account',self.item['account'],self.item['transaction_id'])
+    
   def amount_click(self, **event_args):
     self.text_box_1.visible = True
     self.text_box_1.focus()
@@ -98,6 +107,7 @@ class one_transaction(one_transactionTemplate):
   def some_lose_focus(self,**event_args):
     # must update here...
     self.item['amount'] = int(math.floor(self.text_box_1.text*100))
+    self.update_a_transaction('amount',self.item['amount'],self.item['transaction_id'])
     self.amount.visible = True
     self.text_box_1.visible = False
 
@@ -108,6 +118,7 @@ class one_transaction(one_transactionTemplate):
 
   def desc_lose_focus(self, **event_args):
     self.refresh_data_bindings()
+    self.update_a_transaction('description',self.item['description'],self.item['transaction_id'])
     self.description.visible = True
     self.text_box_2.visible = False
 
@@ -115,15 +126,23 @@ class one_transaction(one_transactionTemplate):
     self.autocomplete_1.visible = True
     if self.autocomplete_1.text == '':
       self.autocomplete_1.focus()
+    else:
+      self.autocomplete_1.select()
     self.category.visible = False
 
   def category_choose(self,**event_args):
     self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
+    print(self.item['category'])
+    self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
     self.category.text = self.autocomplete_1.text
-    Global.smarter(first=False,update=(self.item['category'],self.item['description']))
-    self.category.background = Global.CATEGORIES[self.item['category']]['colour']
-    self.category.foreground = 'theme:Surface'
-    self.category.border = ''
+    if self.item['category']:
+      Global.smarter(first=False,update=(self.item['category'],self.item['description']))
+      self.category.background = Global.CATEGORIES[self.item['category']]['colour']
+      self.category.foreground = 'theme:Surface'
+      self.category.border = ''
+    else:
+      self.category.text = "None"
+      self.category.foreground = ''
     self.category.visible = True
     self.autocomplete_1.visible = False
     self.confirm.visible = False
@@ -141,6 +160,7 @@ class one_transaction(one_transactionTemplate):
       self.category.background = 'theme:Amount Negative'
       self.category.visible = True
       self.autocomplete_1.visible = False
+    
 
   def am_i_smart(self,**event_args):
     if not self.item['category']:
@@ -163,5 +183,10 @@ class one_transaction(one_transactionTemplate):
   def confirm_click(self, **event_args):
     self.autocomplete_1.text = self.category.text
     self.category_choose()
+
+  def update_a_transaction(self,key,value,id,**event_args):
+    self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year)+ str(self.item['amount']) + self.item['account']
+    up_dict = {'hash':self.item['hash'],key:value}
+    app_tables.transactions.get(transaction_id=id).update(**up_dict)
       
   
