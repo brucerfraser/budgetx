@@ -85,9 +85,9 @@ def smarter(first=True,update=None):
 
 def is_it_smart(description):
   """
-  SOMETHING WRONG in here.
-  Allocating a category when no words match. Maybe restrict words that make it
-  into the match lists? Maybe the match algorithm not working?
+  Description string as input
+  Splits description into separate words, compares each word in the SMART dict,
+  Gets the max occurrence key out of another dict, returns the key.
   """
   
   global SMART

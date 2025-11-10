@@ -57,6 +57,9 @@ class Budget(BudgetTemplate):
   def form_show(self,**event_args):
     self.load_me(False)
 
+  def smart_cat_update(self,**event_args):
+    Global.Transactions_Form.smart_cat_update()
+
   def load_me(self,dash,**event_args):
     # this happens after date selection changes at top
     # get date
