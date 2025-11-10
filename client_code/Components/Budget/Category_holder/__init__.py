@@ -73,5 +73,6 @@ class Category_holder(Category_holderTemplate):
   def form_show(self, **event_args):
     for obj in [self.name_label,self.budget,self.actual]:
       obj.foreground = self.item['colour_text']
+      self.link_1.background = self.item['colour_back']
 
 
