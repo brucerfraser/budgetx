@@ -29,11 +29,18 @@ components:
       spacing_below: none
     type: ColumnPanel
   - components:
-    - layout_properties: {grid_position: 'IANMMY,WGVIFN'}
+    - event_bindings: {click: search_button_click}
+      layout_properties: {grid_position: 'IANMMY,WGVIFN'}
       name: search_button
       properties: {icon: 'fa:search', text: SEARCH}
       type: Button
-    - layout_properties: {grid_position: 'IANMMY,BPMICV'}
+    - event_bindings: {change: go_go}
+      layout_properties: {grid_position: 'IANMMY,LZCPDL'}
+      name: search_text
+      properties: {visible: false}
+      type: TextBox
+    - event_bindings: {click: un_cat_button_click}
+      layout_properties: {grid_position: 'IANMMY,BPMICV'}
       name: un_cat_button
       properties: {text: Uncategorised}
       type: Button

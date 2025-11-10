@@ -15,16 +15,34 @@ class Transactions(TransactionsTemplate):
     self.init_components(**properties)
     self.all_transactions = anvil.server.call('load_budget_data',True)
     self.dash = dash
+    self.sub_cat = None
+    self.searched = False
     self.form_show()
 
   def form_show(self, **event_args):
-    self.load_me(self.dash)
+    if self.sub_cat:
+      self.load_me(self.dash,uncat=False,search=False,sub_cat=self.sub_cat)
+    else:
+      self.load_me(self.dash)
 
-  def load_me(self,dash,**event_args):
+  def load_me(self,dash,uncat=False,search=False,sub_cat=None,**event_args):
+    """
+    sub_cat is a tuple of (key,value)
+    """
     fd,ld = self.date_me(dash)
     # print(self.all_transactions[0])
-    self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
-                                          key = lambda x: x['date'],reverse=True)
+    if not uncat and not search:
+      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
+                                            key = lambda x: x['date'],reverse=True)
+    elif uncat:
+      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == None],
+                                            key = lambda x: x['date'],reverse=True)
+    elif search:
+      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and search.lower() in t['description'].lower() or search.lower() in str(t['amount']).lower()],
+                                            key = lambda x: x['date'],reverse=True)
+    elif sub_cat:
+      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and t[sub_cat[0]] == sub_cat[1]],
+                                            key = lambda x: x['date'],reverse=True)
     # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
     #                                                               date=q.between(fd,ld,True,True))
     if self.dash:
@@ -104,6 +122,38 @@ class Transactions(TransactionsTemplate):
       trans.am_i_smart()
     self.inflow.text = "Inflow: R{a:.2f}".format(a=i/100)
     self.outflow.text = "Outflow: R{a:.2f}".format(a=o/100)
+
+  def un_cat_button_click(self, **event_args):
+    if self.un_cat_button.foreground == 'theme:Primary':
+      #un-click it
+      self.un_cat_button.foreground = ''
+      self.load_me(self.dash)
+    else:
+      self.un_cat_button.foreground = 'theme:Primary'
+      self.load_me(self.dash,uncat=True)
+
+  def search_button_click(self, **event_args):
+    if self.search_button.foreground == 'theme:Primary':
+      #un-click it
+      self.search_text.visible = False
+      self.search_text.text = ''
+      self.search_button.foreground = ''
+      if self.searched:
+        self.load_me(self.dash)
+        self.searched = False
+    else:
+      self.search_button.foreground = 'theme:Primary'
+      self.search_text.visible = True
+      self.search_text.focus()
+
+  def go_go(self, **event_args):
+    if len(self.search_text.text) >= 3:
+      self.searched = True
+      self.load_me(self.dash,uncat=False,search=self.search_text.text)
+    else:
+      if self.searched:
+        self.searched = False
+        self.load_me(self.dash)
 
   
     

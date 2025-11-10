@@ -34,11 +34,6 @@ class Frame(FrameTemplate):
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
     
-      
-      
-      
-  
-  
   def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Sales Form
@@ -66,6 +61,7 @@ class Frame(FrameTemplate):
     #Clear the content panel and add the Reports Form
     Global.Transactions_Form.dash = False
     self.content_panel.clear()
+    Global.Transactions_Form.remove_from_parent()
     self.content_panel.add_component(Global.Transactions_Form)
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.transactions_page_link.background = app.theme_colors['Primary Container']

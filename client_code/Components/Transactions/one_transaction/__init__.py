@@ -27,14 +27,7 @@ class one_transaction(one_transactionTemplate):
         break
     self.account.text = self.account_name
     self.categorise()
-    if 'lyceum' in self.item['description'].lower():
-      print("local:",self.item)
-      res = app_tables.transactions.search(description=q.ilike(f"%{'lyceum'}%"))
-      for r in res:
-        rd = dict(r)
-        print("table seacrh:",rd)
-      
-    # self.am_i_smart()
+    
     
 
     

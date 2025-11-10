@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ...Components.Transactions import Transactions
+from ... import Global
 from ...Components.Budget_mini import Budget_mini
 from ...Components.Reports_mini import Reports_mini
 
@@ -24,7 +24,8 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
     
 
   def load_everything(self, **event_args):
-    self.link_transactions.add_component(Transactions(dash=True))
+    Global.Transactions_Form.dash = True
+    self.link_transactions.add_component(Global.Transactions_Form)
     self.link_budget.add_component(Budget_mini())
     self.link_report.add_component(Reports_mini())
     
@@ -38,3 +39,5 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
   def link_report_click(self, **event_args):
     get_open_form().ping_ping("reports")
     
+  def smart_cat_update(self,**event_args):
+    Global.Transactions_Form.smart_cat_update()

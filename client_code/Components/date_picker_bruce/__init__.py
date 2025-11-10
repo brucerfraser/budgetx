@@ -22,7 +22,6 @@ class date_picker_bruce(date_picker_bruceTemplate):
     
     for row in sorted(Global.Transactions_Form.all_transactions,
                       key = lambda x: x['date'],reverse=False):
-      print (row['date'])
       self.budget_x_first_date = row['date']
       break
     m = date.today().month
@@ -50,7 +49,7 @@ class date_picker_bruce(date_picker_bruceTemplate):
       Global.make_date(m,y,False)
       frame = anvil.get_open_form()
       frm = frame.content_panel.get_components()[0]
-      frm.load_me(False)
+      frm.form_show()
       result = self.drop_down_1.items
       if frm.which_form == 'budget':
         if self.drop_down_1.selected_value == result[-1][1]:

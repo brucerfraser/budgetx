@@ -138,6 +138,18 @@ class Sub_category(Sub_categoryTemplate):
       if self.b > 0:
         self.b = self.b * -1
     self.update_bars(self.b,self.a)
+
+  def actual_click(self, **event_args):
+    """We need to call a pop-up"""
+    Global.Transactions_Form.dash = False
+    Global.Transactions_Form.sub_cat = ('category',self.item['sub_category_id'])
+    trigger = alert(Global.Transactions_Form,
+                    title='category',
+                   buttons=[("Done",False),("Go to Transactions",True)],
+                   large=True)
+    if trigger:
+      get_open_form().transactions_page_link_click()
+    
     
 
   
