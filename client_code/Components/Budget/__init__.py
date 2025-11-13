@@ -91,9 +91,11 @@ class Budget(BudgetTemplate):
 
   def neg_pos(self,amount,b_to,**event_args):
     i = True if [c for c in self.all_cats if c['category_id'] == b_to][0]['name'] == "Income" else False
-    if i and amount < 0:
+    if not amount:
+      return 0
+    elif i and amount < 0:
       amount = -1 * amount
-    elif not i and amount >0:
+    elif not i and amount > 0:
       amount = -1 * amount
     return amount
 
@@ -478,7 +480,13 @@ class Budget(BudgetTemplate):
     2. if not roll-over, returns current period (as per Global) budget, or 0 if none saved.
     3. Works from main form or from sub-cat. 
     """
-    sub_cat = [s for s in self.all_sub_cats if s['sub_category_id'] == id][0]
+    
+    try:
+      sub_cat = [s for s in self.all_sub_cats if s['sub_category_id'] == id][0]
+    except:
+      print("Budget line 487:",app_tables.sub_categories.get(sub_category_id=id)['name'])
+      
+    # print(sub_cat[0])
     if sub_cat['roll_over']:
       # make list of dates to check
       date_list = self.roll_date_list(fd=sub_cat['roll_over_date'])

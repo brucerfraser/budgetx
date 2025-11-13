@@ -35,10 +35,13 @@ class Sub_category(Sub_categoryTemplate):
   def update_the_show(self,**event_args):
     #we have to do roll-over calc here, because a budget update is cool but must update roll-over
     budg = anvil.get_open_form().content_panel.get_components()[0]
-    if self.b != budg.roll_over_calc(id=self.item['sub_category_id']):
-      self.budget.underline = True
-    else:
-      self.budget.underline = False
+    try:
+      if self.b != budg.roll_over_calc(id=self.item['sub_category_id']):
+        self.budget.underline = True
+      else:
+        self.budget.underline = False
+    except:
+      print(self.item,'\n',self.b)
     bar_b = budg.roll_over_calc(id=self.item['sub_category_id'])
     self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
     self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
