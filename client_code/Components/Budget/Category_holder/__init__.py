@@ -45,7 +45,16 @@ class Category_holder(Category_holderTemplate):
         edit_id = frm.category_right
         break
     frm = get_open_form().content_panel.get_components()[0]
-    self.repeating_panel_1.items = sorted([l for l in frm.all_sub_cats if l['order'] != -1 and l['belongs_to'] == self.item['category_id']],key=lambda l_i: l_i['order'])
+    item_list = []
+    for line in frm.all_sub_cats:
+      try:
+        if line['order'] >= 0:
+          if line['belongs_to'] == self.item['category_id']:
+            item_list.append(line)
+      except:
+        print(line)
+    item_list = sorted(item_list,key = lambda i: i['order'])
+    self.repeating_panel_1.items = item_list
     odd = False
     for sc in self.repeating_panel_1.get_components():
       if odd:
