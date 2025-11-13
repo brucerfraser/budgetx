@@ -181,6 +181,7 @@ class Budget(BudgetTemplate):
       
 
   def reset_sub_categories(self,cat,**event_args):
+    
     for category in self.expense_categories.get_components():
       # print(category)
       if category.link_1.icon == "fa:angle-down":
@@ -277,6 +278,7 @@ class Budget(BudgetTemplate):
     
 
   def live_name_update(self, **event_args):
+    print(self.cat_sub_cat)
     if self.cat_sub_cat == '':
       #update the category
       for category in self.expense_categories.get_components():
@@ -285,10 +287,16 @@ class Budget(BudgetTemplate):
           break
     else:
       #update the sub_category
+      print('fired')
+      
       for category in self.expense_categories.get_components():
+        print(category.item['name'],category.item['category_id'])
         if category.item['category_id'] == self.cat_sub_cat:
+          print('......fired!')
           for sub_cat in category.repeating_panel_1.get_components():
+            print(sub_cat.item['name'],sub_cat.item['sub_category_id'],self.category_right)
             if sub_cat.item['sub_category_id'] == self.category_right:
+              sub_cat.sub_cat_name.text = self.edit_name.text
               sub_cat.sub_cat_name_edit.text = self.edit_name.text
               break
 
