@@ -37,14 +37,25 @@ class Category_holder(Category_holderTemplate):
           odd = not odd
 
   def refresh_sub_cats(self, **event_args):
-    self.repeating_panel_1.items = app_tables.sub_categories.search(q.not_(order=-1),
-                                                                    tables.order_by('order'),
-                                                                    belongs_to=self.item['category_id'])
+    frm = get_open_form().content_panel.get_components()[0]
+    edit, edit_id = False,None
+    for sc in self.repeating_panel_1.get_components():
+      edit = True if sc.item['sub_category_id'] == frm.category_right else False
+      if edit:
+        edit_id = frm.category_right
+        break
+    frm = get_open_form().content_panel.get_components()[0]
+    self.repeating_panel_1.items = sorted([l for l in frm.all_sub_cats if l['order'] != -1 and l['belongs_to'] == self.item['category_id']],key=lambda l_i: l_i['order'])
     odd = False
     for sc in self.repeating_panel_1.get_components():
       if odd:
         sc.background = 'grey'
       odd = not odd
+    if edit:
+      for sc in self.repeating_panel_1.get_components():
+        if sc.item['sub_category_id'] == edit_id:
+          sc.link_1_click()
+          break
     
   
   def link_1_click(self, **event_args):

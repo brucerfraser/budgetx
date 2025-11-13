@@ -238,34 +238,30 @@ class Budget(BudgetTemplate):
       up = True
     else:
       up = False
-
+    if self.cat_sub_cat == '':
+      ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=self.all_cats)
+    else:
+      ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=self.all_sub_cats)
     
-    ret = anvil.server.call('order_change',up=up,cat_id=self.category_right)
-      #run a refresh of categories
-      # ret = 'cat' means it's a category, 'uy2346iuy...' = sub_category belongs_to, None means do noting
-    if ret == 'cat':
-      cats = []
-      for cat in app_tables.categories.search(q.not_(order=-1),tables.order_by('order')):
-        cat_d = {}
-        cat_d = dict(cat)
-        if cat_d['name'] != 'Income':
-          cats.append(cat_d)
-      open = False
+    # ret = 'cat' means it's a category, 'uy2346iuy...' = sub_category belongs_to, None means do noting
+    if ret[0] == 'cat':
+      self.all_cats = ret[1]
+      open_cats = []
       for category in self.expense_categories.get_components():
         #find if opened or not:
-        
         if category.link_1.icon == "fa:angle-down" and category.item['category_id'] == self.category_right:
-          open = True
+          open_cats.append(category.item['category_id'])
       self.expense_categories.items = []
-      self.expense_categories.items = cats
-      if open:
+      self.expense_categories.items = [c for c in self.all_cats if c['name'] != 'Income']
+      if open_cats:
         for category in self.expense_categories.get_components():
-          if category.item['category_id'] == self.category_right:
+          if category.item['category_id'] in open_cats:
             category.link_1_click()
-    else:
+    elif ret[0] != None:
+      self.all_sub_cats = ret[1]
       #ret is belongs_to. Find object and reload.
       for category in self.expense_categories.get_components():
-        if category.item['category_id'] == ret:
+        if category.item['category_id'] == ret[0]:
           category.refresh_sub_cats()
           for sub_cat in category.repeating_panel_1.get_components():
             if sub_cat.item['sub_category_id'] == self.category_right:
