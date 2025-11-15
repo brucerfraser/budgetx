@@ -156,7 +156,7 @@ class date_picker_bruce(date_picker_bruceTemplate):
         result.append(["Custom",(0,0)])
     except Exception as e:
       Global.make_date()
-      print(e)
+      print("date picker line 159",e)
     self.drop_down_1.items = result
     self.drop_down_1.selected_value = Global.PERIOD
     if get_open_form().content_panel.get_components()[0].which_form == 'budget':

@@ -192,7 +192,7 @@ def change_order_controller(up,id,the_list_o_d):
         the_list_o_d[idx]['order'] = new
         app_tables.sub_categories.get(q.not_(sub_category_id=id),order=new,belongs_to=b_to)['order'] = order
         row_idx = the_list_o_d.index([l for l in the_list_o_d if l['sub_category_id'] != id and l['order'] == new and l['belongs_to'] == b_to][0])
-        the_list_o_d[row_idx] = order
+        the_list_o_d[row_idx]['order'] = order
     return b_to,the_list_o_d
 
 

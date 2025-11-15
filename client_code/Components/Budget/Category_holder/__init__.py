@@ -51,8 +51,8 @@ class Category_holder(Category_holderTemplate):
         if line['order'] >= 0:
           if line['belongs_to'] == self.item['category_id']:
             item_list.append(line)
-      except:
-        print(line)
+      except Exception as e:
+        print("cat holder line 55",line,e)
     item_list = sorted(item_list,key = lambda i: i['order'])
     self.repeating_panel_1.items = item_list
     odd = False
@@ -60,11 +60,12 @@ class Category_holder(Category_holderTemplate):
       if odd:
         sc.background = 'grey'
       odd = not odd
-    if edit:
-      for sc in self.repeating_panel_1.get_components():
-        if sc.item['sub_category_id'] == edit_id:
-          sc.link_1_click()
-          break
+    # if edit:
+    #   for sc in self.repeating_panel_1.get_components():
+    #     if sc.item['sub_category_id'] == edit_id:
+    #       sc.link_1_click()
+          
+    #       break
     
   
   def link_1_click(self, **event_args):

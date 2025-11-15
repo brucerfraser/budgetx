@@ -128,7 +128,7 @@ class Frame(FrameTemplate):
   def signout_link_click(self, **event_args):
     clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link,self.dashboard_page_link]
     for obj in clear_list:
-      print(obj.background)
+      # print(obj.background)
       if obj.background != 'transparent':
         print("fired")
         obj.raise_event('click')

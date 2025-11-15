@@ -129,7 +129,7 @@ class Budget(BudgetTemplate):
       for a in ['roll_over','roll_over_date']:
         del result[a]
       # we need an order first
-      print(max(self.all_cats, key=lambda x: x["order"]))
+      print("order (budget line 132):",max(self.all_cats, key=lambda x: x["order"]))
       result['order'] = max(self.all_cats, key=lambda x: x["order"])['order'] + 1
       app_tables.categories.add_row(**result)
       self.all_cats.append(result)
@@ -244,7 +244,7 @@ class Budget(BudgetTemplate):
       ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=self.all_cats)
     else:
       ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=self.all_sub_cats)
-    
+
     # ret = 'cat' means it's a category, 'uy2346iuy...' = sub_category belongs_to, None means do noting
     if ret[0] == 'cat':
       self.all_cats = ret[1]
@@ -253,22 +253,25 @@ class Budget(BudgetTemplate):
         #find if opened or not:
         if category.link_1.icon == "fa:angle-down" and category.item['category_id'] == self.category_right:
           open_cats.append(category.item['category_id'])
+      for oc in open_cats:
+        print("budget line 257 check open cats",oc)
       self.expense_categories.items = []
-      self.expense_categories.items = [c for c in self.all_cats if c['name'] != 'Income']
+      self.expense_categories.items = sorted([c for c in self.all_cats if c['name'] != 'Income'],
+                                             key = lambda i: i['order'])
       if open_cats:
         for category in self.expense_categories.get_components():
           if category.item['category_id'] in open_cats:
             category.link_1_click()
     elif ret[0] != None:
       self.all_sub_cats = ret[1]
-      #ret is belongs_to. Find object and reload.
+      #ret[0] is belongs_to. Find object and reload.
       for category in self.expense_categories.get_components():
         if category.item['category_id'] == ret[0]:
           category.refresh_sub_cats()
-          for sub_cat in category.repeating_panel_1.get_components():
-            if sub_cat.item['sub_category_id'] == self.category_right:
-              sub_cat.link_1_click()
-              break
+          # for sub_cat in category.repeating_panel_1.get_components():
+          #   if sub_cat.item['sub_category_id'] == self.category_right:
+          #     sub_cat.link_1_click()
+          #     break
 
   def name_change(self, **event_args):
     ret = anvil.server.call('name_change',cat_id=self.category_right,
@@ -276,7 +279,7 @@ class Budget(BudgetTemplate):
     
 
   def live_name_update(self, **event_args):
-    print(self.cat_sub_cat)
+    # print(self.cat_sub_cat)
     if self.cat_sub_cat == '':
       #update the category
       for category in self.expense_categories.get_components():
@@ -285,14 +288,14 @@ class Budget(BudgetTemplate):
           break
     else:
       #update the sub_category
-      print('fired')
+      # print('fired')
       
       for category in self.expense_categories.get_components():
-        print(category.item['name'],category.item['category_id'])
+        # print(category.item['name'],category.item['category_id'])
         if category.item['category_id'] == self.cat_sub_cat:
-          print('......fired!')
+          # print('......fired!')
           for sub_cat in category.repeating_panel_1.get_components():
-            print(sub_cat.item['name'],sub_cat.item['sub_category_id'],self.category_right)
+            # print(sub_cat.item['name'],sub_cat.item['sub_category_id'],self.category_right)
             if sub_cat.item['sub_category_id'] == self.category_right:
               sub_cat.sub_cat_name.text = self.edit_name.text
               sub_cat.sub_cat_name_edit.text = self.edit_name.text

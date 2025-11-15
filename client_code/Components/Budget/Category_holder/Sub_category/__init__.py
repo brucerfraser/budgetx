@@ -26,7 +26,7 @@ class Sub_category(Sub_categoryTemplate):
     try:
       self.b = [b for b in budg.all_budgets if b['belongs_to'] == self.item['sub_category_id'] and b['period'] == period][0]['budget_amount']
     except Exception as e:
-      print(e)
+      print("no budget amount set",e)
     # get actual
     self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
     # budget incl roll-over will be obtained in the below function
@@ -41,7 +41,7 @@ class Sub_category(Sub_categoryTemplate):
       else:
         self.budget.underline = False
     except:
-      print(self.item,'\n',self.b)
+      print("Sub category line 44:",self.item,'\n',self.b)
     bar_b = budg.roll_over_calc(id=self.item['sub_category_id'])
     self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
     self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
