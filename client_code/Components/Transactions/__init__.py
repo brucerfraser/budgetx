@@ -26,8 +26,15 @@ class Transactions(TransactionsTemplate):
     else:
       self.load_me(self.dash)
 
-  def reload(self,**event_args):
-    self.all_transactions = anvil.server.call('load_budget_data',True)
+  def reload_from_upload(self,new_list,**event_args):
+    for new in new_list:
+      if len([t for t in self.all_transactions if t['hash'] == new['hash']]) == 0:
+        #we have a new transaction
+        new['amount'] = int(float(new['amount'])*100)
+        new['notes'] = None
+        new['category'] = None
+        self.all_transactions.append(new)
+    # self.all_transactions = anvil.server.call('load_budget_data',True)
       
 
   def load_me(self,dash,uncat=False,search=False,sub_cat=None,**event_args):

@@ -152,7 +152,7 @@ components:
       properties:
         foreground: white
         margin: [0, null, 0, null]
-        suggest_if_empty: true
+        suggest_if_empty: false
         visible: false
       type: form:dep_6plivhjd0selve:Autocomplete
     layout_properties: {grid_position: 'NWTHGK,IHUSGZ'}
@@ -170,6 +170,7 @@ components:
   name: card_1
   properties:
     background: ''
+    col_widths: '{"HKKOLQ":10,"ZATXLD":10,"LHIJXE":10,"NWLOWG":15,"IHUSGZ":15}'
     role: one-liner
     spacing:
       margin: [0, null, 0, null]

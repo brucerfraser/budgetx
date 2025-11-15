@@ -99,7 +99,7 @@ class Frame(FrameTemplate):
                    buttons=[])
     if result:
       anvil.server.call('save_transactions',ready_list=result)
-      Global.Transactions_Form.reload()
+      Global.Transactions_Form.reload_from_upload(result)
       self.file_loader_1.clear()
       # we need to refresh whichever page is loaded here.
       clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link,self.dashboard_page_link]

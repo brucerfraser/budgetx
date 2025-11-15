@@ -25,6 +25,7 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
 
   def load_everything(self, **event_args):
     Global.Transactions_Form.dash = True
+    Global.Transactions_Form.remove_from_parent()
     self.link_transactions.add_component(Global.Transactions_Form)
     self.link_budget.add_component(Budget_mini())
     self.link_report.add_component(Reports_mini())
