@@ -151,6 +151,7 @@ def make_ready(account,trans_list,accounts=None):
             break
         d['account'] = account
         # daymonthyearamountaccount
+        d['amount'] = int(math.floor(d['amount']*100))
         d['hash'] = str(parse(d['date']).day) + str(parse(d['date']).month) + str(parse(d['date']).year) + d['amount'] + d['account']
         d['transaction_id'] = need_an_id()
         d['date'] = parse(d['date']).date()

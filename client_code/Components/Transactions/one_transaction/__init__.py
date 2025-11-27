@@ -179,7 +179,7 @@ class one_transaction(one_transactionTemplate):
     self.category_choose()
 
   def update_a_transaction(self,key,value,id,**event_args):
-    self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year)+ str(self.item['amount']) + self.item['account']
+    self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year) + str(self.item['amount']) + self.item['account']
     up_dict = {'hash':self.item['hash'],key:value}
     app_tables.transactions.get(transaction_id=id).update(**up_dict)
       
