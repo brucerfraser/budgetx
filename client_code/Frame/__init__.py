@@ -33,6 +33,9 @@ class Frame(FrameTemplate):
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
+    # print("Temp process duplicates starting...")
+    # anvil.server.call('clean_hash')
+    # print("Temp process ended")
     
   def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""

@@ -99,8 +99,9 @@ class one_transaction(one_transactionTemplate):
 
   def some_lose_focus(self,**event_args):
     # must update here...
-    self.item['amount'] = int(math.floor(self.text_box_1.text*100))
+    self.item['amount'] = int(math.trunc(self.text_box_1.text*100))
     self.update_a_transaction('amount',self.item['amount'],self.item['transaction_id'])
+    self.refresh_data_bindings()
     self.amount.visible = True
     self.text_box_1.visible = False
 

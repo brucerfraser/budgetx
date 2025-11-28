@@ -126,6 +126,7 @@ def load_transactions(file,account,head_line,accounts):
   # this dictionary is still based on the CSV file. We have to get it into BudgetX language keys
   # Here's where we split to make efficient!
   r,t = make_ready(account,trans_list,accounts)
+  print(len(r),len(t))
   return r,t
 
 @anvil.server.callable
@@ -134,37 +135,41 @@ def make_ready(account,trans_list,accounts=None):
     accounts = account_finder(None,False)
   if account:
     print("account good")
-    try:
-      deets = list(filter(lambda d: d['acc_id'] == account, accounts))      
-      ready_transactions = []
-      print(len(trans_list))
-      t1 = 0
-      for t in trans_list:
-        d = {}
-        t2 = 0
-        for key in all_trans_keys:
-          if key in deets[0]['key_map']:
-            d[key] = t[deets[0]['key_map'][key]]
-          t2 += 1
-          if t2 == 2000:
-            print('t2 auto stop')
-            break
-        d['account'] = account
-        # daymonthyearamountaccount
-        d['amount'] = int(math.floor(d['amount']*100))
-        d['hash'] = str(parse(d['date']).day) + str(parse(d['date']).month) + str(parse(d['date']).year) + d['amount'] + d['account']
-        d['transaction_id'] = need_an_id()
-        d['date'] = parse(d['date']).date()
-        ready_transactions.append(d)
-        t1 += 1
-        if t1 == 2000:
-          print('t1 auto stop')
+    # try:
+    deets = list(filter(lambda d: d['acc_id'] == account, accounts))      
+    ready_transactions = []
+    # print(len(trans_list))
+    t1 = 0
+    for t in trans_list:
+      d = {}
+      t2 = 0
+      for key in all_trans_keys:
+        if key in deets[0]['key_map']:
+          d[key] = t[deets[0]['key_map'][key]]
+        t2 += 1
+        if t2 == 2000:
+          print('t2 auto stop')
           break
-        # ready for transport back to client
-      return ready_transactions,trans_list
-    except:
+      d['account'] = account
+      # daymonthyearamountaccount
+      try:
+        d['amount'] = int(math.trunc(d['amount']*100))
+      except:
+        d['amount'] = float(d['amount'])*100
+        d['amount'] = int(math.trunc(d['amount']))
+      d['hash'] = str(parse(d['date']).day) + str(parse(d['date']).month) + str(parse(d['date']).year) + str(d['amount']) + d['account']
+      d['transaction_id'] = need_an_id()
+      d['date'] = parse(d['date']).date()
+      ready_transactions.append(d)
+      t1 += 1
+      if t1 == 2000:
+        print('t1 auto stop')
+        break
       # ready for transport back to client
-      return [],trans_list
+    return ready_transactions,trans_list
+    # except:
+    #   # ready for transport back to client
+    #   return [],trans_list
   else:
     # ready for transport back to client
     return [],trans_list
@@ -187,7 +192,7 @@ def save_transactions(ready_list):
       app_tables.transactions.add_row(**t)
 
 def update_numbers(num):
-  return int(math.floor(num*100))
+  return int(math.trunc(num*100))
 
 def find_sep_quote(list_obj):
   s_c = 0

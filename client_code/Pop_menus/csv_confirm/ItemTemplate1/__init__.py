@@ -14,6 +14,10 @@ class ItemTemplate1(ItemTemplate1Template):
     if self.item['date'] == 'Transaction Date':
       self.make_header()
     self.border = '1px solid grey'
+    try:
+      self.amount.text = self.item['amount'] / 100
+    except:
+      pass
     
     # Any code you write here will run before the form opens.
 

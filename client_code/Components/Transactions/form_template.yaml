@@ -175,6 +175,7 @@ components:
       name: card_1_copy
       properties:
         background: ''
+        col_widths: '{"HKKOLQ":10,"ZATXLD":10,"LHIJXE":10,"NWLOWG":15,"IHUSGZ":15}'
         role: one-liner
         spacing:
           margin: [0, null, 0, null]
