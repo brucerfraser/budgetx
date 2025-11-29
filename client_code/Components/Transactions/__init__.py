@@ -147,14 +147,18 @@ class Transactions(TransactionsTemplate):
     if self.search_button.foreground == 'theme:Primary':
       #un-click it
       self.search_text.visible = False
+      self.un_cat_button.visible = True
       self.search_text.text = ''
       self.search_button.foreground = ''
       if self.searched:
         self.load_me(self.dash)
         self.searched = False
     else:
+      if self.un_cat_button.foreground == 'theme:Primary':
+        self.un_cat_button_click()
       self.search_button.foreground = 'theme:Primary'
       self.search_text.visible = True
+      self.un_cat_button.visible = False
       self.search_text.focus()
 
   def go_go(self, **event_args):
@@ -165,6 +169,26 @@ class Transactions(TransactionsTemplate):
       if self.searched:
         self.searched = False
         self.load_me(self.dash)
+
+  def search_text_lost_focus(self, **event_args):
+    if len(self.search_text.text) < 3:
+      self.search_button_click()
+
+  def add_trans_click(self, **event_args):
+    date_new = date.today()
+    hash_new = str(date_new.day) + str(date_new.month) + str(date_new.year) + '0' + 'none_yet'
+    id_new = Global.new_id_needed()
+    new_trans = {'date':date_new,'amount':0,
+                'description':'','category':None,
+                'account':None,'notes':'',
+                'hash':hash_new,'transaction_id':id_new}
+    t_list = self.repeating_panel_1.items
+    t_list.insert(0,new_trans)
+    app_tables.transactions.add_row(**new_trans)
+    self.repeating_panel_1.items = t_list
+    self.rake_page()
+    # self.repeating_panel_1.get_components()[0].click_date()
+    
 
   
     
