@@ -15,6 +15,8 @@ class Transactions(TransactionsTemplate):
     self.init_components(**properties)
     self.all_transactions = anvil.server.call('load_budget_data',True)
     self.dash = dash
+    self.which_form = 'transactions'
+    self.delete_list = []
     self.sub_cat = None
     self.searched = False
     self.form_show()
@@ -120,6 +122,11 @@ class Transactions(TransactionsTemplate):
 
   def rake_page(self,**event_args):
     odd,i,o = True,0,0
+    try:
+      chk = True if get_open_form().content_panel.get_components()[0].which_form == 'transactions' else False
+    except:
+      chk = False
+      #error will occur during loading as there is no open form yet as Transactions page is loaded in Global
     for trans in self.repeating_panel_1.get_components():
       if odd:
         trans.set_bg(True)
@@ -130,9 +137,19 @@ class Transactions(TransactionsTemplate):
         o += trans.item['amount']
       else:
         i += trans.item['amount']
+      trans.check_box_1.enabled = chk
+      if chk:
+        if trans.check_box_1.checked:
+          if trans.item['transaction_id'] not in self.delete_list:
+            self.delete_list.append(trans.item['transaction_id'])
+        else:
+          if trans.item['transaction_id'] in self.delete_list:
+            self.delete_list.remove(trans.item['transaction_id'])
       trans.am_i_smart()
+    self.delete_trans.enabled = True if len(self.delete_list) > 0 else False
     self.inflow.text = "Inflow: R{a:.2f}".format(a=i/100)
     self.outflow.text = "Outflow: R{a:.2f}".format(a=o/100)
+    
 
   def un_cat_button_click(self, **event_args):
     if self.un_cat_button.foreground == 'theme:Primary':
@@ -190,6 +207,25 @@ class Transactions(TransactionsTemplate):
     self.repeating_panel_1.items = t_list
     self.rake_page()
     # self.repeating_panel_1.get_components()[0].click_date()
+
+  def delete_trans_click(self, **event_args):
+    num = str(len(self.delete_list)) + ' ' if len(self.delete_list) > 1 else ''
+    tra = 'transactions' if len(self.delete_list) > 1 else 'transaction'
+    m = "Are you sure you wish to delete the {n}highlighted {t}?".format(n=num,t=tra)
+    
+    if confirm(m,"Delete?",
+                buttons=[("Delete",True),("Cancel",False)]):
+      note = Notification("Deleting {n}{t}".format(n=num,t=tra),
+                         timeout=None)
+      note.show()
+      for id in self.delete_list:
+        app_tables.transactions.get(transaction_id=id).delete()
+        for trans in self.all_transactions:
+          if trans['transaction_id'] == id:
+            self.all_transactions.remove(trans)
+            break
+      self.load_me(self.dash)
+      note.hide()
     
 
   

@@ -179,7 +179,7 @@ components:
   name: card_1
   properties:
     background: ''
-    col_widths: '{"HKKOLQ":8,"ZATXLD":15,"LHIJXE":10,"NWLOWG":20,"IHUSGZ":15,"HBUXBT":2}'
+    col_widths: '{"HKKOLQ":8,"ZATXLD":15,"LHIJXE":10,"NWLOWG":15,"IHUSGZ":20,"HBUXBT":2}'
     role: one-liner
     spacing:
       margin: [0, null, 0, null]

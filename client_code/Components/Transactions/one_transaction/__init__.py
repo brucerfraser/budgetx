@@ -108,6 +108,7 @@ class one_transaction(one_transactionTemplate):
       self.amount.foreground = 'theme:Amount Negative'
     else:
       self.amount.foreground = ''
+    get_open_form().content_panel.get_components()[0].rake_page()
     self.update_a_transaction('amount',self.item['amount'],self.item['transaction_id'])
     self.amount.visible = True
     self.text_box_1.visible = False
