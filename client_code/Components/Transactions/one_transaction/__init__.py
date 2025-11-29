@@ -21,15 +21,16 @@ class one_transaction(one_transactionTemplate):
     # date checker for when date drop down is "changed"...it still fires even if the date 
     # comes back the same, which would waste time refreshing the page
     self.check_date_change = date(2000,1,1)
-    for f in self.dd_list:
-      if self.item['account'] == f[1]:
-        self.account_name = f[0]
-        break
-    self.account.text = self.account_name
+    if not self.item['account']:
+      self.account.text = self.account_name = "None selected"
+    else:
+      for f in self.dd_list:
+        if self.item['account'] == f[1]:
+          self.account_name = f[0]
+          break
+      self.account.text = self.account_name
     self.categorise()
     
-    
-
     
   def categorise(self,**event_args):
     names_list = sorted(list(map(lambda x: x['display'], Global.CATEGORIES.values())))
@@ -51,6 +52,8 @@ class one_transaction(one_transactionTemplate):
         obj.background = "#2B383E"
       else:
         obj.background = "#595A3B"
+      if self.check_box_1.checked:
+        obj.background = '#F29AAE' #can be deleted
     if self.item['amount'] < 0:
       self.amount.foreground = 'theme:Amount Negative'
     if self.item['category'] == None:
@@ -100,8 +103,12 @@ class one_transaction(one_transactionTemplate):
   def some_lose_focus(self,**event_args):
     # must update here...
     self.item['amount'] = int(math.trunc(self.text_box_1.text*100))
-    self.update_a_transaction('amount',self.item['amount'],self.item['transaction_id'])
     self.refresh_data_bindings()
+    if self.item['amount'] < 0:
+      self.amount.foreground = 'theme:Amount Negative'
+    else:
+      self.amount.foreground = ''
+    self.update_a_transaction('amount',self.item['amount'],self.item['transaction_id'])
     self.amount.visible = True
     self.text_box_1.visible = False
 
@@ -184,5 +191,8 @@ class one_transaction(one_transactionTemplate):
     self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year) + str(self.item['amount']) + acc
     up_dict = {'hash':self.item['hash'],key:value}
     app_tables.transactions.get(transaction_id=id).update(**up_dict)
+
+  def check_box_1_change(self, **event_args):
+    get_open_form().content_panel.get_components()[0].rake_page()
     
   

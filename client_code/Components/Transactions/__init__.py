@@ -179,11 +179,13 @@ class Transactions(TransactionsTemplate):
     hash_new = str(date_new.day) + str(date_new.month) + str(date_new.year) + '0' + 'none_yet'
     id_new = Global.new_id_needed()
     new_trans = {'date':date_new,'amount':0,
-                'description':'','category':None,
+                'description':'                  ',
+                'category':None,
                 'account':None,'notes':'',
                 'hash':hash_new,'transaction_id':id_new}
     t_list = self.repeating_panel_1.items
     t_list.insert(0,new_trans)
+    self.all_transactions.insert(0,new_trans)
     app_tables.transactions.add_row(**new_trans)
     self.repeating_panel_1.items = t_list
     self.rake_page()

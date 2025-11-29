@@ -1,5 +1,14 @@
 components:
 - components:
+  - event_bindings: {change: check_box_1_change}
+    layout_properties: {full_width_row: true, grid_position: 'NWTHGK,HBUXBT'}
+    name: check_box_1
+    properties:
+      border: ''
+      spacing:
+        padding: [5, 0, null, 22]
+      text: ''
+    type: CheckBox
   - components:
     - components: []
       data_bindings:
@@ -170,7 +179,7 @@ components:
   name: card_1
   properties:
     background: ''
-    col_widths: '{"HKKOLQ":10,"ZATXLD":10,"LHIJXE":10,"NWLOWG":15,"IHUSGZ":15}'
+    col_widths: '{"HKKOLQ":8,"ZATXLD":15,"LHIJXE":10,"NWLOWG":20,"IHUSGZ":15,"HBUXBT":2}'
     role: one-liner
     spacing:
       margin: [0, null, 0, null]
