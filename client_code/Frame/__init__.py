@@ -74,17 +74,17 @@ class Frame(FrameTemplate):
       obj.background = "transparent"
     
 
-  def load_transactions(self, **event_args):
-    #WILL HAVE to change the transactions here to Transactions_Screen
-    self.content_panel.clear()
-    # self.content_panel.add_component(Transactions())
-    #Change the color of the sales_page_link to indicate that the Reports page has been selected
-    self.transactions_page_link.background = app.theme_colors['Primary Container']
-    clear_list = [self.sales_page_link,self.reports_page_link,self.transactions_page_link]
-    for obj in clear_list:
-      obj.background = "transparent"
-    self.sales_page_link.background = "transparent"
-    self.reports_page_link.background = "transparent"
+  # def load_transactions(self, **event_args):
+  #   #WILL HAVE to change the transactions here to Transactions_Screen
+  #   self.content_panel.clear()
+  #   # self.content_panel.add_component(Transactions())
+  #   #Change the color of the sales_page_link to indicate that the Reports page has been selected
+  #   self.transactions_page_link.background = app.theme_colors['Primary Container']
+  #   clear_list = [self.sales_page_link,self.reports_page_link,self.transactions_page_link]
+  #   for obj in clear_list:
+  #     obj.background = "transparent"
+  #   self.sales_page_link.background = "transparent"
+  #   self.reports_page_link.background = "transparent"
 
   #If using the Users service, uncomment this code to log out the user:
   # def signout_link_click(self, **event_args):
