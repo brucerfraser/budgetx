@@ -32,7 +32,7 @@ class Transactions(TransactionsTemplate):
     for new in new_list:
       if len([t for t in self.all_transactions if t['hash'] == new['hash']]) == 0:
         #we have a new transaction
-        new['amount'] = int(float(new['amount'])*100)
+        # new['amount'] = int(float(new['amount'])*100)
         new['notes'] = None
         new['category'] = None
         self.all_transactions.append(new)
