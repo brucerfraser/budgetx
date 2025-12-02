@@ -1,3 +1,25 @@
-components: []
+components:
+- components:
+  - layout_properties: {full_width_row: true, grid_position: 'QNDPDA,VGCKZW'}
+    name: label_1
+    properties: {align: right, text: Top five variances}
+    type: Label
+  - layout_properties: {full_width_row: true, grid_position: 'QNDPDA,AQHYJO'}
+    name: switch_1
+    properties: {}
+    type: form:dep_6plivhjd0selve:Switch
+  - components:
+    - layout_properties: {full_width_row: true, grid_position: 'ERUXTI,WRYXDT'}
+      name: label_2
+      properties: {align: right, text: 'Choose category:'}
+      type: Label
+    layout_properties: {grid_position: 'NGUDVR,GQANKG'}
+    name: column_panel_2
+    properties: {}
+    type: ColumnPanel
+  layout_properties: {full_width_row: true, grid_position: 'UXVBZS,NZJGCV'}
+  name: column_panel_1
+  properties: {}
+  type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true
