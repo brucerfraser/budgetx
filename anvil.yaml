@@ -79,6 +79,17 @@ db_schema:
       type: string
     server: full
     title: Files
+  settings:
+    client: none
+    columns:
+    - admin_ui: {order: 0, width: 200}
+      name: dash_variances
+      type: bool
+    - admin_ui: {order: 1, width: 200}
+      name: dash_var_top_five
+      type: simpleObject
+    server: full
+    title: settings
   sub_categories:
     client: full
     columns:
