@@ -4,7 +4,10 @@ components:
     name: label_1
     properties: {align: right, text: Top five variances}
     type: Label
-  - layout_properties: {full_width_row: true, grid_position: 'QNDPDA,AQHYJO'}
+  - data_bindings:
+    - {code: 'self.item[''dash_variances'']', property: checked, writeback: true}
+    event_bindings: {change: switch_1_change}
+    layout_properties: {full_width_row: true, grid_position: 'QNDPDA,AQHYJO'}
     name: switch_1
     properties: {}
     type: form:dep_6plivhjd0selve:Switch
@@ -13,13 +16,26 @@ components:
       name: label_2
       properties: {align: right, text: 'Choose category:'}
       type: Label
+    - event_bindings: {suggestion_clicked: category_choose}
+      layout_properties: {grid_position: 'ERUXTI,NFJBHV'}
+      name: autocomplete_1
+      properties: {}
+      type: form:dep_6plivhjd0selve:Autocomplete
+    - data_bindings:
+      - {code: 'self.item[''category_list'']', property: items, writeback: false}
+      layout_properties: {grid_position: 'WVRIIK,IQOHAJ'}
+      name: repeating_panel_1
+      properties: {item_template: Components.Settings.ItemTemplate3}
+      type: RepeatingPanel
+    data_bindings:
+    - {code: self.switch_1.checked, property: visible, writeback: false}
     layout_properties: {grid_position: 'NGUDVR,GQANKG'}
     name: column_panel_2
-    properties: {}
+    properties: {border: solid grey 1px}
     type: ColumnPanel
   layout_properties: {full_width_row: true, grid_position: 'UXVBZS,NZJGCV'}
   name: column_panel_1
-  properties: {}
+  properties: {border: solid grey 1px}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

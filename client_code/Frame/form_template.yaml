@@ -24,6 +24,11 @@ components:
     name: reports_page_link
     properties: {align: center, background: '', bold: false, border: '', enabled: true, font: '', font_size: 18, foreground: '', icon: 'fa:pie-chart', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: ' Reports', tooltip: '', underline: false, visible: true}
     type: Button
+  - event_bindings: {click: settings_page_link_click}
+    layout_properties: {grid_position: 'MTZIQE,FKFQIF'}
+    name: settings_page_link
+    properties: {align: center, background: '', bold: false, border: '', enabled: true, font: '', font_size: 18, foreground: '', icon: 'fa:gear', icon_align: left, italic: false, role: null, spacing_above: small, spacing_below: small, text: Settings, tooltip: '', underline: false, visible: true}
+    type: Button
   - event_bindings: {change: file_loader_1_change}
     layout_properties: {grid_position: 'FZQUOF,KGIGQD'}
     name: file_loader_1

@@ -12,6 +12,7 @@ from .Dashboard_Screen import Dashboard_Screen
 from ..Components.Transactions import Transactions
 from ..Components.Budget import Budget
 from ..Components.Reports import Reports
+from ..Components.Settings import Settings
 import math
 
 from .. import Global
@@ -44,7 +45,9 @@ class Frame(FrameTemplate):
     self.content_panel.add_component(Budget())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     self.budget_page_link.background = app.theme_colors['Primary Container']
-    clear_list = [self.transactions_page_link,self.reports_page_link,self.dashboard_page_link]
+    clear_list = [self.transactions_page_link,self.reports_page_link,
+                  self.dashboard_page_link,self.signout_link,
+                  self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
 
@@ -55,7 +58,9 @@ class Frame(FrameTemplate):
     self.content_panel.add_component(Reports())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     self.reports_page_link.background = app.theme_colors['Primary Container']
-    clear_list = [self.transactions_page_link,self.budget_page_link,self.dashboard_page_link]
+    clear_list = [self.transactions_page_link,self.dashboard_page_link,
+                  self.budget_page_link,self.signout_link,
+                  self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
 
@@ -69,7 +74,9 @@ class Frame(FrameTemplate):
     self.content_panel.add_component(Global.Transactions_Form)
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.transactions_page_link.background = app.theme_colors['Primary Container']
-    clear_list = [self.reports_page_link,self.budget_page_link,self.dashboard_page_link]
+    clear_list = [self.dashboard_page_link,self.reports_page_link,
+                  self.budget_page_link,self.signout_link,
+                  self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
     
@@ -105,7 +112,9 @@ class Frame(FrameTemplate):
       Global.Transactions_Form.reload_from_upload(result)
       self.file_loader_1.clear()
       # we need to refresh whichever page is loaded here.
-      clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link,self.dashboard_page_link]
+      clear_list = [self.transactions_page_link,self.reports_page_link,
+                    self.budget_page_link,self.signout_link,
+                    self.settings_page_link,self.dashboard_page_link]
       for obj in clear_list:
         if obj.background != 'transparent':
           obj.raise_event('click')
@@ -120,7 +129,9 @@ class Frame(FrameTemplate):
     self.content_panel.add_component(Dashboard_Screen())
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.dashboard_page_link.background = app.theme_colors['Primary Container']
-    clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link]
+    clear_list = [self.transactions_page_link,self.reports_page_link,
+                  self.budget_page_link,self.signout_link,
+                  self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
 
@@ -129,13 +140,25 @@ class Frame(FrameTemplate):
     obj.raise_event("click")
 
   def signout_link_click(self, **event_args):
-    clear_list = [self.transactions_page_link,self.reports_page_link,self.budget_page_link,self.dashboard_page_link]
+    clear_list = [self.transactions_page_link,self.reports_page_link,
+                  self.budget_page_link,self.dashboard_page_link,
+                 self.settings_page_link]
     for obj in clear_list:
       # print(obj.background)
       if obj.background != 'transparent':
         print("fired")
         obj.raise_event('click')
         break
+
+  def settings_page_link_click(self, **event_args):
+    self.content_panel.clear()
+    self.content_panel.add_component(Settings())
+    #Change the color of the sales_page_link to indicate that the Sales page has been selected
+    self.settings_page_link.background = app.theme_colors['Primary Container']
+    clear_list = [self.transactions_page_link,self.reports_page_link,
+                  self.dashboard_page_link,self.budget_page_link]
+    for obj in clear_list:
+      obj.background = "transparent"
 
   
 

@@ -16,12 +16,10 @@ class Dashboard_Screen(Dashboard_ScreenTemplate):
     self.init_components(**properties)
     self.which_form = 'dashboard'
     self.load_everything()
-    # self.progress_bar_1.min_value = -100
-    # self.progress_bar_1.max_value = 100
-    
-    # self.negative_progress_bar_1.value = -30
-    # self.negative_progress_bar_2.value = 50
-    
+    if app_tables.settings.get(id='budget')['dash_variances']:
+      self.label_1_copy.text = "Chosen budget variances"  
+    else:
+      self.label_1_copy.text = "Top 5 (worst) variances"
 
   def load_everything(self, **event_args):
     Global.Transactions_Form.dash = True

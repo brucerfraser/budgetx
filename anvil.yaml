@@ -80,7 +80,7 @@ db_schema:
     server: full
     title: Files
   settings:
-    client: none
+    client: full
     columns:
     - admin_ui: {order: 0, width: 200}
       name: dash_variances
@@ -88,6 +88,9 @@ db_schema:
     - admin_ui: {order: 1, width: 200}
       name: dash_var_top_five
       type: simpleObject
+    - admin_ui: {order: 2, width: 200}
+      name: id
+      type: string
     server: full
     title: settings
   sub_categories:

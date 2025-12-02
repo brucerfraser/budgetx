@@ -12,6 +12,11 @@ class Budget_mini(Budget_miniTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
+    if app_tables.settings.get(id='budget')['dash_variances']:
+      self.item['category_list'] = app_tables.settings.get(id='budget')['dash_var_top_five']
+    else:
+      pass
+      #choose top 5 here
     temp = []
     for i in range(0,5):
       temp.append({'name':'Category ' + str(i),'val':random.randint(-100, 100),
