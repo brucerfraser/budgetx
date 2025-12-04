@@ -6,6 +6,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import random
+from ... import BUDGET
 
 
 class Budget_mini(Budget_miniTemplate):
@@ -17,9 +18,9 @@ class Budget_mini(Budget_miniTemplate):
     else:
       pass
       #choose top 5 here
-    temp = []
-    for i in range(0,5):
-      temp.append({'name':'Category ' + str(i),'val':random.randint(-100, 100),
-                  'min':-100,'max':100})
-    self.repeating_panel_1.items = temp      
+    
+    glances = []
+    for i in self.item['category_list']:
+      glances.append([c for c in BUDGET.all_sub_cats if c['sub_category_id'] == i['cat_id']][0])
+    self.repeating_panel_1.items = glances    
     # Any code you write here will run before the form opens.

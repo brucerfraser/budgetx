@@ -7,6 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import date
 from ..... import Global
+from ..... import BUDGET
 
 
 
@@ -15,34 +16,30 @@ class Sub_category(Sub_categoryTemplate):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
     
-    
-
   def form_show(self, **event_args):
     self.a = 0
     self.b = 0
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
-    budg = anvil.get_open_form().content_panel.get_components()[0]
     # get budget
     try:
-      self.b = [b for b in budg.all_budgets if b['belongs_to'] == self.item['sub_category_id'] and b['period'] == period][0]['budget_amount']
+      self.b = [b for b in BUDGET.all_budgets if b['belongs_to'] == self.item['sub_category_id'] and b['period'] == period][0]['budget_amount']
     except Exception as e:
       print("no budget amount set",e)
     # get actual
-    self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    self.a = BUDGET.get_actual(self.item['sub_category_id'])
     # budget incl roll-over will be obtained in the below function
     self.update_the_show()
 
   def update_the_show(self,**event_args):
     #we have to do roll-over calc here, because a budget update is cool but must update roll-over
-    budg = anvil.get_open_form().content_panel.get_components()[0]
     try:
-      if self.b != budg.roll_over_calc(id=self.item['sub_category_id']):
+      if self.b != BUDGET.roll_over_calc(id=self.item['sub_category_id']):
         self.budget.underline = True
       else:
         self.budget.underline = False
     except:
       print("Sub category line 44:",self.item,'\n',self.b)
-    bar_b = budg.roll_over_calc(id=self.item['sub_category_id'])
+    bar_b = BUDGET.roll_over_calc(id=self.item['sub_category_id'])
     self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
     self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
     self.budget_edit.text = float(self.b/100)
@@ -55,7 +52,7 @@ class Sub_category(Sub_categoryTemplate):
   def update_bars(self,b,a,**event_args):
     #income bars are different
     maxi,min,v = 0,0,0
-    if get_open_form().content_panel.get_components()[0].is_income(self.item['belongs_to']):
+    if BUDGET.is_income(self.item['belongs_to']):
       self.progress_bar_1.min_value = 0
       self.progress_bar_1_edit.min_value = 0
       self.progress_bar_1.max_value = max(b,a)
@@ -94,7 +91,7 @@ class Sub_category(Sub_categoryTemplate):
   def budget_edit_lost_focus(self, **event_args):
     period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
     budg = anvil.get_open_form().content_panel.get_components()[0]
-    self.budget_edit.text = budg.neg_pos(self.budget_edit.text,
+    self.budget_edit.text = BUDGET.neg_pos(self.budget_edit.text,
                                         self.item['belongs_to'])
     self.b = self.budget_edit.text * 100
     try:
@@ -103,8 +100,8 @@ class Sub_category(Sub_categoryTemplate):
     except:
       app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
                               period=period,budget_amount=self.b)
-    budg.update_a_budget(self.b,period,self.item['sub_category_id'])
-    self.a = budg.get_actual(self.item['sub_category_id'])
+    BUDGET.update_a_budget(self.b,period,self.item['sub_category_id'])
+    self.a = BUDGET.get_actual(self.item['sub_category_id'])
     self.update_the_show()
     budg.update_numbers()
     self.edit_column_panel.visible = False
@@ -132,9 +129,9 @@ class Sub_category(Sub_categoryTemplate):
     self.edit_column_panel.background = 'theme:Secondary Container'
 
   def budget_edit_change(self, **event_args):
-    self.a = get_open_form().content_panel.get_components()[0].get_actual(self.item['sub_category_id'])
+    self.a = BUDGET.get_actual(self.item['sub_category_id'])
     self.b = self.budget_edit.text
-    if get_open_form().content_panel.get_components()[0].is_income(self.item['belongs_to']):
+    if BUDGET.is_income(self.item['belongs_to']):
       if self.b < 0:
         self.b = self.b * -1
     else:
@@ -144,8 +141,7 @@ class Sub_category(Sub_categoryTemplate):
 
   def actual_click(self, **event_args):
     """We need to call a pop-up"""
-    frm = get_open_form().content_panel.get_components()[0]
-    fd,ld = frm.date_me(False)
+    fd,ld = BUDGET.date_me(False)
     Global.Transactions_Form.remove_from_parent()
     Global.Transactions_Form.dash = False
     Global.Transactions_Form.sub_cat = ('category',self.item['sub_category_id'])

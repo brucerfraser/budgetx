@@ -9,6 +9,7 @@ from .Category_holder import Category_holder
 import calendar
 from datetime import date, datetime, timedelta
 from ... import Global
+from ... import BUDGET
 
 
 class Budget(BudgetTemplate):
@@ -24,7 +25,7 @@ class Budget(BudgetTemplate):
     """
     METHOD SERVER
     """
-    self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
+    # self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
     
     inc_d = {}
     cats = []
@@ -32,14 +33,14 @@ class Budget(BudgetTemplate):
     METHOD LOCAL with backup
     """
     try:
-      inc_d = [c for c in self.all_cats if c['name'] == "Income"][0]
+      inc_d = [c for c in BUDGET.all_cats if c['name'] == "Income"][0]
     except Exception as e:
       for inc in app_tables.categories.search(name='Income'):
         inc_d = dict(inc)
       print("Budget form: Income backup table search use because of \n",e)
     self.card_2.add_component(Category_holder(item=inc_d))
     try:
-      cats = sorted([c for c in self.all_cats if not c['name'] == "Income" and not c['order'] == -1],
+      cats = sorted([c for c in BUDGET.all_cats if not c['name'] == "Income" and not c['order'] == -1],
                     key = lambda x: x['order'])
     except Exception as e:
       for cat in app_tables.categories.search(tables.order_by('order')):
@@ -63,7 +64,7 @@ class Budget(BudgetTemplate):
   def load_me(self,dash,**event_args):
     # this happens after date selection changes at top
     # get date
-    fd,ld = self.date_me(dash)
+    fd,ld = BUDGET.date_me(dash)
     self.month_label.text = fd.strftime("%B %Y")
     
     # go through cats and update any open sub_cats
@@ -76,50 +77,6 @@ class Budget(BudgetTemplate):
         for sub_cat in category.repeating_panel_1.get_components():
           sub_cat.form_show()
     
-  def get_actual(self,id,period=None,**event_args):
-    if not period:
-      fd,ld = self.date_me(False)
-    else:
-      fd,ld = period[0],period[1]
-    trans_list = [
-      t for t in Global.Transactions_Form.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == id
-    ]
-    a = 0.0
-    for t in trans_list:
-      a += t['amount']
-    return a/100
-
-  def neg_pos(self,amount,b_to,**event_args):
-    i = True if [c for c in self.all_cats if c['category_id'] == b_to][0]['name'] == "Income" else False
-    if not amount:
-      return 0
-    elif i and amount < 0:
-      amount = -1 * amount
-    elif not i and amount > 0:
-      amount = -1 * amount
-    return amount
-
-  def is_income(self,b_to,**event_args):
-    return [c for c in self.all_cats if c['name'] == 'Income'][0]['category_id'] == b_to
-
-  def date_me(self,dash,**event_args):
-    m,y = None,None
-    if dash:
-      m = date.today().month
-      y = date.today().year
-      days_in_month = calendar.monthrange(y, m)[1]
-      return date(y,m,1),date(y,m,days_in_month)
-    else:
-      p = Global.PERIOD
-      if p[0] + p[1] == 0:
-        #we have a custom
-        return Global.CUSTOM[0],Global.CUSTOM[1]
-      else:
-        m = p[0]
-        y = p[1]
-        days_in_month = calendar.monthrange(y, m)[1]
-        return date(y,m,1),date(y,m,days_in_month)
-  
   def add_category_click(self, **event_args):
     from ...Pop_menus.work_a_category import work_a_category
     c = work_a_category()
@@ -129,11 +86,11 @@ class Budget(BudgetTemplate):
       for a in ['roll_over','roll_over_date']:
         del result[a]
       # we need an order first
-      print("order (budget line 132):",max(self.all_cats, key=lambda x: x["order"]))
-      result['order'] = max(self.all_cats, key=lambda x: x["order"])['order'] + 1
+      # print("order (budget line 132):",max(BUDGET.all_cats, key=lambda x: x["order"]))
+      result['order'] = max(BUDGET.all_cats, key=lambda x: x["order"])['order'] + 1
       app_tables.categories.add_row(**result)
-      self.all_cats.append(result)
-      self.expense_categories.items = sorted([c for c in self.all_cats if not c['name'] == "Income" and not c['order'] == -1],
+      BUDGET.all_cats.append(result)
+      self.expense_categories.items = sorted([c for c in BUDGET.all_cats if not c['name'] == "Income" and not c['order'] == -1],
                                              key = lambda x: x['order'])
       # for cat in app_tables.categories.search(q.not_(name='Income')):
       #   cat_d = dict(cat)
@@ -142,12 +99,12 @@ class Budget(BudgetTemplate):
   
     
   def get_me_max_order(self,res, **event_args):
-    if len([s for s in self.all_sub_cats if s['belongs_to'] == res['belongs_to']]) > 0:
-      res['order'] = max([s for s in self.all_sub_cats if s['belongs_to'] == res['belongs_to']], 
+    if len([s for s in BUDGET.all_sub_cats if s['belongs_to'] == res['belongs_to']]) > 0:
+      res['order'] = max([s for s in BUDGET.all_sub_cats if s['belongs_to'] == res['belongs_to']], 
                         key=lambda x: x["order"])['order'] + 1
     else:
       res['order'] = 0
-    self.all_sub_cats.append(res)
+    BUDGET.all_sub_cats.append(res)
     return res
 
 
@@ -241,13 +198,13 @@ class Budget(BudgetTemplate):
     else:
       up = False
     if self.cat_sub_cat == '':
-      ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=self.all_cats)
+      ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=BUDGET.all_cats)
     else:
-      ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=self.all_sub_cats)
+      ret = Global.change_order_controller(up=up,id=self.category_right,the_list_o_d=BUDGET.all_sub_cats)
 
     # ret = 'cat' means it's a category, 'uy2346iuy...' = sub_category belongs_to, None means do noting
     if ret[0] == 'cat':
-      self.all_cats = ret[1]
+      BUDGET.all_cats = ret[1]
       open_cats = []
       for category in self.expense_categories.get_components():
         #find if opened or not:
@@ -256,14 +213,14 @@ class Budget(BudgetTemplate):
       for oc in open_cats:
         print("budget line 257 check open cats",oc)
       self.expense_categories.items = []
-      self.expense_categories.items = sorted([c for c in self.all_cats if c['name'] != 'Income'],
+      self.expense_categories.items = sorted([c for c in BUDGET.all_cats if c['name'] != 'Income'],
                                              key = lambda i: i['order'])
       if open_cats:
         for category in self.expense_categories.get_components():
           if category.item['category_id'] in open_cats:
             category.link_1_click()
     elif ret[0] != None:
-      self.all_sub_cats = ret[1]
+      BUDGET.all_sub_cats = ret[1]
       #ret[0] is belongs_to. Find object and reload.
       for category in self.expense_categories.get_components():
         if category.item['category_id'] == ret[0]:
@@ -351,16 +308,6 @@ class Budget(BudgetTemplate):
   def drop_down_1_change(self, **event_args):
     r_o_d = date(self.drop_down_1.selected_value[1],self.drop_down_1.selected_value[0],1)
     app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over_date'] = r_o_d
-
-  def update_a_budget(self,amount,period,id,**event_args):
-    try:
-      i = self.all_budgets.index([b for b in self.all_budgets if b['period'] == period and b['belongs_to'] == id][0])
-      self.all_budgets[i]['budget_amount'] = amount
-    except:
-      self.all_budgets.append({'belongs_to':id,
-                              'budget_amount':amount,
-                              'period':period,
-                              'notes':None})
   
   def update_numbers(self,**event_args):
     """
@@ -371,14 +318,14 @@ class Budget(BudgetTemplate):
       c. Adjusts total budget for any roll-overs
       d. Updates category prog bar
     """
-    fd,ld = self.date_me(False)
+    fd,ld = BUDGET.date_me(False)
     cat = self.card_2.get_components()[-1]
     a,b = 0,0
     income_budget,income_actual = 0,0
-    for sub_cat in [s for s in self.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
-      a += self.get_actual(id=sub_cat['sub_category_id'])
+    for sub_cat in [s for s in BUDGET.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
+      a += BUDGET.get_actual(id=sub_cat['sub_category_id'])
       try:
-        b += [budget for budget in self.all_budgets if budget['period'] == fd and budget['belongs_to'] == sub_cat['sub_category_id']][0]['budget_amount']
+        b += [budget for budget in BUDGET.all_budgets if budget['period'] == fd and budget['belongs_to'] == sub_cat['sub_category_id']][0]['budget_amount']
         # roll-over function. Nah - not sure what to do with roll_over on income
       except:
         b += 0
@@ -390,15 +337,15 @@ class Budget(BudgetTemplate):
     expense_budget,expense_actual = 0,0
     for cat in self.expense_categories.get_components():
       a,b = 0,0
-      for sub_cat in [s for s in self.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
-        a += self.get_actual(id=sub_cat['sub_category_id'])
+      for sub_cat in [s for s in BUDGET.all_sub_cats if s['belongs_to'] == cat.item['category_id']]:
+        a += BUDGET.get_actual(id=sub_cat['sub_category_id'])
         try:
           """
           We go straight to roll-over function
           this function checks if it's roll-over and calcs the whole line. if it is not RO,
           just returns current period budget.
           """
-          b += self.roll_over_calc(id=sub_cat['sub_category_id'])
+          b += BUDGET.roll_over_calc(id=sub_cat['sub_category_id'])
         except Exception as e:
           b += 0
           print(e,"\non line 372 of Budget form (roll_over_calc function error)")
@@ -409,12 +356,13 @@ class Budget(BudgetTemplate):
     self.update_cat_warning()
 
   def update_cat_warning(self,**event_args):
-    fd,ld = self.date_me(False)
+    fd,ld = BUDGET.date_me(False)
     un_cat = len([t for t in Global.Transactions_Form.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == None])
     warning = "{n} uncategorised transactions for this month".format(n=un_cat)
     self.label_uncat.text = "All transactions categorised!" if un_cat == 0 else warning
     self.label_uncat.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
     self.fix_it.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
+    self.fix_it.text = "FIX IT!" if un_cat > 0 else "YOU ROCK!"
     self.fix_it.enabled = True if un_cat > 0 else False
 
   def update_rh_header(self,i_a,i_b,e_a,e_b,**event_args):
@@ -444,7 +392,7 @@ class Budget(BudgetTemplate):
     comp.budget.text = "({b:.2f})".format(b=-b) if b < 0 else "{b:.2f}".format(b=b)
     #income bars are different
     maxi,min,v = 0,0,0
-    if self.is_income(comp.item['category_id']):
+    if BUDGET.is_income(comp.item['category_id']):
       comp.progress_bar_1.min_value = 0
       comp.progress_bar_1.max_value = max(b,a)
       comp.progress_bar_1.value = a
@@ -475,71 +423,9 @@ class Budget(BudgetTemplate):
       comp.progress_bar_1.min_value = min
       comp.progress_bar_1.max_value = maxi
       comp.progress_bar_1.value = v
-    
-  def roll_over_calc(self,id,**event_args):
-    """
-    Takes a sub cat and works out:
-    1. if roll-over budget: accumulation as a total amount to be returned.
-    2. if not roll-over, returns current period (as per Global) budget, or 0 if none saved.
-    3. Works from main form or from sub-cat. 
-    """
-    
-    try:
-      sub_cat = [s for s in self.all_sub_cats if s['sub_category_id'] == id][0]
-    except:
-      print("Budget line 487:",app_tables.sub_categories.get(sub_category_id=id)['name'])
-      
-    # print(sub_cat[0])
-    if sub_cat['roll_over']:
-      # make list of dates to check
-      date_list = self.roll_date_list(fd=sub_cat['roll_over_date'])
-      b = 0 
-      for period in date_list:
-        a = 0
-        try:
-          # this amount is int (ie x 100)
-          b += [budget for budget in self.all_budgets if budget['belongs_to'] == id and budget['period'] == period[0]][0]['budget_amount']
-        except:
-          b += 0
-        # this amount is actual float
-        a = self.get_actual(id=id,period=period)*100
-        #MAGIC
-        if b < 0: #we have budget, either this month or cumulative
-          if b < a: # we have leftover
-            b = b - a
-          else: #nothing left over, overspent whatever - goes to zero
-            b = 0
-        elif b > 0: #we have an income
-          pass # what do we actually do here???
-        # print("...Roll-over Budget for next month: {bud}.\n________________________".format(bud=b))
-      
-      return b + (self.get_actual(id=id,period=date_list[-1])*100)
-    else:
-      try:
-        fd = date(Global.PERIOD[1],Global.PERIOD[0],1)
-        return [budget for budget in self.all_budgets if budget['period'] == fd and budget['belongs_to'] == sub_cat['sub_category_id']][0]['budget_amount']
-      except:
-        return 0
             
           
-  def roll_date_list(self,fd,**event_args):
-    date_list = []
-    ld = date(Global.PERIOD[1],Global.PERIOD[0],1)
-    cd = fd
-    while cd <= ld:
-      # Format the string: %B is full month name, %y is two-digit year
-      d = calendar.monthrange(cd.year,cd.month)[1]
-      date_list.append((cd,date(cd.year,cd.month,d)))
-      # Move to the first day of the next month
-      next = cd.month + 1
-      try:
-        #If below doesn't work, we've gone to next year
-        cd = date(cd.year, next,1)
-      except:
-        #go to next year
-        next = cd.year + 1
-        cd = date(next,1,1)
-    return date_list
+  
 
   def a_colour_change(self, **event_args):
     for cat in self.expense_categories.get_components():
@@ -557,7 +443,7 @@ class Budget(BudgetTemplate):
         break
 
   def fix_it_click(self, **event_args):
-    fd,ld = self.date_me(False)
+    fd,ld = BUDGET.date_me(False)
     Global.Transactions_Form.remove_from_parent()
     Global.Transactions_Form.dash = False
     Global.Transactions_Form.sub_cat = ('category',None)
