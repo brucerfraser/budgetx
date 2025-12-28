@@ -46,7 +46,7 @@ def clean_dups():
         if not already:
           dup_list.append((id,tr['transaction_id']))
           break
-  print("There are {n} flagged duplicates".format(n=len(dup_list)))
+  # print("There are {n} flagged duplicates".format(n=len(dup_list)))
   # dup_list_delete = []
   for pair in dup_list:
     if app_tables.transactions.get(transaction_id=pair[0])['category']:

@@ -126,7 +126,7 @@ def load_transactions(file,account,head_line,accounts):
   # this dictionary is still based on the CSV file. We have to get it into BudgetX language keys
   # Here's where we split to make efficient!
   r,t = make_ready(account,trans_list,accounts)
-  print(len(r),len(t))
+  # print(len(r),len(t))
   return r,t
 
 @anvil.server.callable
@@ -134,7 +134,7 @@ def make_ready(account,trans_list,accounts=None):
   if not accounts:
     accounts = account_finder(None,False)
   if account:
-    print("account good")
+    # print("account good")
     # try:
     deets = list(filter(lambda d: d['acc_id'] == account, accounts))      
     ready_transactions = []
@@ -148,7 +148,7 @@ def make_ready(account,trans_list,accounts=None):
           d[key] = t[deets[0]['key_map'][key]]
         t2 += 1
         if t2 == 2000:
-          print('t2 auto stop')
+          # print('t2 auto stop')
           break
       d['account'] = account
       # daymonthyearamountaccount
@@ -163,7 +163,7 @@ def make_ready(account,trans_list,accounts=None):
       ready_transactions.append(d)
       t1 += 1
       if t1 == 2000:
-        print('t1 auto stop')
+        # print('t1 auto stop')
         break
       # ready for transport back to client
     return ready_transactions,trans_list

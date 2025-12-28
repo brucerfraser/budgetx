@@ -50,7 +50,7 @@ class Settings(SettingsTemplate):
   def choose_account(self,acc_id,**event_args):
     self.account = acc_id
     if acc_id:
-      print(acc_id)
+      # print(acc_id)
       self.work_account("load")
       self.cp_account_details.visible = True
       for l in self.repeating_panel_2.get_components():
@@ -58,7 +58,7 @@ class Settings(SettingsTemplate):
       self.btn_edit.enabled = True
       self.btn_delete.enabled = True
     else:
-      print(acc_id)
+      # print(acc_id)
       self.cp_account_details.visible = False
       for l in self.repeating_panel_2.get_components():
         l.chosen(False)
@@ -138,11 +138,11 @@ class Settings(SettingsTemplate):
   def delete_a_key(self,**event_args):
     self.changed = True
     a_l = self.rp_autokeys.items
-    print(a_l)
+    # print(a_l)
     idx = 0
     for obj in self.rp_autokeys.get_components():
       if obj.to_delete:
-        print(obj.text_box_1.text)
+        # print(obj.text_box_1.text)
         a_l.pop(idx)
         break
       else:

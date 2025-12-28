@@ -146,7 +146,7 @@ class Frame(FrameTemplate):
     for obj in clear_list:
       # print(obj.background)
       if obj.background != 'transparent':
-        print("fired")
+        # print("fired")
         obj.raise_event('click')
         break
 

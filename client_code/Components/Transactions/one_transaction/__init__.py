@@ -134,7 +134,7 @@ class one_transaction(one_transactionTemplate):
 
   def category_choose(self,**event_args):
     self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
-    print(self.item['category'])
+    # print(self.item['category'])
     self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
     self.category.text = self.autocomplete_1.text
     
