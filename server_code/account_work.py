@@ -17,3 +17,7 @@ def get_accounts():
 @anvil.server.callable
 def update_account(account):
   app_tables.accounts.get(acc_id=account['acc_id']).update(**account)
+
+@anvil.server.callable
+def delete_account(account):
+  app_tables.accounts.get(acc_id=account['acc_id']).delete()

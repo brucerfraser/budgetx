@@ -44,6 +44,8 @@ class Settings(SettingsTemplate):
   def form_show(self, **event_args):
     self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
     self.cp_account_details.visible = False
+    self.btn_edit.enabled = False
+    self.btn_delete.enabled = False
 
   def choose_account(self,acc_id,**event_args):
     self.account = acc_id
@@ -53,11 +55,15 @@ class Settings(SettingsTemplate):
       self.cp_account_details.visible = True
       for l in self.repeating_panel_2.get_components():
         l.chosen(acc_id['acc_id']==l.item['acc_id'])
+      self.btn_edit.enabled = True
+      self.btn_delete.enabled = True
     else:
       print(acc_id)
       self.cp_account_details.visible = False
       for l in self.repeating_panel_2.get_components():
         l.chosen(False)
+      self.btn_edit.enabled = False
+      self.btn_delete.enabled = False
 
   @handle('btn_edit','click')
   def work_account(self,edit_del_load="edit",**event_args):
@@ -145,4 +151,11 @@ class Settings(SettingsTemplate):
       a_l.insert(0,'')
     self.rp_autokeys.items = a_l
     self.rp_autokeys.get_components()[0].text_box_1.placeholder = 'New auto-word'
-    
+
+  @handle('btn_delete','click')
+  def delete_account(self,**event_args):
+    a_c = "Are you sure you wish to delete {a_n}?".format(a_n = self.account['acc_name'])
+    a_t = "Delete {a_n}".format(a_n = self.account['acc_name'])
+    a = confirm(a_c,title=a_t,buttons=[("Cancel",False),("Delete",True)])
+    if a:
+      anvil.server.call('delete_account',self.account)
