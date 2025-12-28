@@ -6,8 +6,8 @@ from anvil.tables import app_tables
 import uuid
 from datetime import date
 
-global ACCOUNTS
-ACCOUNTS = []
+global ACCOUNTS,ACCOUNTS_WHOLE
+ACCOUNTS,ACCOUNTS_WHOLE = [],[]
 
 global CATEGORIES
 CATEGORIES = {}
@@ -24,7 +24,7 @@ CUSTOM = (None,None)
 global Transactions_Form
 Transactions_Form = None
 
-accounts = anvil.server.call('get_accounts')
+accounts,ACCOUNTS_WHOLE = anvil.server.call('get_accounts')
 keys = list(accounts.keys())
 ACCOUNTS = [(accounts[k],k) for k in keys]
 

@@ -8,7 +8,8 @@ import anvil.server
 
 @anvil.server.callable
 def get_accounts():
-  accounts = {}
+  accounts,a_w = {},[]
   for row in app_tables.accounts.search():
     accounts[row['acc_id']] = row['acc_name']
-  return accounts
+    a_w.append(dict(row))
+  return accounts,a_w

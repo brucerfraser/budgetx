@@ -276,6 +276,13 @@ input[disabled] ~ span {
   border-bottom: 1px solid white
 }
 
+.anvil-role-fixed-holder-small {
+  height: 120px; !important /* Set your desired fixed height */
+  background: %color:Surface Variant%;
+  padding: 8px 12px;
+  overflow-y: auto;
+}
+
 .anvil-role-fixed-holder-page {
   height: 600px; !important /* Set your desired fixed height */
   background: %color:Surface Variant%;

@@ -16,7 +16,10 @@ class Settings(SettingsTemplate):
     self.item['category_list'] = app_tables.settings.get(id='budget')['dash_var_top_five']
     names_list = sorted(list(map(lambda x: x['display'], Global.CATEGORIES.values())))
     self.autocomplete_1.suggestions = names_list
+    self.account = ''
+    self.repeating_panel_2.set_event_handler('x-account-clicked',self.choose_account)
     self.refresh_data_bindings()
+    
 
 
   def category_choose(self,**event_args):
@@ -31,3 +34,16 @@ class Settings(SettingsTemplate):
   def switch_1_change(self, **event_args):
     app_tables.settings.get(id='budget')['dash_variances'] = self.switch_1.checked
     self.refresh_data_bindings()
+
+  @handle("", "show")
+  def form_show(self, **event_args):
+    self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
+
+  def choose_account(self,acc_id,**event_args):
+    self.account = acc_id
+    if acc_id:
+      for l in self.repeating_panel_2.get_components():
+        l.chosen(acc_id==l.item['acc_id'])
+    else:
+      for l in self.repeating_panel_2.get_components():
+        l.chosen(False)

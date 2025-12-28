@@ -1,0 +1,10 @@
+components:
+- data_bindings:
+  - {code: 'self.item[''acc_name'']', property: text, writeback: false}
+  event_bindings: {}
+  layout_properties: {grid_position: 'PTRPRI,UBGPKS'}
+  name: link_1
+  properties: {align: center, background: 'theme:On Background'}
+  type: Link
+container: {type: ColumnPanel}
+is_package: true
