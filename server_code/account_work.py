@@ -13,3 +13,7 @@ def get_accounts():
     accounts[row['acc_id']] = row['acc_name']
     a_w.append(dict(row))
   return accounts,a_w
+
+@anvil.server.callable
+def update_account(account):
+  app_tables.accounts.get(acc_id=account['acc_id']).update(**account)

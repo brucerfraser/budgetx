@@ -12,9 +12,13 @@ class ItemTemplate5(ItemTemplate5Template):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
 
-  @handle("", "show")
-  def form_show(self, **event_args):
-    self.text_box_1.text = self.item
+  # @handle("", "show")
+  # def form_show(self, **event_args):
+  #   self.text_box_1.text = self.item
+
+  @handle('text_box_1','change')
+  def change_me(self,**event_args):
+    self.parent.raise_event('x-changed')
     
     
   

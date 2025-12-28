@@ -12,4 +12,6 @@ class ItemTemplate6(ItemTemplate6Template):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
 
-    # Any code you write here will run before the form opens.
+  @handle('text_box_1','change')
+  def change_me(self,**event_args):
+    self.parent.raise_event('x-changed')
