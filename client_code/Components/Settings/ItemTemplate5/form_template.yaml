@@ -9,9 +9,10 @@ components:
       margin: [0, null, 0, null]
     type: TextBox
   - layout_properties: {grid_position: 'JASQTD,EXZLEI'}
-    name: button_1
+    name: btn_del_key
     properties:
       border: solid red 1px
+      enabled: true
       foreground: theme:Error
       spacing:
         margin: [0, null, 0, null]
