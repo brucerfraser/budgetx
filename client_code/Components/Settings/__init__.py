@@ -63,6 +63,8 @@ class Settings(SettingsTemplate):
       for l in self.repeating_panel_2.get_components():
         l.chosen(False)
       self.btn_edit.enabled = False
+      self.btn_edit.text = "EDIT"
+      self.btn_add.text = "ADD"
       self.btn_delete.enabled = False
 
   @handle('btn_edit','click')
@@ -96,6 +98,7 @@ class Settings(SettingsTemplate):
             if a['acc_id'] == upload['acc_id']:
               a.update(**upload)
               break
+          self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
           self.changed = False
         self.btn_edit.text = "EDIT"
         self.enable_accounts(False,True)
@@ -105,7 +108,10 @@ class Settings(SettingsTemplate):
     self.txt_acc_name.enabled = enabled
     if enabled:
       l = self.rp_autokeys.items
-      l.insert(0,'')
+      if l:
+        l.insert(0,'')
+      else:
+        l = ['']
       self.rp_autokeys.items = l
       self.rp_autokeys.get_components()[0].text_box_1.placeholder = 'New auto-word'
     else:
@@ -123,17 +129,21 @@ class Settings(SettingsTemplate):
   @handle('txt_acc_name','change')
   def edit_and_change(self,caller=None,**event_args):
     self.changed = True
-    if not caller:
-      for k in self.repeating_panel_2.get_components():
-        if k.item['acc_id'] == self.account['acc_id']:
-          k.link_1.text = self.txt_acc_name.text
+    # if not caller:
+    #   for k in self.repeating_panel_2.get_components():
+    #     if k.item['acc_id'] == self.account['acc_id']:
+    #       k.link_1.text = self.txt_acc_name.text
 
   def add_an_auto(self,key_word,**event_args):
-    self.account['acc_keywords'].insert(0,key_word)
+    if self.account['acc_keywords']:
+      self.account['acc_keywords'].insert(0,key_word)
+    else:
+      self.account['acc_keywords'].append(key_word)
     a_l = self.account['acc_keywords']
     a_l.insert(0,'')
     self.rp_autokeys.items = a_l
     self.rp_autokeys.get_components()[0].text_box_1.placeholder = 'New auto-word'
+    self.rp_autokeys.get_components()[0].text_box_1.focus()
 
   def delete_a_key(self,**event_args):
     self.changed = True
@@ -159,3 +169,40 @@ class Settings(SettingsTemplate):
     a = confirm(a_c,title=a_t,buttons=[("Cancel",False),("Delete",True)])
     if a:
       anvil.server.call('delete_account',self.account)
+
+  @handle('btn_add','click')
+  def add_an_account(self,**event_args):
+    if event_args['sender'].text == 'ADD':
+      for l in self.repeating_panel_2.get_components():
+        l.chosen(False)
+      self.account = {'acc_id':'','acc_name':'','acc_keywords':[],
+                     'key_map':{}}
+      self.btn_add.text = "SAVE"
+      self.btn_edit.enabled = False
+      self.btn_delete.enabled = False
+      self.txt_acc_name.text = 'New Account Name'
+      self.rp_csvkeys.items = [{'key':'date','value':''},
+                              {'key':'amount','value':''},
+                              {'key':'description','value':''}]
+      self.rp_autokeys.items = []
+      self.enable_accounts(True)
+      self.cp_account_details.visible = True
+      self.txt_acc_name.select()
+    elif event_args['sender'].text == 'SAVE':
+      map = {}
+      for obj in self.rp_csvkeys.get_components():
+        map[obj.item['key']] = obj.item['value']
+      auto_list = []
+      for obj in self.rp_autokeys.get_components():
+        if len(obj.text_box_1.text) > 2 and obj.text_box_1.placeholder == 'New auto-word':
+          auto_list.append(obj.text_box_1.text)
+        elif obj.text_box_1.placeholder == '':
+          auto_list.append(obj.text_box_1.text)
+      self.account = {'acc_id':Global.new_id_needed(),
+                     'acc_name':self.txt_acc_name.text,
+                     'acc_keywords':auto_list,
+                     'key_map':map}
+      print(self.account)
+      self.btn_add.text = 'ADD'
+      
+      

@@ -23,7 +23,7 @@ class ItemTemplate5(ItemTemplate5Template):
 
   @handle('text_box_1','pressed_enter')
   def add_me(self,**event_args):
-    self.parent.raise_event('x-pressed-enter',keyword=self.text_box_1.text)
+    self.parent.raise_event('x-pressed-enter',key_word=self.text_box_1.text)
 
   @handle('btn_del_key','click')
   def delete_me(self,**event_args):
