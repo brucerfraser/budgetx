@@ -189,7 +189,7 @@ components:
       layout_properties: {grid_position: 'MNNEDO,LZRHCY'}
       name: card_1_copy
       properties:
-        background: ''
+        background: theme:Surface Variant
         col_widths: '{"HKKOLQ":8,"ZATXLD":15,"LHIJXE":10,"NWLOWG":15,"IHUSGZ":20,"UWVHUP":2}'
         role: one-liner
         spacing:

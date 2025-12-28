@@ -178,7 +178,7 @@ components:
   layout_properties: {full_width_row: true, grid_position: 'DKYHHT,OAQPKM', row_background: ''}
   name: card_1
   properties:
-    background: ''
+    background: theme:Surface Variant
     col_widths: '{"HKKOLQ":8,"ZATXLD":15,"LHIJXE":10,"NWLOWG":15,"IHUSGZ":20,"HBUXBT":2}'
     role: one-liner
     spacing:

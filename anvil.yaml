@@ -16,6 +16,12 @@ db_schema:
     - admin_ui: {order: 3, width: 200}
       name: key_map
       type: simpleObject
+    - admin_ui: {order: 4, width: 200}
+      name: recon_date
+      type: date
+    - admin_ui: {order: 5, width: 200}
+      name: recon_amount
+      type: number
     server: full
     title: accounts
   budgets:

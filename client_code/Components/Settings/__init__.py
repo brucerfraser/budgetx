@@ -46,6 +46,7 @@ class Settings(SettingsTemplate):
     self.cp_account_details.visible = False
     self.btn_edit.enabled = False
     self.btn_delete.enabled = False
+    self.btn_reconcile.enabled = False
 
   def choose_account(self,acc_id,**event_args):
     self.account = acc_id
@@ -56,7 +57,10 @@ class Settings(SettingsTemplate):
       for l in self.repeating_panel_2.get_components():
         l.chosen(acc_id['acc_id']==l.item['acc_id'])
       self.btn_edit.enabled = True
+      self.btn_edit.text = "EDIT"
       self.btn_delete.enabled = True
+      self.btn_reconcile.enabled = True
+      self.btn_add.text = "ADD"
     else:
       # print(acc_id)
       self.cp_account_details.visible = False
@@ -66,6 +70,7 @@ class Settings(SettingsTemplate):
       self.btn_edit.text = "EDIT"
       self.btn_add.text = "ADD"
       self.btn_delete.enabled = False
+      self.btn_reconcile.enabled = False
 
   @handle('btn_edit','click')
   def work_account(self,edit_del_load="edit",**event_args):
@@ -135,15 +140,16 @@ class Settings(SettingsTemplate):
     #       k.link_1.text = self.txt_acc_name.text
 
   def add_an_auto(self,key_word,**event_args):
-    if self.account['acc_keywords']:
-      self.account['acc_keywords'].insert(0,key_word)
-    else:
-      self.account['acc_keywords'].append(key_word)
-    a_l = self.account['acc_keywords']
-    a_l.insert(0,'')
-    self.rp_autokeys.items = a_l
+    auto_list = []
+    for obj in self.rp_autokeys.get_components():
+      if len(obj.text_box_1.text) > 0 and obj.text_box_1.placeholder == 'New auto-word':
+        auto_list.append(obj.text_box_1.text)
+      elif obj.text_box_1.placeholder == '':
+        auto_list.append(obj.text_box_1.text)
+    auto_list.insert(0,'')
+    self.rp_autokeys.items = auto_list
     self.rp_autokeys.get_components()[0].text_box_1.placeholder = 'New auto-word'
-    self.rp_autokeys.get_components()[0].text_box_1.focus()
+    self.rp_autokeys.get_components()[0].text_box_1.select()
 
   def delete_a_key(self,**event_args):
     self.changed = True
@@ -180,6 +186,7 @@ class Settings(SettingsTemplate):
       self.btn_add.text = "SAVE"
       self.btn_edit.enabled = False
       self.btn_delete.enabled = False
+      self.btn_reconcile.enabled = False
       self.txt_acc_name.text = 'New Account Name'
       self.rp_csvkeys.items = [{'key':'date','value':''},
                               {'key':'amount','value':''},
@@ -202,7 +209,33 @@ class Settings(SettingsTemplate):
                      'acc_name':self.txt_acc_name.text,
                      'acc_keywords':auto_list,
                      'key_map':map}
-      print(self.account)
+      anvil.server.call('add_account',self.account)
+      Global.ACCOUNTS_WHOLE.append(self.account)
+      self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
       self.btn_add.text = 'ADD'
+      self.clear_an_account()
       
-      
+  def clear_an_account(self,**event_args):
+    self.txt_acc_name.text = ''
+    self.rp_autokeys.items = []
+    self.rp_csvkeys.items = []
+    self.cp_account_details.visible = False
+
+  @handle('btn_reconcile','click')
+  def trigger_button_click(self, **event_args):
+    # Setup components
+    dp = DatePicker(pick_time=False)
+    nb = TextBox(type="number",placeholder="R0,00")
+    container = ColumnPanel()
+    container.add_component(Label(text="Date:"))
+    container.add_component(dp)
+    container.add_component(Label(text="Recon Amount:"))
+    container.add_component(nb)
+
+    # Show alert; returns the value of the clicked button (True for OK)
+    save_clicked = alert(content=container, 
+                         title="Enter Recon Details", 
+                         buttons=[("OK", True), ("Cancel", False)])
+
+    if save_clicked:
+      print(f"Values: {dp.date}, {nb.text}")

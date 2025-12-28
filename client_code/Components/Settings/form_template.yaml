@@ -35,7 +35,7 @@ components:
     type: ColumnPanel
   layout_properties: {full_width_row: true, grid_position: 'UXVBZS,NZJGCV'}
   name: column_panel_1
-  properties: {border: solid grey 1px}
+  properties: {border: solid grey 1px, role: card}
   type: ColumnPanel
 - components:
   - components:
@@ -82,6 +82,10 @@ components:
       - layout_properties: {grid_position: 'VSKTBZ,CTSFRB'}
         name: btn_edit
         properties: {icon: 'fa:pencil', text: EDIT}
+        type: Button
+      - layout_properties: {grid_position: 'IYQTGI,CVAASU'}
+        name: btn_reconcile
+        properties: {enabled: true, icon: 'fa:handshake-o', icon_align: left_edge, text: reconcile}
         type: Button
       - layout_properties: {grid_position: 'HHHYZD,VSSKSL'}
         name: btn_delete
