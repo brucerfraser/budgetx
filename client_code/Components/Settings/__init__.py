@@ -38,12 +38,25 @@ class Settings(SettingsTemplate):
   @handle("", "show")
   def form_show(self, **event_args):
     self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
+    self.cp_account_details.visible = False
 
   def choose_account(self,acc_id,**event_args):
     self.account = acc_id
     if acc_id:
+      print(acc_id)
+      self.work_account("load")
+      self.cp_account_details.visible = True
       for l in self.repeating_panel_2.get_components():
-        l.chosen(acc_id==l.item['acc_id'])
+        l.chosen(acc_id['acc_id']==l.item['acc_id'])
     else:
+      print(acc_id)
+      self.cp_account_details.visible = False
       for l in self.repeating_panel_2.get_components():
         l.chosen(False)
+
+  def work_account(self,edit_del_load,**event_args):
+    if edit_del_load == "load":
+      self.txt_acc_name.text = self.account['acc_name']
+      self.rp_autokeys.items = self.account['acc_keywords']
+      self.rp_csvkeys.items = [{'key':k,'value':v} for k,v in self.account['key_map'].items()]
+      

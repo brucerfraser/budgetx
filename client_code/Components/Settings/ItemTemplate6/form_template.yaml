@@ -1,0 +1,27 @@
+components:
+- data_bindings:
+  - {code: 'self.item[''key'']', property: text, writeback: false}
+  layout_properties: {grid_position: 'IFIVMA,JGFZGT'}
+  name: label_1
+  properties:
+    align: right
+    spacing:
+      margin: [2, null, 2, null]
+      padding: [2, null, 2, null]
+  type: Label
+- data_bindings:
+  - {code: 'self.item[''value'']', property: text, writeback: false}
+  layout_properties: {grid_position: 'IFIVMA,NFJJJU'}
+  name: text_box_1
+  properties:
+    enabled: false
+    margin: [0, null, 0, null]
+  type: TextBox
+container:
+  properties:
+    spacing:
+      margin: [0, null, 0, null]
+    spacing_above: none
+    spacing_below: none
+  type: ColumnPanel
+is_package: true

@@ -24,6 +24,6 @@ class ItemTemplate4(ItemTemplate4Template):
   @handle("link_1", "click")
   def link_1_click(self, **event_args):
     if self.link_1.foreground != 'blue':
-      self.parent.raise_event('x-account-clicked',acc_id=self.item['acc_id'])
+      self.parent.raise_event('x-account-clicked',acc_id=self.item)
     else:
-      self.parent.raise_event('x-account-clicked',acc_id='')
+      self.parent.raise_event('x-account-clicked',acc_id={})
