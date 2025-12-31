@@ -81,19 +81,19 @@ components:
     - components:
       - layout_properties: {grid_position: 'VSKTBZ,CTSFRB'}
         name: btn_edit
-        properties: {icon: 'fa:pencil', text: EDIT}
+        properties: {foreground: blue, icon: 'fa:pencil', role: button-blue, text: EDIT}
         type: Button
       - layout_properties: {grid_position: 'IYQTGI,CVAASU'}
         name: btn_reconcile
-        properties: {enabled: true, icon: 'fa:handshake-o', icon_align: left_edge, text: reconcile}
+        properties: {enabled: true, foreground: blue, icon: 'fa:handshake-o', icon_align: left_edge, role: button-blue, text: reconcile}
         type: Button
       - layout_properties: {grid_position: 'HHHYZD,VSSKSL'}
         name: btn_delete
-        properties: {foreground: 'theme:Error', icon: 'fa:trash-o', text: DELETE}
+        properties: {foreground: red, icon: 'fa:trash-o', role: button-red, text: DELETE}
         type: Button
       - layout_properties: {grid_position: 'AZQXSB,UNBJLW'}
         name: btn_add
-        properties: {icon: 'fa:plus', text: ADD}
+        properties: {foreground: green, icon: 'fa:plus', role: button-green, text: ADD}
         type: Button
       layout_properties: {grid_position: 'INXYGU,OYZADR'}
       name: column_panel_5

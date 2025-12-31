@@ -19,7 +19,7 @@ class Transactions(TransactionsTemplate):
     self.delete_list = []
     self.sub_cat = None
     self.searched = False
-    self.form_show()
+    # self.form_show()
 
   def form_show(self, **event_args):
     if self.sub_cat:

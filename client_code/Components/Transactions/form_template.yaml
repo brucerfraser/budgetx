@@ -32,12 +32,12 @@ components:
     - event_bindings: {click: search_button_click}
       layout_properties: {grid_position: 'IANMMY,WGVIFN'}
       name: search_button
-      properties: {icon: 'fa:search', text: SEARCH}
+      properties: {foreground: blue, icon: 'fa:search', role: button-blue, text: SEARCH}
       type: Button
     - event_bindings: {click: un_cat_button_click}
       layout_properties: {grid_position: 'IANMMY,BPMICV QNLGPY,MLDUET'}
       name: un_cat_button
-      properties: {text: Uncategorised}
+      properties: {foreground: blue, role: button-blue, text: Uncat}
       type: Button
     - event_bindings: {change: go_go, lost_focus: search_text_lost_focus}
       layout_properties: {grid_position: 'IANMMY,BPMICV HKZBIK,NMGCBE'}
@@ -62,7 +62,7 @@ components:
     name: column_panel_3
     properties:
       col_spacing: tiny
-      col_widths: '{"WGVIFN":12,"BPMICV":23,"XXKYIW":10,"ECJYSH":9,"SGABVB":9}'
+      col_widths: '{"WGVIFN":15,"BPMICV":20,"XXKYIW":10,"ECJYSH":9,"SGABVB":9}'
       spacing:
         margin: [0, null, 0, null]
     type: ColumnPanel
@@ -218,7 +218,7 @@ components:
       type: RepeatingPanel
     layout_properties: {full_width_row: true, grid_position: 'GEWNTV,WKFKHA'}
     name: card_3
-    properties: {role: fixed-holder}
+    properties: {role: fixed-holder, visible: true}
     type: ColumnPanel
   layout_properties: {grid_position: 'QBHNUR,CZOKND'}
   name: column_panel_1

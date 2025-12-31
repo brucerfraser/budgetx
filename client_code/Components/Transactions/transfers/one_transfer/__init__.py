@@ -34,9 +34,13 @@ class one_transfer(one_transferTemplate):
                                                       ama=am_a,
                                                       db=dir[1])
     self.label_1.text = t
+    if am_a < 0:
+      self.label_1.foreground = 'theme:Amount Negative'
     if self.item[1]:
       self.date_picker_1.date = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['date']
       self.drop_down_1.selected_value = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['account']
       a = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['amount']
       a = a/100
-      self.label_2.text = "R {amount:.2f}".format(amo)
+      self.label_2.text = "R {amount:.2f}".format(amount=a)
+      if a < 0:
+        self.label_2.foreground = 'theme:Amount Negative'

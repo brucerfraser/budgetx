@@ -28,20 +28,20 @@ class Frame(FrameTemplate):
     Global.make_date()
     Global.all_categories()
     Global.smarter()
+    self.content_panel.visible = False
     Global.open_transactions_instance()
     #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
-    # print("Temp process duplicates starting...")
-    # anvil.server.call('clean_hash')
-    # print("Temp process ended")
+    self.content_panel.visible = True
     
   def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Sales Form
     self.content_panel.clear()
+    self.content_panel.visible = False
     self.content_panel.add_component(Budget())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     self.budget_page_link.background = app.theme_colors['Primary Container']
@@ -50,11 +50,13 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.content_panel.visible = True
 
   def reports_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Sales Form
     self.content_panel.clear()
+    self.content_panel.visible = False
     self.content_panel.add_component(Reports())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     self.reports_page_link.background = app.theme_colors['Primary Container']
@@ -63,10 +65,12 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.content_panel.visible = True
 
   def transactions_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
     #Clear the content panel and add the Transactions Form
+    self.content_panel.visible = False
     Global.Transactions_Form.remove_from_parent()
     Global.Transactions_Form.dash = False
     Global.Transactions_Form.sub_cat = None
@@ -79,6 +83,7 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.content_panel.visible = True
     
 
   # def load_transactions(self, **event_args):
@@ -126,6 +131,7 @@ class Frame(FrameTemplate):
 
   def dashboard_page_link_click(self, **event_args):
     self.content_panel.clear()
+    self.content_panel.visible = False
     self.content_panel.add_component(Dashboard_Screen())
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.dashboard_page_link.background = app.theme_colors['Primary Container']
@@ -134,6 +140,7 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.content_panel.visible = True
 
   def ping_ping(self,ping,**event_args):
     obj = self.paths[ping]
@@ -152,6 +159,7 @@ class Frame(FrameTemplate):
 
   def settings_page_link_click(self, **event_args):
     self.content_panel.clear()
+    self.content_panel.visible = False
     self.content_panel.add_component(Settings())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     self.settings_page_link.background = app.theme_colors['Primary Container']
@@ -159,6 +167,7 @@ class Frame(FrameTemplate):
                   self.dashboard_page_link,self.budget_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.content_panel.visible = True
 
   
 

@@ -183,6 +183,7 @@ class one_transaction(one_transactionTemplate):
         self.confirm.visible = True
         # self.card_6.add_component(confirm)
 
+  @handle('confirm','click')
   def confirm_click(self, **event_args):
     self.autocomplete_1.text = self.category.text
     self.category_choose()
