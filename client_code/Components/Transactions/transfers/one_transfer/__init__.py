@@ -37,4 +37,5 @@ class one_transfer(one_transferTemplate):
     if self.item[1]:
       self.date_picker_1.date = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['date']
       self.drop_down_1.selected_value = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['account']
-      
+      a = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['amount']
+      a = a/100

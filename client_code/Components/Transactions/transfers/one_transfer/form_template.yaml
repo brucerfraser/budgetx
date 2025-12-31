@@ -26,7 +26,7 @@ components:
     type: Button
   layout_properties: {full_width_row: true, grid_position: 'ETKESH,WCMDRO'}
   name: column_panel_1
-  properties: {col_widths: '{"SKXFJF":50,"YEBQZV":10,"PJVIJY":10,"ZRTVRL":10,"HKTTZG":7}', wrap_on: never}
+  properties: {col_widths: '{"SKXFJF":40,"YEBQZV":15,"PJVIJY":15,"ZRTVRL":10,"HKTTZG":7}', role: one-liner, wrap_on: never}
   type: ColumnPanel
 container:
   event_bindings: {}
