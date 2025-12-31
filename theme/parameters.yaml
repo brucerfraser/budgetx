@@ -320,3 +320,5 @@ roles:
   name: category-link
 - {name: fixed-holder-small}
 - {name: button-green}
+- {name: button-blue}
+- {name: button-red}

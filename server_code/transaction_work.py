@@ -46,21 +46,16 @@ def clean_dups():
         if not already:
           dup_list.append((id,tr['transaction_id']))
           break
-  # print("There are {n} flagged duplicates".format(n=len(dup_list)))
-  # dup_list_delete = []
+  
   for pair in dup_list:
     if app_tables.transactions.get(transaction_id=pair[0])['category']:
       # first of the pairs has been categorised
       app_tables.transactions.get(transaction_id=pair[1]).delete()
-      # cat = app_tables.transactions.get(transaction_id=pair[0])['category']
-      # cat_str = 'No cat' if not cat else cat
-      # dup_list_delete.append((app_tables.transactions.get(transaction_id=pair[0])['description'] + cat_str,
-      #                         dict(app_tables.transactions.get(transaction_id=pair[1]))))
     else:
       app_tables.transactions.get(transaction_id=pair[0]).delete()
-      # cat = app_tables.transactions.get(transaction_id=pair[1])['category']
-      # cat_str = 'No cat' if not cat else cat
-      # dup_list_delete.append((app_tables.transactions.get(transaction_id=pair[1])['description'] + cat_str,
-      #                         dict(app_tables.transactions.get(transaction_id=pair[0]))))
-  # for del_pair in dup_list_delete:
-  #   print(del_pair[0],'\n',del_pair[1],'\n_________________')
+
+@anvil.server.callable
+def delete_transactions(del_list):
+  for transaction in del_list:
+    app_tables.transactions.get(transaction_id=transaction).delete()
+  return True

@@ -167,6 +167,9 @@ db_schema:
     - admin_ui: {order: 7, width: 200}
       name: category
       type: string
+    - admin_ui: {order: 8, width: 200}
+      name: transfer_account
+      type: string
     server: full
     title: transactions
   users:

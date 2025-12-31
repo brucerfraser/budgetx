@@ -287,32 +287,69 @@ input[disabled] ~ span {
   color: #2d4d2d;
 }
 
-.anvil-role-button-green:hover {
-  transform: scale(1.05);  /* Slight grow effect */
-  filter: brightness(0.95); /* Slight darkening */
-}
+.anvil-role-button-blue {
+  /* Layout: Perfectly Centered */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px; 
 
+  /* Shaping */
+  padding: 1px 1px;       /* Minimal padding */
+  border-radius: 6px;      /* Slightly rounded corners */
+  border: none;
+  cursor: pointer;
 
-.btn:active {
-  transform: scale(0.98);  /* "Click" feedback */
-}
+  /* Typography */
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
 
-/* Color Variants */
-.btn-pastel-blue {
+  /* The 0.3s Transition */
+  transition: all 0.3s ease;
+  transform: scale(1);
+
+  /* Colours */
   background-color: #aec6cf;
   color: #334e58;
 }
 
-.btn-pastel-green {
-  background-color: #b2d8b2;
-  color: #2d4d2d;
-}
+.anvil-role-button-red {
+  /* Layout: Perfectly Centered */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px; 
 
-.btn-pastel-red {
+  /* Shaping */
+  padding: 1px 1px;       /* Minimal padding */
+  border-radius: 6px;      /* Slightly rounded corners */
+  border: none;
+  cursor: pointer;
+
+  /* Typography */
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+
+  /* The 0.3s Transition */
+  transition: all 0.3s ease;
+  transform: scale(1);
+
+  /* Colours */
   background-color: #ffb3ba;
   color: #5e3a3d;
 }
 
+[class*="anvil-role-button-"]:active {
+  transform: scale(0.98);  /* "Click" feedback */
+}
+
+[class*="anvil-role-button-"]:hover {
+  transform: scale(1.05);
+  filter: brightness(0.95);
+  transition: all 0.3s ease;
+}
 
 .anvil-role-fixed-repeating-panel {
   border-bottom: 1px solid grey

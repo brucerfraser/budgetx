@@ -147,6 +147,7 @@ class Transactions(TransactionsTemplate):
             self.delete_list.remove(trans.item['transaction_id'])
       trans.am_i_smart()
     self.delete_trans.enabled = True if len(self.delete_list) > 0 else False
+    self.btn_tfer.enabled = True if len(self.delete_list) > 0 else False
     self.inflow.text = "Inflow: R{a:.2f}".format(a=i/100)
     self.outflow.text = "Outflow: R{a:.2f}".format(a=o/100)
     
@@ -218,15 +219,19 @@ class Transactions(TransactionsTemplate):
       note = Notification("Deleting {n}{t}".format(n=num,t=tra),
                          timeout=None)
       note.show()
+      anvil.server.call('delete_transactions',self.delete_list)
       for id in self.delete_list:
-        app_tables.transactions.get(transaction_id=id).delete()
+        # app_tables.transactions.get(transaction_id=id).delete()
         for trans in self.all_transactions:
           if trans['transaction_id'] == id:
             self.all_transactions.remove(trans)
             break
       self.load_me(self.dash)
       note.hide()
-    
 
+  @handle('btn_tfer','click')
+  def handle_transfers(self,**event_args):
+    from .transfers import transfers
+    alert(transfers(self.delete_list),large=True)
   
     
