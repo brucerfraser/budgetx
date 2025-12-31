@@ -19,7 +19,11 @@ class transfers(transfersTemplate):
   @handle("", "show")
   def form_show(self, **event_args):
     print(self.transfer_list)
-    t = "Select or confirm a corresponding account for each of the {n} transactions:".format(n=len(self.transfer_list))
+    t = "Select or confirm a corresponding account for each of the {n} transactions.\n".format(n=len(self.transfer_list))
+    t += """
+    Use the green lock button 🔒 to confirm the transfer details. Green background = locked and ready.\n
+    Use the red unlock button 🔓 to ignore the transaction for transfer. Red background = ignored.
+    """
     self.label_2.text = t
     self.repeating_panel_1.items = self.get_pairs()
       
