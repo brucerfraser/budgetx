@@ -53,7 +53,7 @@ class one_transaction(one_transactionTemplate):
       else:
         obj.background = "#595A3B"
       if self.check_box_1.checked:
-        obj.background = '#F29AAE' #can be deleted
+        obj.background = '#4682B4' #can be deleted/amended for transfer
     if self.item['amount'] < 0:
       self.amount.foreground = 'theme:Amount Negative'
     if self.item['category'] == None:
@@ -133,10 +133,19 @@ class one_transaction(one_transactionTemplate):
     self.category.visible = False
 
   def category_choose(self,**event_args):
-    self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
-    # print(self.item['category'])
-    self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
-    self.category.text = self.autocomplete_1.text
+    if self.autocomplete_1.text == "Transfer":
+      from ..transfers import transfers
+      result = alert(transfers([self.item['transaction_id']]),large=True,buttons=[],dismissible=False)
+      if result:
+        Global.Transactions_Form.handle_transfers(from_one_t=result)
+        self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
+        self.category.text = self.autocomplete_1.text
+      else:
+        self.autocomplete_1.text = ''
+    else:
+      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
+      self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
+      self.category.text = self.autocomplete_1.text
     
     if self.item['category']:
       Global.smarter(first=False,update=(self.item['category'],self.item['description']))

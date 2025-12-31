@@ -59,3 +59,36 @@ def delete_transactions(del_list):
   for transaction in del_list:
     app_tables.transactions.get(transaction_id=transaction).delete()
   return True
+
+# partner = {'exists':transfer.item[1] != None,
+#            'trans_one':transfer.item[0],'trans_two':None,
+#            'amount_two':transfer.amount_zero * -1,
+#            'date_two':transfer.date_picker_1.date,
+#            'account_two':transfer.drop_down_1.selected_value,
+#            'account_one':transfer.account_zero}
+
+@anvil.server.callable
+def handle_transfers(transfer_list):
+  for transfer in transfer_list:
+    if transfer['exists']:
+      app_tables.transactions.get(transaction_id=transfer['trans_one']).update(transfer_account=transfer['account_two'],
+                                                                              category='ec8e0085-8408-43a2-953f-ebba24549d96')
+      app_tables.transactions.get(transaction_id=transfer['trans_two']).update(transfer_account=transfer['account_one'],
+                                                                              category='ec8e0085-8408-43a2-953f-ebba24549d96')
+    else:
+      #we have to amend one and make one transaction
+      
+      f_t = "From" if transfer['amount_two'] > 0 else "To"
+      desc = "{f_t} {acc}".format(f_t=f_t,
+                                  acc=app_tables.accounts.get(acc_id=transfer['account_one'])['acc_name'])
+      hash = transfer['date_two'].strftime("%d%m%Y") + str(transfer['amount_two']) + transfer['account_two']
+      app_tables.transactions.add_row(account=transfer['account_two'],
+                                     amount=transfer['amount_two'],
+                                     transaction_id=transfer['trans_two'],
+                                     date=transfer['date_two'],
+                                     transfer_account=transfer['account_one'],
+                                     category='ec8e0085-8408-43a2-953f-ebba24549d96', #transfers
+                                     hash=hash,
+                                     description=desc)
+      app_tables.transactions.get(transaction_id=transfer['trans_one']).update(transfer_account=transfer['account_two'],
+                                                                               category='ec8e0085-8408-43a2-953f-ebba24549d96')

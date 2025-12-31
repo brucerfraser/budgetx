@@ -7,7 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from ... import Global
 import calendar
-from datetime import date
+from datetime import date, datetime
 
 class Transactions(TransactionsTemplate):
   def __init__(self,dash=False, **properties):
@@ -231,8 +231,54 @@ class Transactions(TransactionsTemplate):
       note.hide()
 
   @handle('btn_tfer','click')
-  def handle_transfers(self,**event_args):
+  def handle_transfers(self,from_one_t=None,**event_args):
+    if from_one_t:
+      l = from_one_t
+    else:
+      l = self.delete_list
     from .transfers import transfers
-    alert(transfers(self.delete_list),large=True)
+    result = alert(transfers(l),large=True,buttons=[],dismissible=False)
+    if result:
+      # we must build a list to add/edit in transaction list:
+      # all_transactions and table transactions.
+      anvil.server.call('handle_transfers',self.local_transfers(result))
+      self.load_me(self.dash)
+
+  def local_transfers(self,transfer_list,**event_args):
+    for transfer in transfer_list:
+      
+      if transfer['exists']:
+        # left t-id
+        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['transfer_account'] = transfer['account_two']
+        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
+        #right t-id
+        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['transfer_account'] = transfer['account_one']
+        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
+        
+      else:
+        #we have to amend one and make one transaction
+        f_t = "From" if transfer['amount_two'] > 0 else "To"
+        acc_two = ''
+        for g in Global.ACCOUNTS:
+          print(g[0],g[1],g[1]==transfer['account_one'])
+          if g[1] == transfer['account_one']:
+            acc_two = g[0]
+            break
+        desc = "{f_t} {acc}".format(f_t=f_t,
+                                    acc=acc_two)
+        
+        hash = transfer['date_two'].strftime("%d%m%Y") + str(transfer['amount_two']) + transfer['account_two']
+        t_acc = Global.new_id_needed()
+        transfer['trans_two'] = t_acc
+        self.all_transactions.append({'date':transfer['date_two'],
+                                     'description':desc,
+                                     'amount':transfer['amount_two'],
+                                     'hash':hash,
+                                     'account':transfer['account_two'],
+                                     'transaction_id':t_acc,
+                                     'category':'ec8e0085-8408-43a2-953f-ebba24549d96',
+                                     'transfer_account':transfer['account_one']})
+    return transfer_list
+        
   
     

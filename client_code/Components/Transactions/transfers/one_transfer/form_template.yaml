@@ -2,7 +2,7 @@ components:
 - components:
   - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,SKXFJF'}
     name: label_1
-    properties: {foreground: 'theme:Primary'}
+    properties: {background: 'theme:Surface Variant', foreground: 'theme:Amount Negative', text: Testing}
     type: Label
   - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,YEBQZV'}
     name: date_picker_1
@@ -14,7 +14,7 @@ components:
     type: DropDown
   - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,ZRTVRL'}
     name: label_2
-    properties: {foreground: ''}
+    properties: {background: 'theme:Surface Variant', foreground: '', text: Testing}
     type: Label
   - layout_properties: {grid_position: 'EMHTYX,HKTTZG GMRVAS,HDZISY'}
     name: btn_lock
@@ -26,7 +26,7 @@ components:
     type: Button
   layout_properties: {full_width_row: true, grid_position: 'ETKESH,WCMDRO'}
   name: column_panel_1
-  properties: {col_widths: '{"SKXFJF":40,"YEBQZV":15,"PJVIJY":15,"ZRTVRL":10,"HKTTZG":7}', role: one-liner, wrap_on: never}
+  properties: {background: '#FFCDC9', col_widths: '{"SKXFJF":40,"YEBQZV":15,"PJVIJY":15,"ZRTVRL":10,"HKTTZG":7}', role: one-liner, wrap_on: never}
   type: ColumnPanel
 container:
   event_bindings: {}

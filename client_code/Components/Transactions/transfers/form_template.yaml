@@ -5,26 +5,30 @@ components:
   type: Label
 - layout_properties: {grid_position: 'KQNDPM,WZUJNU'}
   name: label_2
-  properties: {}
+  properties: {font_size: 16}
   type: Label
 - components:
   - layout_properties: {full_width_row: true, grid_position: 'CXMUQL,WFWNBL'}
     name: repeating_panel_1
     properties: {item_template: Components.Transactions.transfers.one_transfer}
     type: RepeatingPanel
-  - components:
-    - layout_properties: {}
-      name: button_1
-      properties: {role: button-red, text: hello}
-      type: Button
-    layout_properties: {grid_position: 'USPJBA,DTDVAM'}
-    name: flow_panel_1
-    properties: {align: center}
-    type: FlowPanel
   layout_properties: {full_width_row: true, grid_position: 'TFZEHT,LYVMIF'}
   name: column_panel_1
   properties: {role: fixed-holder}
   type: ColumnPanel
+- components:
+  - layout_properties: {}
+    name: btn_cancel
+    properties: {foreground: red, role: button-red, text: cancel}
+    type: Button
+  - layout_properties: {}
+    name: btn_ok
+    properties: {foreground: green, role: button-green, text: ok}
+    type: Button
+  layout_properties: {grid_position: 'KDQNXO,KECOIX'}
+  name: flow_panel_1
+  properties: {align: center}
+  type: FlowPanel
 container:
   event_bindings: {}
   type: ColumnPanel

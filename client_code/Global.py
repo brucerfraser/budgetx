@@ -41,6 +41,8 @@ def all_categories():
   for row in app_tables.sub_categories.search():
     display = cats[row['belongs_to']][0] + " - " + row['name']
     CATEGORIES[row['sub_category_id']] = {'display':display,'colour':cats[row['belongs_to']][1]}
+  # one special last line for transfers
+  CATEGORIES['ec8e0085-8408-43a2-953f-ebba24549d96'] = {'display':'Transfer','colour':cats['ec8e0085-8408-43a2-953f-ebba24549d96'][1]}
     
 
 def new_id_needed():
