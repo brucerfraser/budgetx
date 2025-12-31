@@ -171,10 +171,10 @@ class Budget(BudgetTemplate):
       if self.cat_sub_cat:
         self.roll_over.enabled = True
         self.drop_down_1.items = self.date_picker_bruce_1.drop_down_1.items
-        self.roll_over.checked = [s for s in self.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over']
+        self.roll_over.checked = [s for s in BUDGET.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over']
         # self.roll_over.checked = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over']
         if self.roll_over.checked:
-          r_o_d = [s for s in self.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over_date']
+          r_o_d = [s for s in BUDGET.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over_date']
           if r_o_d:
             m = r_o_d.month
             y = r_o_d.year
@@ -183,8 +183,8 @@ class Budget(BudgetTemplate):
         self.colours.visible = False
       else:
         self.roll_over.enabled,self.roll_over.checked = False,False
-        self.bg_colour.set_color([c for c in self.all_cats if c['category_id'] == self.category_right][0]['colour_back'])
-        self.text_colour.set_color([c for c in self.all_cats if c['category_id'] == self.category_right][0]['colour_text'])
+        self.bg_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category_right][0]['colour_back'])
+        self.text_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category_right][0]['colour_text'])
         self.colours.visible = True
       self.edit_details.visible = True
       self.edit_name.select()
@@ -437,9 +437,9 @@ class Budget(BudgetTemplate):
         cat.item['colour_back'] = new['colour_back']
         cat.item['colour_text'] = new['colour_text']
         cat.form_show()
-        i = self.all_cats.index([c for c in self.all_cats if c['category_id'] == self.category_right][0])
-        self.all_cats[i]['colour_back'] = new['colour_back']
-        self.all_cats[i]['colour_text'] = new['colour_text']
+        i = BUDGET.all_cats.index([c for c in BUDGET.all_cats if c['category_id'] == self.category_right][0])
+        BUDGET.all_cats[i]['colour_back'] = new['colour_back']
+        BUDGET.all_cats[i]['colour_text'] = new['colour_text']
         break
 
   def fix_it_click(self, **event_args):

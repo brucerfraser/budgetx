@@ -6,6 +6,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import date
+from .... import BUDGET
 
 
 class Category_holder(Category_holderTemplate):
@@ -44,9 +45,8 @@ class Category_holder(Category_holderTemplate):
       if edit:
         edit_id = frm.category_right
         break
-    frm = get_open_form().content_panel.get_components()[0]
     item_list = []
-    for line in frm.all_sub_cats:
+    for line in BUDGET.all_sub_cats:
       try:
         if line['order'] >= 0:
           if line['belongs_to'] == self.item['category_id']:

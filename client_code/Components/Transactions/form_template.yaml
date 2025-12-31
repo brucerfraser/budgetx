@@ -47,7 +47,11 @@ components:
     - event_bindings: {click: add_trans_click}
       layout_properties: {grid_position: 'IANMMY,XXKYIW'}
       name: add_trans
-      properties: {border: solid green 1px, font_size: 14, foreground: green, icon: 'fa:plus', icon_align: top, text: ''}
+      properties: {border: solid green 1px, font_size: 14, foreground: '', icon: 'fa:plus', icon_align: top, role: button-green, text: ''}
+      type: Button
+    - layout_properties: {grid_position: 'IANMMY,TJAWCD'}
+      name: button_1
+      properties: {foreground: '', icon: 'fa:exchange', icon_align: top, text: ''}
       type: Button
     - event_bindings: {click: delete_trans_click}
       layout_properties: {grid_position: 'IANMMY,EOWBNE'}

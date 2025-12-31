@@ -319,3 +319,4 @@ roles:
 - components: [Link]
   name: category-link
 - {name: fixed-holder-small}
+- {name: button-green}
