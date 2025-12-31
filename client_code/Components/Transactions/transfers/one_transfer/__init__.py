@@ -39,3 +39,4 @@ class one_transfer(one_transferTemplate):
       self.drop_down_1.selected_value = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['account']
       a = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == self.item[1]][0]['amount']
       a = a/100
+      self.label_2.text = "R {amount:.2f}".format(amo)
