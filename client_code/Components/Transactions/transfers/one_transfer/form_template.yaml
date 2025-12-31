@@ -1,0 +1,34 @@
+components:
+- components:
+  - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,SKXFJF'}
+    name: label_1
+    properties: {}
+    type: Label
+  - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,YEBQZV'}
+    name: date_picker_1
+    properties: {}
+    type: DatePicker
+  - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,PJVIJY'}
+    name: drop_down_1
+    properties: {}
+    type: DropDown
+  - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,ZRTVRL'}
+    name: label_2
+    properties: {}
+    type: Label
+  - layout_properties: {grid_position: 'EMHTYX,HKTTZG GMRVAS,HDZISY'}
+    name: btn_lock
+    properties: {enabled: false, foreground: green, icon: 'fa:lock', role: button-green, text: ''}
+    type: Button
+  - layout_properties: {grid_position: 'EMHTYX,HKTTZG VNSSAE,RXHQKC'}
+    name: btn_unlock
+    properties: {foreground: red, icon: 'fa:unlock', role: button-red, text: '', visible: false}
+    type: Button
+  layout_properties: {full_width_row: true, grid_position: 'ETKESH,WCMDRO'}
+  name: column_panel_1
+  properties: {col_widths: '{"SKXFJF":50,"YEBQZV":10,"PJVIJY":10,"ZRTVRL":10,"HKTTZG":7}', wrap_on: never}
+  type: ColumnPanel
+container:
+  event_bindings: {}
+  type: ColumnPanel
+is_package: true

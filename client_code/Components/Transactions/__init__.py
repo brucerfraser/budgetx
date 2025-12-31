@@ -43,6 +43,12 @@ class Transactions(TransactionsTemplate):
     """
     sub_cat is a tuple of (key,value)
     """
+    if self.dash:
+      self.card_3.role = 'fixed-holder'
+      self.card_header.visible = False
+    else:
+      self.card_3.role = 'fixed-holder-page'
+      self.card_header.visible = True
     fd,ld = self.date_me(dash)
     if not uncat and not search and not sub_cat:
       self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
@@ -58,12 +64,7 @@ class Transactions(TransactionsTemplate):
                                             key = lambda x: x['date'],reverse=True)
     # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
     #                                                               date=q.between(fd,ld,True,True))
-    if self.dash:
-      self.card_3.role = 'fixed-holder'
-      self.card_header.visible = False
-    else:
-      self.card_3.role = 'fixed-holder-page'
-      self.card_header.visible = True
+    
     self.which_form = 'transactions'
     self.rake_page()
     

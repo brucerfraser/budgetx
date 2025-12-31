@@ -18,36 +18,11 @@ class transfers(transfersTemplate):
 
   @handle("", "show")
   def form_show(self, **event_args):
+    print(self.transfer_list)
     t = "Select or confirm a corresponding account for each of the {n} transactions:".format(n=len(self.transfer_list))
     self.label_2.text = t
-    for pair in self.get_pairs():
-      d_a = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == pair[0]][0]['date']
-      ac_a = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == pair[0]][0]['account']
-      ac_a = [a for a in Global.ACCOUNTS if a[1] == ac_a][0]
-      am_a = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == pair[0]][0]['amount']
-      if pair[1]:
-        d_b = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == pair[0]][0]['date']
-        ac_b = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == pair[0]][0]['account']
-        ac_b = [a for a in Global.ACCOUNTS if a[1] == ac_b][0]
-      else:
-        d_b = None
-      dir = ("From","to") if am_a < 0 else ("To","from")
-      if d_b:
-        t = "{da} {aca} on {ada} for {ama}, {db} {acb} on {adb} for {amb}".format(da=dir[0],
-                                                                                aca=ac_a,
-                                                                                ada=d_a,
-                                                                                ama=am_a,
-                                                                                db=dir[1],
-                                                                                acb=ac_b,
-                                                                                adb=d_b,
-                                                                                amb=-1*am_a)
-      else:
-        t = "{da} {aca} on {ada} for {ama}, {db} ...No pair found".format(da=dir[0],
-                                                                          aca=ac_a,
-                                                                          ada=d_a,
-                                                                          ama=am_a,
-                                                                          db=dir[1])
-      self.column_panel_1.add_component(Label(text=t))
+    self.repeating_panel_1.items = self.get_pairs()
+      
 
   def get_pairs(self, **event_args):
     # build a transfer pair list based on opposite but equal amounts, same dates ± 2
