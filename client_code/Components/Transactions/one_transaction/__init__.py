@@ -39,7 +39,7 @@ class one_transaction(one_transactionTemplate):
     if self.item['category'] == None:
       self.category.text = "None"
     else:
-      # print(Global.CATEGORIES[self.item['category']])
+      print(Global.CATEGORIES[self.item['category']])
       self.category.text = Global.CATEGORIES[self.item['category']]['display']
       self.category.background = Global.CATEGORIES[self.item['category']]['colour']
       self.autocomplete_1.text = self.category.text

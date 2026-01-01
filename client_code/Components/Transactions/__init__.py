@@ -193,22 +193,26 @@ class Transactions(TransactionsTemplate):
     if len(self.search_text.text) < 3:
       self.search_button_click()
 
+  @handle('add_trans','click')
   def add_trans_click(self, **event_args):
     date_new = date.today()
     hash_new = str(date_new.day) + str(date_new.month) + str(date_new.year) + '0' + 'none_yet'
     id_new = Global.new_id_needed()
     new_trans = {'date':date_new,'amount':0,
-                'description':'                  ',
+                'description':'',
                 'category':None,
                 'account':None,'notes':'',
-                'hash':hash_new,'transaction_id':id_new}
-    t_list = self.repeating_panel_1.items
-    t_list.insert(0,new_trans)
+                'hash':hash_new,'transaction_id':id_new,
+                'transfer_account':None}
+    from .add_transaction import add_transaction
+    alert(add_transaction(new_trans),buttons=[],large=True,
+          dismissible=False)
+  
+
+  def send_new_transaction(self,new_trans,**event_args):
     self.all_transactions.insert(0,new_trans)
     app_tables.transactions.add_row(**new_trans)
-    self.repeating_panel_1.items = t_list
-    self.rake_page()
-    # self.repeating_panel_1.get_components()[0].click_date()
+    self.load_me(self.dash)
 
   def delete_trans_click(self, **event_args):
     num = str(len(self.delete_list)) + ' ' if len(self.delete_list) > 1 else ''
@@ -246,32 +250,36 @@ class Transactions(TransactionsTemplate):
 
   def local_transfers(self,transfer_list,**event_args):
     for transfer in transfer_list:
-      
+      f_t = "From" if transfer['amount_two'] > 0 else "To"
+      acc_one,acc_two = '',''
+      for g in Global.ACCOUNTS:
+        # print(g[0],g[1],g[1]==transfer['account_one'])
+        if g[1] == transfer['account_one']:
+          acc_two = g[0]
+        if g[1] == transfer['account_two']:
+          acc_one = g[0]
+      t_f = "From" if f_t == "To" else "From"
+      desc_one = "{f_t} {acc}".format(f_t=t_f,
+                                      acc=acc_one)
+      desc_two = "{f_t} {acc}".format(f_t=f_t,
+                                  acc=acc_two)
+        
+      # left t-id
+      [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['transfer_account'] = transfer['account_two']
+      [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
+      [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['description'] = desc_one
       if transfer['exists']:
-        # left t-id
-        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['transfer_account'] = transfer['account_two']
-        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
         #right t-id
         [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['transfer_account'] = transfer['account_one']
         [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
-        
+        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['description'] = desc_two
       else:
-        #we have to amend one and make one transaction
-        f_t = "From" if transfer['amount_two'] > 0 else "To"
-        acc_two = ''
-        for g in Global.ACCOUNTS:
-          print(g[0],g[1],g[1]==transfer['account_one'])
-          if g[1] == transfer['account_one']:
-            acc_two = g[0]
-            break
-        desc = "{f_t} {acc}".format(f_t=f_t,
-                                    acc=acc_two)
-        
+        #we have to make one transaction
         hash = transfer['date_two'].strftime("%d%m%Y") + str(transfer['amount_two']) + transfer['account_two']
         t_acc = Global.new_id_needed()
         transfer['trans_two'] = t_acc
         self.all_transactions.append({'date':transfer['date_two'],
-                                     'description':desc,
+                                     'description':desc_two,
                                      'amount':transfer['amount_two'],
                                      'hash':hash,
                                      'account':transfer['account_two'],

@@ -19,6 +19,7 @@ unique_ids:
     Components.Settings.ItemTemplate5: '1766902432971317709951939.86285'
     Components.Settings.ItemTemplate6: '1766908117663851094315555.8151'
     Components.Transactions: '1759640236173825242359712.6605'
+    Components.Transactions.add_transaction: '1767261946789404351154403.00775'
     Components.Transactions.one_transaction: '1759654767641900803673532.0245'
     Components.Transactions.transfers: '1767159745149313535529111.5318'
     Components.Transactions.transfers.one_transfer: '1767166651261110660175987.29938'
