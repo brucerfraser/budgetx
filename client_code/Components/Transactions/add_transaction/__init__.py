@@ -41,11 +41,11 @@ class add_transaction(add_transactionTemplate):
         self.raise_event('x-close-alert',value=None)
       else:
         #flash a bit
-        on = True
+        on = False
         for i in range(0,5):
           self.cp_transfer.background = '#FFCDC9' if on else ''
           on = not on
-          time.sleep(0.3)
+          time.sleep(0.2)
         self.cp_transfer.background = '#FFCDC9'
     elif event_args["sender"].text == "save and add":
       # save, clear, and wait
@@ -59,11 +59,11 @@ class add_transaction(add_transactionTemplate):
         self.refresh_form()
       else:
         #flash a bit
-        on = True
+        on = False
         for i in range(0,5):
           self.cp_transfer.background = '#FFCDC9' if on else ''
           on = not on
-          time.sleep(0.3)
+          time.sleep(0.2)
         self.cp_transfer.background = '#FFCDC9'
       
       
@@ -135,19 +135,21 @@ class add_transaction(add_transactionTemplate):
       # we have a transfer
       self.holder = self.txt_description.text
       acc_name = "<No Account>"
+      acc_name_two = "<No Account>"
       for g in Global.ACCOUNTS:
-        # print(g[0],g[1],g[1]==transfer['account_one'])
         if g[1] == self.item['account']:
           acc_name = g[0]
         if g[1] == self.dd_transfer.selected_value:
           acc_name_two = g[0]
-      f_t = "From" if self.item['amount'] > 0 else "To"
+      f_t = "From" if self.item['amount'] < 0 else "To"
       t_f = "From" if f_t == "To" else "To"
       dte = self.item['date'] if self.item['date'] else "<No Date>"
       self.lbl_tfer_detail.text = "{f} {a} on {d} {t}:".format(f=f_t,a=acc_name,d=dte,t=t_f)
       self.lbl_tfer_amount.text = "R {ama:.2f}".format(ama=-1*self.item['amount'])
-      self.txt_description.text = "{f} {a}".format(f=f_t,a=acc_name_two)
-      self.refresh_data_bindings()
+      self.txt_description.text = "{f} {a}".format(f=t_f,a=acc_name_two)
+      self.item['description'] = self.txt_description.text
+      self.lbl_tfer_amount.foreground = 'theme:Amount Negative' if self.item['amount'] > 0 else 'theme:Primary'
+      self.lbl_tfer_detail.foreground = 'theme:Amount Negative' if self.item['amount'] < 0 else 'theme:Primary'
       self.cp_transfer.visible = True
     else:
       self.item['description'] = self.txt_description.text = self.holder
@@ -160,5 +162,12 @@ class add_transaction(add_transactionTemplate):
   def tfer_account(self,**event_args):
     if self.dd_transfer.selected_value:
       self.cp_transfer.background = "#b2d8b2"
+      acc_name = ''
+      for g in Global.ACCOUNTS:
+        if g[1] == self.dd_transfer.selected_value:
+          acc_name = g[0]
+          break
+      f_t = "From" if self.item['amount'] > 0 else "To"
+      self.item['description'] = self.txt_description.text = "{f} {a}".format(f=f_t,a=acc_name)
     else:
       self.cp_transfer.background = '#FFCDC9'

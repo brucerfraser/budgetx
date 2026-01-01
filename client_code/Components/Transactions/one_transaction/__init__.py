@@ -39,7 +39,7 @@ class one_transaction(one_transactionTemplate):
     if self.item['category'] == None:
       self.category.text = "None"
     else:
-      print(Global.CATEGORIES[self.item['category']])
+      # print(Global.CATEGORIES[self.item['category']])
       self.category.text = Global.CATEGORIES[self.item['category']]['display']
       self.category.background = Global.CATEGORIES[self.item['category']]['colour']
       self.autocomplete_1.text = self.category.text
@@ -133,7 +133,28 @@ class one_transaction(one_transactionTemplate):
     self.category.visible = False
 
   def category_choose(self,**event_args):
-    if self.autocomplete_1.text == "Transfer":
+    # first we check if it was Transfer and changed:
+    if self.item['category'] == 'ec8e0085-8408-43a2-953f-ebba24549d96' and self.autocomplete_1.text != "Transfer":
+      # we need to handle by giving a choice - do we delete corresponding 
+      # (if there is one) or change its category to None?
+      # First, either way, we change the category
+      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
+      self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
+      self.category.text = self.autocomplete_1.text
+      corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
+      if corr_id:
+        from ..remove_transfer import remove_transfer
+        if alert(remove_transfer(corr_id),buttons=[],large=False,dismissible=False):
+          # we must delete
+          Global.Transactions_Form.delete_trans_click([corr_id])
+        else:
+          #we must change to none
+          app_tables.transactions.get(transaction_id=corr_id).update(category=None)
+          [t for t in Global.Transactions_Form.all_transactions if t['transaction_id'] == corr_id][0]['category'] = None
+          Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+          
+    # Then we check if it changed to Transfer
+    elif self.autocomplete_1.text == "Transfer":
       from ..transfers import transfers
       result = alert(transfers([self.item['transaction_id']]),large=True,buttons=[],dismissible=False)
       if result:
@@ -142,6 +163,7 @@ class one_transaction(one_transactionTemplate):
         self.category.text = self.autocomplete_1.text
       else:
         self.autocomplete_1.text = ''
+    #Otherwise we just do a normal update.
     else:
       self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
       self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
@@ -161,6 +183,7 @@ class one_transaction(one_transactionTemplate):
       frame = get_open_form()
       frm = frame.content_panel.get_components()[0]
       frm.smart_cat_update()
+
 
   def autocomplete_1_lost_focus(self, **event_args):
     if self.item['category']:

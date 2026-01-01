@@ -7,7 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from ... import Global
 import calendar
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 class Transactions(TransactionsTemplate):
   def __init__(self,dash=False, **properties):
@@ -214,18 +214,17 @@ class Transactions(TransactionsTemplate):
     app_tables.transactions.add_row(**new_trans)
     self.load_me(self.dash)
 
-  def delete_trans_click(self, **event_args):
-    num = str(len(self.delete_list)) + ' ' if len(self.delete_list) > 1 else ''
-    tra = 'transactions' if len(self.delete_list) > 1 else 'transaction'
-    m = "Are you sure you wish to delete the {n}highlighted {t}?".format(n=num,t=tra)
-    
-    if confirm(m,"Delete?",
-                buttons=[("Delete",True),("Cancel",False)]):
-      note = Notification("Deleting {n}{t}".format(n=num,t=tra),
-                         timeout=None)
+  def delete_trans_click(self,alien=None, **event_args):
+    """
+    Either uses list of transaction_id's obtained from ticking the check boxes...
+    or uses a list called alien which can be called from anywhere. NB alien MUST be list
+    """
+    if alien:
+      note = Notification("Deleting corresponding transfer",
+                          timeout=None)
       note.show()
-      anvil.server.call('delete_transactions',self.delete_list)
-      for id in self.delete_list:
+      anvil.server.call('delete_transactions',alien)
+      for id in alien:
         # app_tables.transactions.get(transaction_id=id).delete()
         for trans in self.all_transactions:
           if trans['transaction_id'] == id:
@@ -233,6 +232,25 @@ class Transactions(TransactionsTemplate):
             break
       self.load_me(self.dash)
       note.hide()
+    else:
+      num = str(len(self.delete_list)) + ' ' if len(self.delete_list) > 1 else ''
+      tra = 'transactions' if len(self.delete_list) > 1 else 'transaction'
+      m = "Are you sure you wish to delete the {n}highlighted {t}?".format(n=num,t=tra)
+      
+      if confirm(m,"Delete?",
+                  buttons=[("Delete",True),("Cancel",False)]):
+        note = Notification("Deleting {n}{t}".format(n=num,t=tra),
+                          timeout=None)
+        note.show()
+        anvil.server.call('delete_transactions',self.delete_list)
+        for id in self.delete_list:
+          # app_tables.transactions.get(transaction_id=id).delete()
+          for trans in self.all_transactions:
+            if trans['transaction_id'] == id:
+              self.all_transactions.remove(trans)
+              break
+        self.load_me(self.dash)
+        note.hide()
 
   @handle('btn_tfer','click')
   def handle_transfers(self,from_one_t=None,**event_args):
@@ -288,5 +306,14 @@ class Transactions(TransactionsTemplate):
                                      'transfer_account':transfer['account_one']})
     return transfer_list
         
+  def check_corresponding(self,t_id,**event_args):
+    the_one = [t for t in self.all_transactions if t['transaction_id'] == t_id][0]
+    a_opp = -1 * the_one['amount']
+    d_bef = the_one['date'] - timedelta(days=2)
+    d_aft = the_one['date'] + timedelta(days=2)
+    try:
+      return [t for t in self.all_transactions if t['amount'] == a_opp and d_bef <= t['date'] and d_aft >= t['date']][0]['transaction_id']
+    except:
+      return None
   
     

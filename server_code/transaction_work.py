@@ -57,7 +57,9 @@ def clean_dups():
 @anvil.server.callable
 def delete_transactions(del_list):
   for transaction in del_list:
-    app_tables.transactions.get(transaction_id=transaction).delete()
+    row = app_tables.transactions.get(transaction_id=transaction)
+    if row:
+      row.delete()
   return True
 
 # partner = {'exists':transfer.item[1] != None,
