@@ -42,7 +42,7 @@ class Settings(SettingsTemplate):
 
   @handle("", "show")
   def form_show(self, **event_args):
-    self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
+    self.repeating_panel_2.items = list(filter(lambda item: not item.get("archived", False), Global.ACCOUNTS_WHOLE))
     self.cp_account_details.visible = False
     self.btn_edit.enabled = False
     self.btn_delete.enabled = False
@@ -76,6 +76,8 @@ class Settings(SettingsTemplate):
   def work_account(self,edit_del_load="edit",**event_args):
     if edit_del_load == "load":
       self.txt_acc_name.text = self.account['acc_name']
+      self.dte_recon.date = self.account['recon_date']
+      self.txt_recon.text = self.account['recon_amount']
       self.rp_autokeys.items = self.account['acc_keywords']
       self.rp_csvkeys.items = [{'key':k,'value':v} for k,v in self.account['key_map'].items()]
       self.enable_accounts(False)
@@ -103,7 +105,7 @@ class Settings(SettingsTemplate):
             if a['acc_id'] == upload['acc_id']:
               a.update(**upload)
               break
-          self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
+          self.repeating_panel_2.items = list(filter(lambda item: not item.get("archived", False), Global.ACCOUNTS_WHOLE))
           self.changed = False
         self.btn_edit.text = "EDIT"
         self.enable_accounts(False,True)
@@ -111,6 +113,8 @@ class Settings(SettingsTemplate):
 
   def enable_accounts(self,enabled,save=False,**event_args):
     self.txt_acc_name.enabled = enabled
+    self.dte_recon.enabled = enabled
+    self.txt_recon.enabled = enabled
     if enabled:
       l = self.rp_autokeys.items
       if l:
@@ -132,6 +136,8 @@ class Settings(SettingsTemplate):
       row.text_box_1.enabled = enabled
 
   @handle('txt_acc_name','change')
+  @handle('dte_recon','change')
+  @handle('txt_recon','change')
   def edit_and_change(self,caller=None,**event_args):
     self.changed = True
     # if not caller:
@@ -175,7 +181,16 @@ class Settings(SettingsTemplate):
     a = confirm(a_c,title=a_t,buttons=[("Cancel",False),("Delete",True)])
     if a:
       anvil.server.call('delete_account',self.account)
-
+      upload = {'archived':True,
+               'acc_id':self.account['acc_id']}
+      for a in Global.ACCOUNTS_WHOLE:
+        if a['acc_id'] == upload['acc_id']:
+          a.update(**upload)
+          break
+      self.account = None
+      self.repeating_panel_2.items = list(filter(lambda item: not item.get("archived", False), Global.ACCOUNTS_WHOLE))
+      self.choose_account(self.account)
+  
   @handle('btn_add','click')
   def add_an_account(self,**event_args):
     if event_args['sender'].text == 'ADD':
@@ -211,7 +226,7 @@ class Settings(SettingsTemplate):
                      'key_map':map}
       anvil.server.call('add_account',self.account)
       Global.ACCOUNTS_WHOLE.append(self.account)
-      self.repeating_panel_2.items = Global.ACCOUNTS_WHOLE
+      self.repeating_panel_2.items = list(filter(lambda item: not item.get("archived", False), Global.ACCOUNTS_WHOLE))
       self.btn_add.text = 'ADD'
       self.clear_an_account()
       

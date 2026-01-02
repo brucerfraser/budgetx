@@ -267,7 +267,6 @@ class Reports_mini(Reports_miniTemplate):
         "ticklen": 4
       }
     }
-    print(layout['height'])
 
     if len(traces) == 0:
       traces = [{
