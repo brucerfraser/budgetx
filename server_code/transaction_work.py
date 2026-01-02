@@ -62,12 +62,6 @@ def delete_transactions(del_list):
       row.delete()
   return True
 
-# partner = {'exists':transfer.item[1] != None,
-#            'trans_one':transfer.item[0],'trans_two':None,
-#            'amount_two':transfer.amount_zero * -1,
-#            'date_two':transfer.date_picker_1.date,
-#            'account_two':transfer.drop_down_1.selected_value,
-#            'account_one':transfer.account_zero}
 
 @anvil.server.callable
 def handle_transfers(transfer_list):

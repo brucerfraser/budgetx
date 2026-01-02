@@ -14,6 +14,7 @@ class Transactions(TransactionsTemplate):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
     self.all_transactions = anvil.server.call('load_budget_data',True)
+    
     self.dash = dash
     self.which_form = 'transactions'
     self.delete_list = []
