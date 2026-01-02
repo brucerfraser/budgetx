@@ -13,7 +13,7 @@ class Reports(ReportsTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    self.cp_reports.add_component(Reports_mini())
+    self.cp_reports.add_component(Reports_mini(full_screen=True))
   
 
  

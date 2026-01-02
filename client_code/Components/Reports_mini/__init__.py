@@ -15,8 +15,11 @@ import re
 
 
 class Reports_mini(Reports_miniTemplate):
-  def __init__(self, **properties):
+  def __init__(self, full_screen=False, **properties):
     self.init_components(**properties)
+    if full_screen:
+      self.plot_1.height = 600
+
     self.build_two_month_balance_plot()
 
   # ---------------------------
@@ -246,6 +249,7 @@ class Reports_mini(Reports_miniTemplate):
 
     layout = {
       "title": {"text": "Account Balances — Last Month & This Month", "x": 0.02, "xanchor": "left"},
+      # ✅ taller graph when full_screen=True
       "height": 260,
 
       # ✅ ONLY FIX: more space for y-axis labels
@@ -254,7 +258,16 @@ class Reports_mini(Reports_miniTemplate):
       "paper_bgcolor": "white",
       "plot_bgcolor": "white",
       "hovermode": "x unified",
-      "legend": {"orientation": "h", "yanchor": "top", "y": -0.18, "xanchor": "left", "x": 0.0, "font": {"size": 10}},
+      # "legend": {"orientation": "h", "yanchor": "top", "y": -0.18, "xanchor": "left", "x": 0.0, "font": {"size": 10}},
+      # (Optional) push legend a bit lower on full screen, otherwise it can crowd the plot
+      "legend": {
+        "orientation": "h",
+        "yanchor": "top",
+        "y": -0.14 if getattr(self, "full_screen", False) else -0.18,
+        "xanchor": "left",
+        "x": 0.0,
+        "font": {"size": 10}
+      },
       "xaxis": {
         "type": "category",
         "tickmode": "array",
@@ -282,7 +295,7 @@ class Reports_mini(Reports_miniTemplate):
         "ticklen": 4
       }
     }
-
+    print(layout['height'])
 
     if len(traces) == 0:
       traces = [{
