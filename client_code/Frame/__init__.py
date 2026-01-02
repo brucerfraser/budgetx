@@ -7,17 +7,14 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import math
 
+from ..F_PopUps.csv_confirm import csv_confirm
+from ..F_Components.Dashboard_Screen import Dashboard_Screen
+from ..F_Components.Transactions import Transactions
+from ..F_Components.Budget import Budget
+from ..F_Components.Reports import Reports
+from ..F_Components.Settings import Settings
+from ..F_Global_Logic import Global
 
-from .csv_confirm import csv_confirm
-
-from .Dashboard_Screen import Dashboard_Screen
-from ..Components.Transactions import Transactions
-from ..Components.Budget import Budget
-from ..Components.Reports import Reports
-from ..Components.Settings import Settings
-
-
-from .. import Global
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
 class Frame(FrameTemplate):
@@ -87,25 +84,6 @@ class Frame(FrameTemplate):
       obj.background = "transparent"
     self.content_panel.visible = True
     
-
-  # def load_transactions(self, **event_args):
-  #   #WILL HAVE to change the transactions here to Transactions_Screen
-  #   self.content_panel.clear()
-  #   # self.content_panel.add_component(Transactions())
-  #   #Change the color of the sales_page_link to indicate that the Reports page has been selected
-  #   self.transactions_page_link.background = app.theme_colors['Primary Container']
-  #   clear_list = [self.sales_page_link,self.reports_page_link,self.transactions_page_link]
-  #   for obj in clear_list:
-  #     obj.background = "transparent"
-  #   self.sales_page_link.background = "transparent"
-  #   self.reports_page_link.background = "transparent"
-
-  #If using the Users service, uncomment this code to log out the user:
-  # def signout_link_click(self, **event_args):
-  #   """This method is called when the link is clicked"""
-  #   anvil.users.logout()
-  #   open_form('Logout')
-
   def file_loader_1_change(self, file, **event_args):
     acc_id, ready, raw, accounts = anvil.server.call('read_file',fn=file)
     # csv_confirm time
@@ -127,10 +105,7 @@ class Frame(FrameTemplate):
           obj.raise_event('click')
     else:
       self.file_loader_1.clear()
-    
-    
-    
-
+   
   def dashboard_page_link_click(self, **event_args):
     self.content_panel.clear()
     self.content_panel.visible = False

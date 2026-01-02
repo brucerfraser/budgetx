@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ... import Global
+from ...F_Global_Logic import Global
 import calendar
 from datetime import date
 
@@ -20,7 +20,7 @@ class date_picker_bruce(date_picker_bruceTemplate):
   def form_show(self, **event_args):
     # get transaction start and end date:
     
-    for row in sorted(Global.Transactions_Form.all_transactions,
+    for row in sorted(Global.TRANSACTIONS,
                       key = lambda x: x['date'],reverse=False):
       self.budget_x_first_date = row['date']
       break

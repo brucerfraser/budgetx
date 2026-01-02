@@ -6,7 +6,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import random
-from ... import BUDGET
+from ...F_Global_Logic import BUDGET
 
 
 class Budget_mini(Budget_miniTemplate):

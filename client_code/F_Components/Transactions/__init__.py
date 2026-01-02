@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ... import Global
+from ...F_Global_Logic import Global
 import calendar
 from datetime import date, datetime, timedelta
 
@@ -13,8 +13,6 @@ class Transactions(TransactionsTemplate):
   def __init__(self,dash=False, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    self.all_transactions = anvil.server.call('load_budget_data',True)
-    
     self.dash = dash
     self.which_form = 'transactions'
     self.delete_list = []
@@ -205,7 +203,7 @@ class Transactions(TransactionsTemplate):
                 'account':None,'notes':'',
                 'hash':hash_new,'transaction_id':id_new,
                 'transfer_account':None}
-    from .add_transaction import add_transaction
+    from ...F_PopUps.add_transaction import add_transaction
     alert(add_transaction(new_trans),buttons=[],large=True,
           dismissible=False)
   
@@ -259,7 +257,7 @@ class Transactions(TransactionsTemplate):
       l = from_one_t
     else:
       l = self.delete_list
-    from .transfers import transfers
+    from ...F_PopUps.transfers import transfers
     result = alert(transfers(l),large=True,buttons=[],dismissible=False)
     if result:
       # we must build a list to add/edit in transaction list:

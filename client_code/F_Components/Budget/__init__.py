@@ -8,8 +8,8 @@ from anvil.tables import app_tables
 from .Category_holder import Category_holder
 import calendar
 from datetime import date, datetime, timedelta
-from ... import Global
-from ... import BUDGET
+from ...F_Global_Logic import Global
+from ...F_Global_Logic import BUDGET
 
 
 class Budget(BudgetTemplate):
@@ -78,7 +78,7 @@ class Budget(BudgetTemplate):
           sub_cat.form_show()
     
   def add_category_click(self, **event_args):
-    from ...Pop_menus.work_a_category import work_a_category
+    from ...F_PopUps.work_a_category import work_a_category
     c = work_a_category()
     result = alert(c,title="Add a category",buttons=[],large=True)
     # print(result)
@@ -357,7 +357,7 @@ class Budget(BudgetTemplate):
 
   def update_cat_warning(self,**event_args):
     fd,ld = BUDGET.date_me(False)
-    un_cat = len([t for t in Global.Transactions_Form.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == None])
+    un_cat = len([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld and t['category'] == None])
     warning = "{n} uncategorised transactions for this month".format(n=un_cat)
     self.label_uncat.text = "All transactions categorised!" if un_cat == 0 else warning
     self.label_uncat.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'

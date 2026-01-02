@@ -7,6 +7,7 @@ import calendar
 from datetime import date, datetime, timedelta
 from . import Global
 
+
 global all_cats
 all_cats = []
 
@@ -24,7 +25,7 @@ def get_actual(id,period=None):
   else:
     fd,ld = period[0],period[1]
   trans_list = [
-    t for t in Global.Transactions_Form.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == id
+    t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld and t['category'] == id
   ]
   a = 0.0
   for t in trans_list:

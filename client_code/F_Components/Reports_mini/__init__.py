@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import random
 from datetime import date, timedelta
 import math
-from ... import Global
+from ...F_Global_Logic import Global
 import re
 
 

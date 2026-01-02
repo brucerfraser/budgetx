@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from .... import Global
+from ....F_Global_Logic import Global
 from datetime import date, datetime
 import math
 
@@ -143,19 +143,19 @@ class one_transaction(one_transactionTemplate):
       self.category.text = self.autocomplete_1.text
       corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
       if corr_id:
-        from ..remove_transfer import remove_transfer
+        from ....F_PopUps.remove_transfer import remove_transfer
         if alert(remove_transfer(corr_id),buttons=[],large=False,dismissible=False):
           # we must delete
           Global.Transactions_Form.delete_trans_click([corr_id])
         else:
           #we must change to none
           app_tables.transactions.get(transaction_id=corr_id).update(category=None)
-          [t for t in Global.Transactions_Form.all_transactions if t['transaction_id'] == corr_id][0]['category'] = None
+          [t for t in Global.TRANSACTIONS if t['transaction_id'] == corr_id][0]['category'] = None
           Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
           
     # Then we check if it changed to Transfer
     elif self.autocomplete_1.text == "Transfer":
-      from ..transfers import transfers
+      from ....F_PopUps.transfers import transfers
       result = alert(transfers([self.item['transaction_id']]),large=True,buttons=[],dismissible=False)
       if result:
         Global.Transactions_Form.handle_transfers(from_one_t=result)

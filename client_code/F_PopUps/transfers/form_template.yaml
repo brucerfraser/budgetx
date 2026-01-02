@@ -10,7 +10,7 @@ components:
 - components:
   - layout_properties: {full_width_row: true, grid_position: 'CXMUQL,WFWNBL'}
     name: repeating_panel_1
-    properties: {item_template: F_Components.Transactions.transfers.one_transfer}
+    properties: {item_template: F_PopUps.transfers.one_transfer}
     type: RepeatingPanel
   layout_properties: {full_width_row: true, grid_position: 'TFZEHT,LYVMIF'}
   name: column_panel_1

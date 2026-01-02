@@ -5,9 +5,9 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ... import Global
-from ...Components.Budget_mini import Budget_mini
-from ...Components.Reports_mini import Reports_mini
+from ...F_Global_Logic import Global
+from ..Budget_mini import Budget_mini
+from ..Reports_mini import Reports_mini
 
 
 class Dashboard_Screen(Dashboard_ScreenTemplate):

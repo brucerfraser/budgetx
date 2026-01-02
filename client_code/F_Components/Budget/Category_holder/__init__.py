@@ -6,7 +6,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import date
-from .... import BUDGET
+from ....F_Global_Logic import BUDGET
 
 
 class Category_holder(Category_holderTemplate):
@@ -15,7 +15,7 @@ class Category_holder(Category_holderTemplate):
     self.init_components(**properties)
     
   def link_2_click(self, **event_args):
-    from ....Pop_menus.work_a_category import work_a_category
+    from ....F_PopUps.work_a_category import work_a_category
     c = work_a_category(cat=False)
     result = alert(c,title="Add a sub-category to {cat}".format(cat=self.item['name']),
                   buttons=[],large=True)

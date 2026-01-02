@@ -21,16 +21,17 @@ PERIOD = (0,0)
 global CUSTOM
 CUSTOM = (None,None)
 
-global Transactions_Form
-Transactions_Form = None
+global Transactions_Form, TRANSACTIONS
+Transactions_Form,TRANSACTIONS = None,[]
 
 accounts,ACCOUNTS_WHOLE = anvil.server.call('get_accounts')
 keys = list(accounts.keys())
 ACCOUNTS = [(accounts[k],k) for k in keys]
 
 def open_transactions_instance():
-  global Transactions_Form
-  from .Components.Transactions import Transactions
+  global Transactions_Form,TRANSACTIONS
+  from ..F_Components.Transactions import Transactions
+  TRANSACTIONS = anvil.server.call('load_budget_data',True)
   Transactions_Form = Transactions(dash=True)
 
 def all_categories():

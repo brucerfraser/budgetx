@@ -41,16 +41,16 @@ class transfers(transfersTemplate):
         a_opp = -1 * a
         d_bef = d - timedelta(days=2)
         d_aft = d + timedelta(days=2)
-        if len([t for t in Transactions_Form.all_transactions if t['amount'] == a_opp and d_bef <= t['date'] and d_aft >= t['date']]) == 1:
+        if len([t for t in Global.TRANSACTIONS if t['amount'] == a_opp and d_bef <= t['date'] and d_aft >= t['date']]) == 1:
           # we have a match
-          pairs.append((t_id,[t for t in Transactions_Form.all_transactions if t['amount'] == a_opp and d_bef <= t['date'] and d_aft >= t['date']][0]['transaction_id']))
+          pairs.append((t_id,[t for t in Global.TRANSACTIONS if t['amount'] == a_opp and d_bef <= t['date'] and d_aft >= t['date']][0]['transaction_id']))
         else:
           pairs.append((t_id,None))
     return pairs
 
   def extract_details(self,trans_id,**event_args):
-    amount = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == trans_id][0]['amount']
-    date = [t for t in Transactions_Form.all_transactions if t['transaction_id'] == trans_id][0]['date']
+    amount = [t for t in Global.TRANSACTIONS if t['transaction_id'] == trans_id][0]['amount']
+    date = [t for t in Global.TRANSACTIONS if t['transaction_id'] == trans_id][0]['date']
     return amount,date
 
   @handle('btn_cancel','click')

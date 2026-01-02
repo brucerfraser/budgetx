@@ -18,7 +18,7 @@ class remove_transfer(remove_transferTemplate):
     You are changing a transfer transaction with a corresponding transaction for {R:.2f} on {D} from {A}.
     Would you like to delete this corresponding transaction or change its category to None?
     """
-    the_one = [t for t in Global.Transactions_Form.all_transactions if t['transaction_id'] == t_id][0]
+    the_one = [t for t in Global.TRANSACTIONS if t['transaction_id'] == t_id][0]
     r = the_one['amount'] / 100
     a = ''
     for g in Global.ACCOUNTS:
