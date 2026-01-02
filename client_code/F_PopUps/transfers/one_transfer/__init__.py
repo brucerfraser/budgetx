@@ -5,9 +5,8 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from .....Global import Transactions_Form
-from ..... import Global
-
+from ....F_Global_Logic import Global
+from ....F_Global_Logic.Global import Transactions_Form
 
 class one_transfer(one_transferTemplate):
   def __init__(self, **properties):
