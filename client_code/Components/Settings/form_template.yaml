@@ -57,19 +57,11 @@ components:
         properties: {enabled: false}
         type: TextBox
       - layout_properties: {grid_position: 'YVXRKI,ITKEWF'}
-        name: label_7
+        name: lbl_recon
         properties:
           text: |
             Recon Account:
         type: Label
-      - layout_properties: {grid_position: 'YVXRKI,OFMLTM'}
-        name: dte_recon
-        properties: {enabled: false, placeholder: Recon Date}
-        type: DatePicker
-      - layout_properties: {grid_position: 'YVXRKI,CVKHZR'}
-        name: txt_recon
-        properties: {enabled: false, placeholder: Recon Balance}
-        type: TextBox
       - layout_properties: {grid_position: 'WVZCPX,NCYDWL'}
         name: label_5
         properties:

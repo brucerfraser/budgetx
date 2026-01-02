@@ -76,8 +76,13 @@ class Settings(SettingsTemplate):
   def work_account(self,edit_del_load="edit",**event_args):
     if edit_del_load == "load":
       self.txt_acc_name.text = self.account['acc_name']
-      self.dte_recon.date = self.account['recon_date']
-      self.txt_recon.text = self.account['recon_amount']
+      t = ''
+      if self.account['recon_date']:
+        # we add a label
+        t = "Recon to R{a:.2f} on {d:%d %b %Y}".format(a=self.account['recon_amount']/100,d=self.account['recon_date'])
+      else:
+        t = "No recon yet"
+      self.lbl_recon.text = t
       self.rp_autokeys.items = self.account['acc_keywords']
       self.rp_csvkeys.items = [{'key':k,'value':v} for k,v in self.account['key_map'].items()]
       self.enable_accounts(False)
@@ -113,8 +118,6 @@ class Settings(SettingsTemplate):
 
   def enable_accounts(self,enabled,save=False,**event_args):
     self.txt_acc_name.enabled = enabled
-    self.dte_recon.enabled = enabled
-    self.txt_recon.enabled = enabled
     if enabled:
       l = self.rp_autokeys.items
       if l:
@@ -136,8 +139,6 @@ class Settings(SettingsTemplate):
       row.text_box_1.enabled = enabled
 
   @handle('txt_acc_name','change')
-  @handle('dte_recon','change')
-  @handle('txt_recon','change')
   def edit_and_change(self,caller=None,**event_args):
     self.changed = True
     # if not caller:
@@ -203,6 +204,7 @@ class Settings(SettingsTemplate):
       self.btn_delete.enabled = False
       self.btn_reconcile.enabled = False
       self.txt_acc_name.text = 'New Account Name'
+      self.lbl_recon.text = "No recon yet"
       self.rp_csvkeys.items = [{'key':'date','value':''},
                               {'key':'amount','value':''},
                               {'key':'description','value':''}]
@@ -223,7 +225,8 @@ class Settings(SettingsTemplate):
       self.account = {'acc_id':Global.new_id_needed(),
                      'acc_name':self.txt_acc_name.text,
                      'acc_keywords':auto_list,
-                     'key_map':map}
+                     'key_map':map,'recon_date':None,
+                     'recon_amount':None}
       anvil.server.call('add_account',self.account)
       Global.ACCOUNTS_WHOLE.append(self.account)
       self.repeating_panel_2.items = list(filter(lambda item: not item.get("archived", False), Global.ACCOUNTS_WHOLE))
@@ -232,6 +235,7 @@ class Settings(SettingsTemplate):
       
   def clear_an_account(self,**event_args):
     self.txt_acc_name.text = ''
+    self.lbl_recon.text = ''
     self.rp_autokeys.items = []
     self.rp_csvkeys.items = []
     self.cp_account_details.visible = False
@@ -253,4 +257,16 @@ class Settings(SettingsTemplate):
                          buttons=[("OK", True), ("Cancel", False)])
 
     if save_clicked:
-      print(f"Values: {dp.date}, {nb.text}")
+      upload = {'recon_date':dp.date,
+                'recon_amount':int(nb.text*100),
+                'acc_id':self.account['acc_id']}
+      self.account['recon_amount'] = int(nb.text*100)
+      self.account['recon_date'] = dp.date
+      anvil.server.call('update_account',upload)
+      for a in Global.ACCOUNTS_WHOLE:
+        if a['acc_id'] == upload['acc_id']:
+          a.update(**upload)
+          break
+      self.lbl_recon.text = "Recon to R{a:.2f} on {d:%d %b %Y}".format(a=self.account['recon_amount']/100,d=self.account['recon_date'])
+
+

@@ -159,14 +159,35 @@ class Reports_mini(Reports_miniTemplate):
     start_this = self._first_of_month(today)
     start_last = self._add_months_first(start_this, -1)
     end_this = self._last_of_month(today)
+    cutoff = start_last - timedelta(days=1)
 
     accounts = getattr(Global, "ACCOUNTS", []) or []
     account_names_by_id = {acc_id: acc_name for (acc_name, acc_id) in accounts}
 
     txns = getattr(Global.Transactions_Form, "all_transactions", []) or []
 
-    starting = {acc_id: 0 for acc_id in account_names_by_id.keys()}
+    # --- Recon adjustments (optional, institution-agnostic) ---
+    recon_by_acc = {}
+    accounts_whole = getattr(Global, "ACCOUNTS_WHOLE", []) or []
+    for a in accounts_whole:
+      try:
+        acc_id = a.get("acc_id")
+        rd = a.get("recon_date")
+        ra = a.get("recon_amount")
+        if acc_id and isinstance(rd, date) and ra is not None:
+          recon_by_acc.setdefault(acc_id, {})[rd] = int(ra)  # cents
+      except Exception:
+        continue
+        
+    recon_dates_by_acc = {}
+    for acc_id, m in recon_by_acc.items():
+      recon_dates_by_acc[acc_id] = sorted(m.keys())
+    
+      starting = {acc_id: 0 for acc_id in account_names_by_id.keys()}
     deltas = {acc_id: {} for acc_id in account_names_by_id.keys()}
+
+    # Collect pre-window txns per account (so we can apply "latest recon before window")
+    pre_window_txns = {acc_id: {} for acc_id in account_names_by_id.keys()}
 
     for t in txns:
       try:
@@ -177,12 +198,38 @@ class Reports_mini(Reports_miniTemplate):
           continue
 
         if d < start_last:
-          starting[acc_id] = starting.get(acc_id, 0) + amt
+          dd = pre_window_txns.setdefault(acc_id, {})
+          dd[d] = dd.get(d, 0) + amt
+
         elif start_last <= d <= end_this:
           dd = deltas.setdefault(acc_id, {})
           dd[d] = dd.get(d, 0) + amt
       except Exception:
         continue
+
+        cutoff = start_last - timedelta(days=1)
+
+    for acc_id in starting.keys():
+      # 1) latest recon on/before cutoff
+      base = 0
+      recon_start_date = None
+
+      rdates = recon_dates_by_acc.get(acc_id, [])
+      if rdates:
+        # get latest <= cutoff
+        prior = [rd for rd in rdates if rd <= cutoff]
+        if prior:
+          recon_start_date = prior[-1]
+          base = recon_by_acc[acc_id][recon_start_date]
+
+      # 2) add txns after recon_start_date up to cutoff
+      bal = base
+      for d, amt in pre_window_txns.get(acc_id, {}).items():
+        if recon_start_date is None or d > recon_start_date:
+          bal += amt
+
+      starting[acc_id] = bal
+
 
     all_days = list(self._daterange(start_last, end_this))
     x = [d.isoformat() for d in all_days]
@@ -213,8 +260,16 @@ class Reports_mini(Reports_miniTemplate):
 
       y = []
       for d in all_days:
+        # apply normal daily transaction deltas
         bal += deltas.get(acc_id, {}).get(d, 0)
+
+        # apply recon override (if present for this account on this date)
+        rec = recon_by_acc.get(acc_id, {}).get(d)
+        if rec is not None:
+          bal = rec  # cents, force balance to recon amount on recon_date
+
         y.append(bal / 100.0)
+
 
       traces.append({
         "type": "scatter",
