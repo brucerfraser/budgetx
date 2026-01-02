@@ -254,7 +254,7 @@ class Transactions(TransactionsTemplate):
   @handle('btn_tfer','click')
   def handle_transfers(self,from_one_t=None,**event_args):
     if from_one_t:
-      l = from_one_t
+      l = [from_one_t]
     else:
       l = self.delete_list
     from ...F_PopUps.transfers import transfers
@@ -264,6 +264,7 @@ class Transactions(TransactionsTemplate):
       # all_transactions and table transactions.
       anvil.server.call('handle_transfers',self.local_transfers(result))
       self.load_me(self.dash)
+    return True if result else False
 
   def local_transfers(self,transfer_list,**event_args):
     for transfer in transfer_list:

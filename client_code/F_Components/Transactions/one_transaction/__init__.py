@@ -155,10 +155,7 @@ class one_transaction(one_transactionTemplate):
           
     # Then we check if it changed to Transfer
     elif self.autocomplete_1.text == "Transfer":
-      from ....F_PopUps.transfers import transfers
-      result = alert(transfers([self.item['transaction_id']]),large=True,buttons=[],dismissible=False)
-      if result:
-        Global.Transactions_Form.handle_transfers(from_one_t=result)
+      if Global.Transactions_Form.handle_transfers(from_one_t=self.item['transaction_id']):
         self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
         self.category.text = self.autocomplete_1.text
       else:
