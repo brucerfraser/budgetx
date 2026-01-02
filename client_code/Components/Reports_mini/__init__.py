@@ -249,6 +249,9 @@ class Reports_mini(Reports_miniTemplate):
     def has_any_data(acc_id):
       return starting.get(acc_id, 0) != 0 or len(deltas.get(acc_id, {})) > 0
 
+    # --- TOTAL balance per day (for background area) ---
+    total_by_day = {d: 0 for d in all_days}
+
     traces = []
 
     for acc_id in sorted(account_names_by_id.keys(), key=sort_key):
@@ -267,7 +270,7 @@ class Reports_mini(Reports_miniTemplate):
         rec = recon_by_acc.get(acc_id, {}).get(d)
         if rec is not None:
           bal = rec  # cents, force balance to recon amount on recon_date
-
+        total_by_day[d] += bal
         y.append(bal / 100.0)
 
 
@@ -319,7 +322,10 @@ class Reports_mini(Reports_miniTemplate):
         "fixedrange": True,
         "tickfont": {"size": 11},
         "ticks": "outside",
-        "ticklen": 4
+        "ticklen": 4,
+        "zeroline": True,
+        "zerolinecolor": "rgba(0,0,0,0.25)",
+        "zerolinewidth": 1,
       }
     }
 
@@ -336,6 +342,44 @@ class Reports_mini(Reports_miniTemplate):
       }]
       layout["xaxis"]["showgrid"] = False
       layout["yaxis"]["showgrid"] = False
+
+    # --- TOTAL balance split-area (green above 0, orange below 0) ---
+    total_y = [total_by_day[d] / 100.0 for d in all_days]
+    
+    pos_y = [v if v > 0 else 0 for v in total_y]
+    neg_y = [v if v < 0 else 0 for v in total_y]
+    
+    total_pos_trace = {
+      "type": "scatter",
+      "mode": "lines",
+      "name": "Total (positive)",
+      "x": x,
+      "y": pos_y,
+      "line": {"width": 0},
+      "fill": "tozeroy",
+      "fillcolor": "rgba(46, 160, 67, 0.18)",  # soft green
+      "hovertemplate": "<b>Total</b><br>%{x}<br>R%{customdata:,.2f}<extra></extra>",
+      "customdata": total_y,
+      "showlegend": False
+    }
+    
+    total_neg_trace = {
+      "type": "scatter",
+      "mode": "lines",
+      "name": "Total (negative)",
+      "x": x,
+      "y": neg_y,
+      "line": {"width": 0},
+      "fill": "tozeroy",
+      "fillcolor": "rgba(217, 83, 79, 0.18)",  # soft orange/red
+      "hovertemplate": "<b>Total</b><br>%{x}<br>R%{customdata:,.2f}<extra></extra>",
+      "customdata": total_y,
+      "showlegend": False
+    }
+    
+    # Put them behind everything else
+    traces.insert(0, total_neg_trace)
+    traces.insert(0, total_pos_trace)
 
     self.plot_1.data = traces
     self.plot_1.layout = layout

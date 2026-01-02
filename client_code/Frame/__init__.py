@@ -24,7 +24,7 @@ class Frame(FrameTemplate):
     self.init_components(**properties)
     
     #Present users with a login form with just one line of code:
-    #anvil.users.login_with_form()
+    anvil.users.login_with_form()
     Global.make_date()
     Global.all_categories()
     Global.smarter()
