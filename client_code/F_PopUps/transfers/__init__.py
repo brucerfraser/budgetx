@@ -16,6 +16,7 @@ class transfers(transfersTemplate):
     self.init_components(**properties)
     self.transfer_list = transfer_list
     self.return_list = []
+    
 
   @handle("", "show")
   def form_show(self, **event_args):
@@ -28,6 +29,7 @@ class transfers(transfersTemplate):
     Use the green lock button 🔒 to confirm the transfer details. Green background = locked and ready.\n
     Use the red unlock button 🔓 to ignore the transaction for transfer. Red background = ignored.
     """
+    self.return_list = []
     return t
 
   def get_pairs(self, **event_args):
@@ -49,9 +51,12 @@ class transfers(transfersTemplate):
     return pairs
 
   def extract_details(self,trans_id,**event_args):
-    amount = [t for t in Global.TRANSACTIONS if t['transaction_id'] == trans_id][0]['amount']
-    date = [t for t in Global.TRANSACTIONS if t['transaction_id'] == trans_id][0]['date']
-    return amount,date
+    try:
+      amount = [t for t in Global.TRANSACTIONS if t['transaction_id'] == trans_id][0]['amount']
+      date = [t for t in Global.TRANSACTIONS if t['transaction_id'] == trans_id][0]['date']
+      return amount,date
+    except Exception as e:
+      print(self.transfer_list)
 
   @handle('btn_cancel','click')
   @handle('btn_ok','click')
