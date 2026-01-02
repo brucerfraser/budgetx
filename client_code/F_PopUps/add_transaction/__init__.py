@@ -5,10 +5,10 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ....Global import Transactions_Form
-from .... import Global
 from datetime import date, timedelta
 import time
+from ...F_Global_Logic.Global import Transactions_Form
+from ...F_Global_Logic import Global
 
 
 class add_transaction(add_transactionTemplate):
