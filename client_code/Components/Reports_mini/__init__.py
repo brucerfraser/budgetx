@@ -17,8 +17,10 @@ import re
 class Reports_mini(Reports_miniTemplate):
   def __init__(self, full_screen=False, **properties):
     self.init_components(**properties)
+    self.full_screen = full_screen
     if full_screen:
       self.plot_1.height = 600
+      self.plot_1.interactive = True
 
     self.build_two_month_balance_plot()
 
@@ -44,64 +46,49 @@ class Reports_mini(Reports_miniTemplate):
       cur += timedelta(days=1)
 
   # ---------------------------
-  # Tokenisation + grouping
+  # Tokenisation + grouping (INSTITUTION ONLY)
   # ---------------------------
   def _tokens(self, name: str):
-    # keep only letters/numbers as tokens, lowercase
     raw = re.findall(r"[A-Za-z0-9]+", name or "")
     return [t.lower() for t in raw if t.strip()]
 
-  def _meaningful_tokens(self, name: str):
-    # Words that should NOT drive grouping (generic descriptors)
-    stop = {
+  def _institution_key(self, name: str) -> str:
+    """
+    Group ONLY by institution (bank/provider), ignoring personal names & generic account words.
+    This ensures Investec accounts share a hue just like the FNB accounts do.
+    """
+    tokens = self._tokens(name)
+
+    ignore = {
+      # personal names
+      "bruce", "esther",
+      # generic descriptors
       "card", "credit", "cheque", "checking", "current", "savings",
-      "account", "acc", "a/c", "black", "gold", "platinum",
+      "account", "acc", "a", "c", "black", "gold", "platinum",
       "visa", "mastercard", "amex", "debit", "business", "personal"
     }
-    toks = self._tokens(name)
-    return [t for t in toks if t not in stop]
 
-  def _build_groups_any_shared_word(self, account_names_by_id: dict):
-    """
-    Returns:
-      groups: dict[group_key -> list[(acc_id, name)]]
-      group_key is a token (e.g., 'fnb', 'investec', 'discovery') or 'other'
-    """
-    # Collect meaningful tokens per account
-    tokens_by_id = {}
-    for acc_id, name in account_names_by_id.items():
-      tokens_by_id[acc_id] = set(self._meaningful_tokens(name))
+    # Known institutions you want to group by (extend as needed)
+    institutions = {"fnb", "investec", "discovery"}
 
-    # Count token frequency across accounts to find "shared words"
-    token_freq = {}
-    for acc_id, toks in tokens_by_id.items():
-      for t in toks:
-        token_freq[t] = token_freq.get(t, 0) + 1
+    # Prefer an explicit institution token anywhere in the name
+    for t in tokens:
+      if t in institutions:
+        return t
 
-    # Candidate grouping tokens are ones appearing in >= 2 accounts
-    shared_tokens = {t for t, c in token_freq.items() if c >= 2}
+    # Fallback: first non-ignored token
+    for t in tokens:
+      if t not in ignore:
+        return t
 
-    # For each account, choose the "best" shared token (if any)
-    # Heuristic: prefer tokens shared by more accounts, then shorter token
-    def best_shared_token(toks):
-      candidates = [t for t in toks if t in shared_tokens]
-      if not candidates:
-        return None
-      candidates.sort(key=lambda t: (-token_freq.get(t, 0), len(t), t))
-      return candidates[0]
+    return "other"
 
-    group_key_by_id = {}
-    for acc_id, toks in tokens_by_id.items():
-      g = best_shared_token(toks)
-      group_key_by_id[acc_id] = g if g else "other"
-
-    # Build group dict
+  def _build_groups_institution_only(self, account_names_by_id: dict):
     groups = {}
     for acc_id, name in account_names_by_id.items():
-      g = group_key_by_id.get(acc_id, "other")
+      g = self._institution_key(name)
       groups.setdefault(g, []).append((acc_id, name))
 
-    # Stable ordering inside groups
     for g in groups:
       groups[g].sort(key=lambda t: t[1].lower())
 
@@ -134,28 +121,24 @@ class Reports_mini(Reports_miniTemplate):
 
     return "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
 
-  def _assign_colors_any_shared_word(self, account_names_by_id: dict):
+  def _assign_colors_institution_only(self, account_names_by_id: dict):
     """
-    Groups by any shared meaningful word, then assigns same hue per group + shades per account.
+    Groups by institution only, then assigns same hue per institution + shades per account.
     Returns {acc_id: "#RRGGBB"}.
     """
     base_hues = [210, 25, 145, 280, 95, 15, 200, 330, 60, 260]
-    groups = self._build_groups_any_shared_word(account_names_by_id)
+    groups = self._build_groups_institution_only(account_names_by_id)
 
-    # Make group order stable and pleasant:
-    # Put "other" last, else alphabetical
     group_keys = sorted([g for g in groups.keys() if g != "other"])
     if "other" in groups:
       group_keys.append("other")
 
     colors = {}
-
     for gi, g in enumerate(group_keys):
       hue = base_hues[gi % len(base_hues)]
       members = groups[g]
       n = len(members)
 
-      # Shades in the same hue
       l_min, l_max = 0.38, 0.74
       if n == 1:
         lightnesses = [(l_min + l_max) / 2]
@@ -207,21 +190,17 @@ class Reports_mini(Reports_miniTemplate):
     tickvals = [start_last.isoformat(), start_this.isoformat(), end_this.isoformat()]
     ticktext = [start_last.strftime("1 %b"), start_this.strftime("1 %b"), end_this.strftime("%d %b")]
 
-    colors = self._assign_colors_any_shared_word(account_names_by_id)
+    # ✅ CHANGED: use institution-only coloring
+    colors = self._assign_colors_institution_only(account_names_by_id)
+
+    # ✅ CHANGED: sort by institution, then name
+    def sort_key(acc_id):
+      name = account_names_by_id.get(acc_id, "")
+      g = self._institution_key(name)
+      return (g, name.lower())
 
     def has_any_data(acc_id):
       return starting.get(acc_id, 0) != 0 or len(deltas.get(acc_id, {})) > 0
-
-    def sort_key(acc_id):
-      # sort by group token, then name
-      name = account_names_by_id.get(acc_id, "")
-      toks = self._meaningful_tokens(name)
-      # pick deterministic group key for sorting
-      g = "other"
-      if toks:
-        # the grouping function might choose a shared token; we can mirror that roughly:
-        g = toks[0]
-      return (g, name.lower())
 
     traces = []
 
@@ -258,8 +237,6 @@ class Reports_mini(Reports_miniTemplate):
       "paper_bgcolor": "white",
       "plot_bgcolor": "white",
       "hovermode": "x unified",
-      # "legend": {"orientation": "h", "yanchor": "top", "y": -0.18, "xanchor": "left", "x": 0.0, "font": {"size": 10}},
-      # (Optional) push legend a bit lower on full screen, otherwise it can crowd the plot
       "legend": {
         "orientation": "h",
         "yanchor": "top",
@@ -280,16 +257,11 @@ class Reports_mini(Reports_miniTemplate):
       "yaxis": {
         "tickprefix": "R",
         "tickformat": ",",
-
-        # ✅ ONLY FIX: let Plotly auto-reserve label space
         "automargin": True,
-
         "showgrid": True,
         "gridcolor": "rgba(0,0,0,0.08)",
         "zeroline": False,
         "fixedrange": True,
-
-        # ✅ OPTIONAL but helpful: slightly larger labels + padding from axis
         "tickfont": {"size": 11},
         "ticks": "outside",
         "ticklen": 4

@@ -56,6 +56,20 @@ components:
         name: txt_acc_name
         properties: {enabled: false}
         type: TextBox
+      - layout_properties: {grid_position: 'YVXRKI,ITKEWF'}
+        name: label_7
+        properties:
+          text: |
+            Recon Account:
+        type: Label
+      - layout_properties: {grid_position: 'YVXRKI,OFMLTM'}
+        name: dte_recon
+        properties: {enabled: false, placeholder: Recon Date}
+        type: DatePicker
+      - layout_properties: {grid_position: 'YVXRKI,CVKHZR'}
+        name: txt_recon
+        properties: {enabled: false, placeholder: Recon Balance}
+        type: TextBox
       - layout_properties: {grid_position: 'WVZCPX,NCYDWL'}
         name: label_5
         properties:
@@ -76,7 +90,7 @@ components:
         type: RepeatingPanel
       layout_properties: {grid_position: 'INXYGU,BMYQFX'}
       name: cp_account_details
-      properties: {border: solid orange 1px, col_widths: '{"NIXAJO":25,"YTTVJR":35,"NCYDWL":25,"FUIVRS":35}'}
+      properties: {border: solid orange 1px, col_widths: '{"NIXAJO":25,"YTTVJR":35,"NCYDWL":25,"FUIVRS":35}', role: fixed-holder}
       type: ColumnPanel
     - components:
       - layout_properties: {grid_position: 'VSKTBZ,CTSFRB'}
