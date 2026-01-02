@@ -2,7 +2,7 @@ components:
 - components:
   - layout_properties: {full_width_row: true, grid_position: 'KKKEFW,EFLBJV'}
     name: repeating_panel_1
-    properties: {item_template: Components.Budget_mini.budget_glances, role: fixed-repeating-panel}
+    properties: {item_template: F_Components.Budget_mini.budget_glances, role: fixed-repeating-panel}
     type: RepeatingPanel
   layout_properties: {full_width_row: true, grid_position: 'HGHVYE,BHYYCT'}
   name: card_1

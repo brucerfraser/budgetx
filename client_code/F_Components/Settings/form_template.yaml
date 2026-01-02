@@ -25,7 +25,7 @@ components:
       - {code: 'self.item[''category_list'']', property: items, writeback: false}
       layout_properties: {grid_position: 'WVRIIK,IQOHAJ'}
       name: repeating_panel_1
-      properties: {item_template: Components.Settings.ItemTemplate3}
+      properties: {item_template: F_Components.Settings.ItemTemplate3}
       type: RepeatingPanel
     data_bindings:
     - {code: self.switch_1.checked, property: visible, writeback: false}
@@ -45,7 +45,7 @@ components:
       type: Label
     - layout_properties: {grid_position: 'INXYGU,DAATXO'}
       name: repeating_panel_2
-      properties: {item_template: Components.Settings.ItemTemplate4, role: fixed-holder}
+      properties: {item_template: F_Components.Settings.ItemTemplate4, role: fixed-holder}
       type: RepeatingPanel
     - components:
       - layout_properties: {grid_position: 'LQDEMK,NIXAJO'}
@@ -70,7 +70,7 @@ components:
         type: Label
       - layout_properties: {grid_position: 'WVZCPX,FUIVRS'}
         name: rp_autokeys
-        properties: {item_template: Components.Settings.ItemTemplate5, role: fixed-holder-small, spacing_above: none, spacing_below: none}
+        properties: {item_template: F_Components.Settings.ItemTemplate5, role: fixed-holder-small, spacing_above: none, spacing_below: none}
         type: RepeatingPanel
       - layout_properties: {grid_position: 'QXAYUB,HHOYSS'}
         name: label_6
@@ -78,7 +78,7 @@ components:
         type: Label
       - layout_properties: {grid_position: 'PNZQVT,QQTYTM'}
         name: rp_csvkeys
-        properties: {item_template: Components.Settings.ItemTemplate6, role: fixed-holder-small}
+        properties: {item_template: F_Components.Settings.ItemTemplate6, role: fixed-holder-small}
         type: RepeatingPanel
       layout_properties: {grid_position: 'INXYGU,BMYQFX'}
       name: cp_account_details

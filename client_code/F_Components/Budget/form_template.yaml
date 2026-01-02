@@ -6,7 +6,7 @@ components:
         - layout_properties: {grid_position: 'JMRLBA,QGCDCG'}
           name: date_picker_bruce_1
           properties: {}
-          type: form:Components.date_picker_bruce
+          type: form:F_Components.date_picker_bruce
         layout_properties: {grid_position: 'ABRJPF,EHDCBW'}
         name: card_month_picker
         properties:
@@ -59,7 +59,7 @@ components:
         type: ColumnPanel
       - layout_properties: {grid_position: 'VTICVQ,RHQMGY'}
         name: expense_categories
-        properties: {item_template: Components.Budget.Category_holder}
+        properties: {item_template: F_Components.Budget.Category_holder}
         type: RepeatingPanel
       layout_properties: {grid_position: 'YKXTUA,CGOXGK'}
       name: card_expenses
@@ -279,7 +279,7 @@ components:
                 layout_properties: {}
                 name: text_colour
                 properties: {}
-                type: form:Pop_menus.colorpicker
+                type: form:F_PopUps.colorpicker
               layout_properties: {grid_position: 'DZXRHC,NGUVUG SGDTZP,NKCSYN'}
               name: flow_panel_2
               properties: {align: center}
@@ -294,7 +294,7 @@ components:
                 name: bg_colour
                 properties:
                   align: []
-                type: form:Pop_menus.colorpicker
+                type: form:F_PopUps.colorpicker
               layout_properties: {grid_position: 'DZXRHC,KTPLSG WMPRWC,WREZSX'}
               name: flow_panel_1
               properties:

@@ -20,7 +20,7 @@ components:
         name: colorpicker_text
         properties:
           align: [center]
-        type: form:Pop_menus.colorpicker
+        type: form:F_PopUps.colorpicker
       layout_properties: {grid_position: 'SCSGAM,YZIPNY'}
       name: flow_panel_1
       properties: {align: center}
@@ -35,7 +35,7 @@ components:
         name: colorpicker_back
         properties:
           align: [Center]
-        type: form:Pop_menus.colorpicker
+        type: form:F_PopUps.colorpicker
       layout_properties: {grid_position: 'SCSGAM,NEYLSS'}
       name: flow_panel_2
       properties: {align: center}

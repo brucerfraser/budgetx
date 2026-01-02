@@ -35,7 +35,7 @@ components:
       - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
         name: progress_bar_1
         properties: {max_value: 100, min_value: -100, value: 0}
-        type: form:Components.ProgressBar
+        type: form:F_Components.ProgressBar
       layout_properties: {full_width_row: true, grid_position: 'EDIEGX,DEDJPQ'}
       name: current_column_panel
       properties: {background: ''}
@@ -78,7 +78,7 @@ components:
     - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
       name: progress_bar_1_edit
       properties: {max_value: 100, min_value: -100, value: 23}
-      type: form:Components.ProgressBar
+      type: form:F_Components.ProgressBar
     layout_properties: {full_width_row: true, grid_position: 'NKBVXG,VKGXVW'}
     name: edit_column_panel
     properties:
