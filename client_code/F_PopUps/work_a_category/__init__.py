@@ -33,7 +33,7 @@ class work_a_category(work_a_categoryTemplate):
 
   def button_2_click(self, **event_args):
     if len(self.label.text) > 2 and not self.label.text.lower() in ["choose name",'income']:
-      from ... import Global
+      from ...F_Global_Logic import Global
       id = 'category_id' if self.cat else 'sub_category_id'
       self.raise_event('x-close-alert',value={'name':self.label.text,
                                               'colour_back':self.colorpicker_back.get_color(),

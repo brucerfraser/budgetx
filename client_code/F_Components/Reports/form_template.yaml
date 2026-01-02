@@ -4,6 +4,6 @@ components:
   properties: {role: fixed-holder-page}
   type: ColumnPanel
 container:
-  event_bindings: {show: form_show}
+  event_bindings: {}
   type: ColumnPanel
 is_package: true

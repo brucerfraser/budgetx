@@ -164,7 +164,7 @@ class Reports_mini(Reports_miniTemplate):
     accounts = getattr(Global, "ACCOUNTS", []) or []
     account_names_by_id = {acc_id: acc_name for (acc_name, acc_id) in accounts}
 
-    txns = getattr(Global.Transactions_Form, "all_transactions", []) or []
+    txns = getattr(Global, "TRANSACTIONS", []) or []
 
     # --- Recon adjustments (optional, institution-agnostic) ---
     recon_by_acc = {}

@@ -6,8 +6,8 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import date
-from ..... import Global
-from ..... import BUDGET
+from .....F_Global_Logic import BUDGET
+from .....F_Global_Logic import Global
 
 
 

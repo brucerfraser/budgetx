@@ -29,13 +29,13 @@ class Transactions(TransactionsTemplate):
 
   def reload_from_upload(self,new_list,**event_args):
     for new in new_list:
-      if len([t for t in self.all_transactions if t['hash'] == new['hash']]) == 0:
+      if len([t for t in Global.TRANSACTIONS if t['hash'] == new['hash']]) == 0:
         #we have a new transaction
         # new['amount'] = int(float(new['amount'])*100)
         new['notes'] = None
         new['category'] = None
-        self.all_transactions.append(new)
-    # self.all_transactions = anvil.server.call('load_budget_data',True)
+        Global.TRANSACTIONS.append(new)
+    # Global.TRANSACTIONS = anvil.server.call('load_budget_data',True)
       
 
   def load_me(self,dash,uncat=False,search=False,sub_cat=None,**event_args):
@@ -50,16 +50,16 @@ class Transactions(TransactionsTemplate):
       self.card_header.visible = True
     fd,ld = self.date_me(dash)
     if not uncat and not search and not sub_cat:
-      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
+      self.repeating_panel_1.items = sorted([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld],
                                             key = lambda x: x['date'],reverse=True)
     elif uncat:
-      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and t['category'] == None],
+      self.repeating_panel_1.items = sorted([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld and t['category'] == None],
                                             key = lambda x: x['date'],reverse=True)
     elif search:
-      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and search.lower() in t['description'].lower() or search.lower() in str(t['amount']).lower()],
+      self.repeating_panel_1.items = sorted([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld and search.lower() in t['description'].lower() or search.lower() in str(t['amount']).lower()],
                                             key = lambda x: x['date'],reverse=True)
     elif sub_cat:
-      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld and (t[sub_cat[0]] == sub_cat[1] or Global.is_it_smart(t['description']) == sub_cat[1])],
+      self.repeating_panel_1.items = sorted([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld and (t[sub_cat[0]] == sub_cat[1] or Global.is_it_smart(t['description']) == sub_cat[1])],
                                             key = lambda x: x['date'],reverse=True)
     # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by("date",ascending=False),
     #                                                               date=q.between(fd,ld,True,True))
@@ -100,13 +100,13 @@ class Transactions(TransactionsTemplate):
     if key == "date" and i == "fa:chevron-down":
       i = ""
     if key == 'account':
-      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
+      self.repeating_panel_1.items = sorted([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld],
                                             key = lambda x: (x[key],x['date']),reverse = not a)
       # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
       #                                                               tables.order_by("date",ascending=False),
       #                                                              date=q.between(fd,ld,True,True))
     else:
-      self.repeating_panel_1.items = sorted([t for t in self.all_transactions if t['date'] >= fd and t['date'] <= ld],
+      self.repeating_panel_1.items = sorted([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld],
                                             key = lambda x: x[key],reverse = not a)
       # self.repeating_panel_1.items = app_tables.transactions.search(tables.order_by(key,ascending=a),
       #                                                              date=q.between(fd,ld,True,True))
@@ -209,7 +209,7 @@ class Transactions(TransactionsTemplate):
   
 
   def send_new_transaction(self,new_trans,**event_args):
-    self.all_transactions.insert(0,new_trans)
+    Global.TRANSACTIONS.insert(0,new_trans)
     app_tables.transactions.add_row(**new_trans)
     self.load_me(self.dash)
 
@@ -225,9 +225,9 @@ class Transactions(TransactionsTemplate):
       anvil.server.call('delete_transactions',alien)
       for id in alien:
         # app_tables.transactions.get(transaction_id=id).delete()
-        for trans in self.all_transactions:
+        for trans in Global.TRANSACTIONS:
           if trans['transaction_id'] == id:
-            self.all_transactions.remove(trans)
+            Global.TRANSACTIONS.remove(trans)
             break
       self.load_me(self.dash)
       note.hide()
@@ -244,9 +244,9 @@ class Transactions(TransactionsTemplate):
         anvil.server.call('delete_transactions',self.delete_list)
         for id in self.delete_list:
           # app_tables.transactions.get(transaction_id=id).delete()
-          for trans in self.all_transactions:
+          for trans in Global.TRANSACTIONS:
             if trans['transaction_id'] == id:
-              self.all_transactions.remove(trans)
+              Global.TRANSACTIONS.remove(trans)
               break
         self.load_me(self.dash)
         note.hide()
@@ -282,20 +282,20 @@ class Transactions(TransactionsTemplate):
                                   acc=acc_two)
         
       # left t-id
-      [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['transfer_account'] = transfer['account_two']
-      [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
-      [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_one']][0]['description'] = desc_one
+      [t for t in Global.TRANSACTIONS if t['transaction_id'] == transfer['trans_one']][0]['transfer_account'] = transfer['account_two']
+      [t for t in Global.TRANSACTIONS if t['transaction_id'] == transfer['trans_one']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
+      [t for t in Global.TRANSACTIONS if t['transaction_id'] == transfer['trans_one']][0]['description'] = desc_one
       if transfer['exists']:
         #right t-id
-        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['transfer_account'] = transfer['account_one']
-        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
-        [t for t in self.all_transactions if t['transaction_id'] == transfer['trans_two']][0]['description'] = desc_two
+        [t for t in Global.TRANSACTIONS if t['transaction_id'] == transfer['trans_two']][0]['transfer_account'] = transfer['account_one']
+        [t for t in Global.TRANSACTIONS if t['transaction_id'] == transfer['trans_two']][0]['category'] = 'ec8e0085-8408-43a2-953f-ebba24549d96'
+        [t for t in Global.TRANSACTIONS if t['transaction_id'] == transfer['trans_two']][0]['description'] = desc_two
       else:
         #we have to make one transaction
         hash = transfer['date_two'].strftime("%d%m%Y") + str(transfer['amount_two']) + transfer['account_two']
         t_acc = Global.new_id_needed()
         transfer['trans_two'] = t_acc
-        self.all_transactions.append({'date':transfer['date_two'],
+        Global.TRANSACTIONS.append({'date':transfer['date_two'],
                                      'description':desc_two,
                                      'amount':transfer['amount_two'],
                                      'hash':hash,
@@ -306,12 +306,12 @@ class Transactions(TransactionsTemplate):
     return transfer_list
         
   def check_corresponding(self,t_id,**event_args):
-    the_one = [t for t in self.all_transactions if t['transaction_id'] == t_id][0]
+    the_one = [t for t in Global.TRANSACTIONS if t['transaction_id'] == t_id][0]
     a_opp = -1 * the_one['amount']
     d_bef = the_one['date'] - timedelta(days=2)
     d_aft = the_one['date'] + timedelta(days=2)
     try:
-      return [t for t in self.all_transactions if t['amount'] == a_opp and d_bef <= t['date'] and d_aft >= t['date']][0]['transaction_id']
+      return [t for t in Global.TRANSACTIONS if t['amount'] == a_opp and d_bef <= t['date'] and d_aft >= t['date']][0]['transaction_id']
     except:
       return None
   
