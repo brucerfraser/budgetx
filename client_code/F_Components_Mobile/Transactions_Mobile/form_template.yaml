@@ -115,7 +115,7 @@ components:
     type: ColumnPanel
   - layout_properties: {full_width_row: true, grid_position: 'BEQGJZ,JGWJGD'}
     name: repeating_panel_1
-    properties: {item_template: F_Components_Mobile.Transactions_Mobile.one_transaction_mobile, role: null, spacing_above: none, spacing_below: none}
+    properties: {item_template: F_Components_Mobile.Transactions_Mobile.one_transaction_mobile, role: loose-inner, spacing_above: none, spacing_below: none}
     type: RepeatingPanel
   layout_properties: {grid_position: 'RRNDAL,EUZJRT'}
   name: card_3
@@ -123,6 +123,6 @@ components:
   type: ColumnPanel
 container:
   event_bindings: {show: form_show}
-  properties: {role: null}
+  properties: {role: fixed-outer}
   type: ColumnPanel
 is_package: true

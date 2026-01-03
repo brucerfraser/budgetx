@@ -328,3 +328,5 @@ roles:
 - {name: txn-card-mobile-selected}
 - {name: category-option}
 - {name: fixed-repeating-panel-mobile}
+- {name: fixed-outer}
+- {name: loose-inner}
