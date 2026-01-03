@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ....F_Global_Logic import Global
+from ....F_Global_Logic import Global,Transaction
 
 
 class one_transaction_mobile(one_transaction_mobileTemplate):
@@ -131,8 +131,10 @@ class one_transaction_mobile(one_transaction_mobileTemplate):
           c = self.lbl_category.text 
         cat_name = alert(category_selector(self.item['description'],c),buttons=[],large=False)
         self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
-        # send and load
         self.lbl_category.text = cat_name
+        Transaction.work_transaction_data('update',self.item)
+        Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+        
   
       def do_long_press():
         alert("LONG PRESS (open/edits")  # (keep for testing)

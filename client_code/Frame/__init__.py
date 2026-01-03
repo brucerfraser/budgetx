@@ -17,8 +17,7 @@ from ..F_Components.Settings import Settings
 from ..F_Components_Mobile.BottomBar import BottomBar
 from ..F_Components_Mobile.Dashboard_Screen_Mobile import Dashboard_Screen_Mobile
 
-from ..F_Global_Logic import Global
-from ..F_Global_Logic import Responsive
+from ..F_Global_Logic import Global,Responsive,Transaction
 
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
@@ -29,8 +28,8 @@ class Frame(FrameTemplate):
     # Ensure content panel uses the correct scrolling role
     if Responsive.is_mobile():
       self.content_panel.role = "fixed-holder-page-mobile"
-    
-      self.bottom_bar = BottomBar()
+      butt = {'text':'info','icon':'','role':'button-blue','colour':'blue'}
+      self.bottom_bar = BottomBar([butt])
       self.bottom_bar.set_event_handler("x-navigate", self._bottom_bar_navigate)
     
       # Add to the default slot so it exists on the page (CSS makes it fixed anyway)
@@ -67,6 +66,7 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.bottom_bar_buttons()
     self.content_panel.visible = True
 
   def reports_page_link_click(self, **event_args):
@@ -82,6 +82,7 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.bottom_bar_buttons()
     self.content_panel.visible = True
 
   def transactions_page_link_click(self, **event_args):
@@ -100,6 +101,7 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.bottom_bar_buttons()
     self.content_panel.visible = True
     
   def file_loader_1_change(self, file, **event_args):
@@ -112,7 +114,8 @@ class Frame(FrameTemplate):
                    buttons=[])
     if result:
       anvil.server.call('save_transactions',ready_list=result)
-      Global.Transactions_Form.reload_from_upload(result)
+      Transaction.work_transaction_data('reload',result)
+      # Global.Transactions_Form.reload_from_upload(result)
       self.file_loader_1.clear()
       # we need to refresh whichever page is loaded here.
       clear_list = [self.transactions_page_link,self.reports_page_link,
@@ -138,6 +141,7 @@ class Frame(FrameTemplate):
                   self.settings_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.bottom_bar_buttons()
     self.content_panel.visible = True
 
   def ping_ping(self,ping,**event_args):
@@ -165,21 +169,41 @@ class Frame(FrameTemplate):
                   self.dashboard_page_link,self.budget_page_link]
     for obj in clear_list:
       obj.background = "transparent"
+    self.bottom_bar_buttons()
     self.content_panel.visible = True
 
   def _bottom_bar_navigate(self, key, **event_args):
   # For now, just call the same methods your sidebar buttons already call:
-    if key == "butt1":
-      self.dashboard_page_link_click()
-    elif key == "butt2":
-      self.budget_page_link_click()
-    elif key == "butt3":
-      self.transactions_page_link_click()
-    elif key == "butt4":
-      self.reports_page_link_click()
+    print('fired',key)
+    self.content_panel.get_components()[0].bottom_button_incoming(key)
+    # if key == "butt1":
+    #   self.dashboard_page_link_click()
+    # elif key == "butt2":
+    #   self.budget_page_link_click()
+    # elif key == "butt3":
+    #   self.transactions_page_link_click()
+    # elif key == "butt4":
+    #   self.reports_page_link_click()
+    # elif key == "butt5":
+    #   self.reports_page_link_click()
 
-  
-
+  def bottom_bar_buttons(self,**event_args):
+    if Responsive.is_mobile():
+      b_list = []
+      if self.content_panel.get_components()[0].which_form == 'transactions':
+        b_list = [
+          {'text':'','icon':'fa:search','role':'button-blue','colour':'blue'},
+          {'text':'UnCat','icon':'','role':'button-blue','colour':'blue'},
+          {'text':'','icon':'fa:plus','role':'button-green','colour':'green'},
+          {'text':'','icon':'fa:exchange','role':'button-blue','colour':'blue'},
+          {'text':'','icon':'fa:trash-o','role':'button-red','colour':'red'},
+        ]
+        
+      elif self.content_panel.get_components()[0].which_form == 'dashboard':
+        b_list = [
+          {'text':'info','icon':'','role':'button-blue','colour':'blue'}
+        ]
+      self.bottom_bar.update_buttons(b_list)
 
 
 

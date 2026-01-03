@@ -8,7 +8,7 @@ from anvil.tables import app_tables
 from datetime import date, timedelta
 import time
 from ...F_Global_Logic.Global import Transactions_Form
-from ...F_Global_Logic import Global
+from ...F_Global_Logic import Global,Transaction
 
 
 class add_transaction(add_transactionTemplate):
@@ -71,7 +71,7 @@ class add_transaction(add_transactionTemplate):
   def save_and_send(self,**event_args):
     self.item['amount'] = self.item['amount'] * 100
     self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year) + str(self.item['amount']) + str(self.item['account'])
-    Global.Transactions_Form.send_new_transaction(self.item)
+    Transaction.work_transaction_data('add',self.item)
     # was this a transfer? Need to make a new transaction if so.
     if self.item['category'] == "ec8e0085-8408-43a2-953f-ebba24549d96":
       hash_new = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year) + str(-1 * self.item['amount']) + self.dd_transfer.selected_value
@@ -89,7 +89,7 @@ class add_transaction(add_transactionTemplate):
                    'notes':'',
                    'hash':hash_new,'transaction_id':Global.new_id_needed(),
                    'transfer_account':self.item['account']}
-      Global.Transactions_Form.send_new_transaction(new_trans)
+      Transaction.work_transaction_data('add',new_trans)
 
   def refresh_form(self,**event_args):
     date_new = date.today()

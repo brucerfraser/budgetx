@@ -27,17 +27,6 @@ class Transactions(TransactionsTemplate):
     else:
       self.load_me(self.dash)
 
-  def reload_from_upload(self,new_list,**event_args):
-    for new in new_list:
-      if len([t for t in Global.TRANSACTIONS if t['hash'] == new['hash']]) == 0:
-        #we have a new transaction
-        # new['amount'] = int(float(new['amount'])*100)
-        new['notes'] = None
-        new['category'] = None
-        Global.TRANSACTIONS.append(new)
-    # Global.TRANSACTIONS = anvil.server.call('load_budget_data',True)
-      
-
   def load_me(self,dash,uncat=False,search=False,sub_cat=None,**event_args):
     """
     sub_cat is a tuple of (key,value)
@@ -48,7 +37,7 @@ class Transactions(TransactionsTemplate):
     else:
       self.card_3.role = 'fixed-holder-page'
       self.card_header.visible = True
-    fd,ld = self.date_me(dash)
+    fd,ld = Transaction.date_me(dash)
     if not uncat and not search and not sub_cat:
       self.repeating_panel_1.items = sorted([t for t in Global.TRANSACTIONS if t['date'] >= fd and t['date'] <= ld],
                                             key = lambda x: x['date'],reverse=True)
@@ -67,27 +56,9 @@ class Transactions(TransactionsTemplate):
     self.which_form = 'transactions'
     self.rake_page()
     
-  
-  def date_me(self,dash,**event_args):
-    m,y = None,None
-    if dash:
-      m = date.today().month
-      y = date.today().year
-      days_in_month = calendar.monthrange(y, m)[1]
-      return date(y,m,1),date(y,m,days_in_month)
-    else:
-      p = Global.PERIOD
-      if p[0] + p[1] == 0:
-        #we have a custom
-        return Global.CUSTOM[0],Global.CUSTOM[1]
-      else:
-        m = p[0]
-        y = p[1]
-        days_in_month = calendar.monthrange(y, m)[1]
-        return date(y,m,1),date(y,m,days_in_month)
 
   def quick_sort(self,**event_args):
-    fd,ld = self.date_me(False)
+    fd,ld = Transaction.date_me(False)
     #we need the sorter, and sorter state
     k = event_args['sender'].text.lower()
     #cycle order: None,Up,Down
@@ -207,49 +178,9 @@ class Transactions(TransactionsTemplate):
     alert(add_transaction(new_trans),buttons=[],large=True,
           dismissible=False)
   
-
-  def send_new_transaction(self,new_trans,**event_args):
-    Global.TRANSACTIONS.insert(0,new_trans)
-    app_tables.transactions.add_row(**new_trans)
-    self.load_me(self.dash)
-
-  def delete_trans_click(self,alien=None, **event_args):
-    """
-    Either uses list of transaction_id's obtained from ticking the check boxes...
-    or uses a list called alien which can be called from anywhere. NB alien MUST be list
-    """
-    if alien:
-      note = Notification("Deleting corresponding transfer",
-                          timeout=None)
-      note.show()
-      anvil.server.call('delete_transactions',alien)
-      for id in alien:
-        # app_tables.transactions.get(transaction_id=id).delete()
-        for trans in Global.TRANSACTIONS:
-          if trans['transaction_id'] == id:
-            Global.TRANSACTIONS.remove(trans)
-            break
-      self.load_me(self.dash)
-      note.hide()
-    else:
-      num = str(len(self.delete_list)) + ' ' if len(self.delete_list) > 1 else ''
-      tra = 'transactions' if len(self.delete_list) > 1 else 'transaction'
-      m = "Are you sure you wish to delete the {n}highlighted {t}?".format(n=num,t=tra)
-      
-      if confirm(m,"Delete?",
-                  buttons=[("Delete",True),("Cancel",False)]):
-        note = Notification("Deleting {n}{t}".format(n=num,t=tra),
-                          timeout=None)
-        note.show()
-        anvil.server.call('delete_transactions',self.delete_list)
-        for id in self.delete_list:
-          # app_tables.transactions.get(transaction_id=id).delete()
-          for trans in Global.TRANSACTIONS:
-            if trans['transaction_id'] == id:
-              Global.TRANSACTIONS.remove(trans)
-              break
-        self.load_me(self.dash)
-        note.hide()
+  
+  def delete_trans_click(self, **event_args):
+    Transaction.work_transaction_data('delete_confirm',self.delete_list)
 
   @handle('btn_tfer','click')
   def handle_transfers(self,from_one_t=None,**event_args):

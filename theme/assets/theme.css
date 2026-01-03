@@ -357,6 +357,7 @@ input[disabled] ~ span {
   --mobile-topbar: 56px;   /* your slide-in toggle row height */
   --mobile-bottombar: 72px;
   --mobile-gap: 10px;
+  --mobile-topbartrans: 156px; /*extra heading stuff at top of transactions page */
 }
 
 
@@ -476,6 +477,15 @@ input[disabled] ~ span {
   padding: 8px 12px;
   overflow-y: auto;
   border-bottom: 1px solid white;
+}
+
+.anvil-role-fixed-repeating-panel-mobile {
+  border-bottom: 1px solid grey;
+  height: 200px !important;
+  /*height: calc(100vh - var(--mobile-topbartrans) - var(--mobile-bottombar) - (2 * var(--mobile-gap)));*/
+  overflow-y: auto; /* Enable vertical scrolling when content exceeds height */
+  background: %color:Surface Variant%;
+  padding: 8px 12px;
 }
 
 .anvil-role-bottom-bar-mobile {

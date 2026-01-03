@@ -14,7 +14,7 @@ class Dashboard_Screen_Mobile(Dashboard_Screen_MobileTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    self.which_form = "dashboard_mobile"
+    self.which_form = "dashboard"
     self.load_everything()
     if app_tables.settings.get(id="budget")["dash_variances"]:
       self.label_1_copy.text = "Chosen budget variances"
@@ -29,6 +29,11 @@ class Dashboard_Screen_Mobile(Dashboard_Screen_MobileTemplate):
     self.link_report.add_component(Reports_mini())
     self.start_listening()
 
+  def bottom_button_incoming(self,key,**event_args):
+    if key == 'butt1':
+      #info button
+      alert("Information page will pop up in future")
+  
   def link_budget_click(self, **event_args):
     get_open_form().ping_ping("budget")
 

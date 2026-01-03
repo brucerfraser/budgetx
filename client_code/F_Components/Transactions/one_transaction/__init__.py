@@ -5,7 +5,7 @@ import anvil.users
 import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
-from ....F_Global_Logic import Global
+from ....F_Global_Logic import Global,Transaction
 from datetime import date, datetime
 import math
 
@@ -73,7 +73,8 @@ class one_transaction(one_transactionTemplate):
       frame = get_open_form()
       frm = frame.content_panel.get_components()[0]
       frm.load_me(False)
-      self.update_a_transaction('date',self.item['date'],self.item['transaction_id'])
+      Transaction.work_transaction_data('update',self.item)
+      # self.update_a_transaction('date',self.item['date'],self.item['transaction_id'])
     self.date_picker_1.visible = False
     self.date.visible = True
     
@@ -93,7 +94,8 @@ class one_transaction(one_transactionTemplate):
     self.account.visible = True
     self.drop_down_1.visible = False
     # have to change the hash here
-    self.update_a_transaction('account',self.item['account'],self.item['transaction_id'])
+    Transaction.work_transaction_data('update',self.item)
+    # self.update_a_transaction('account',self.item['account'],self.item['transaction_id'])
     
   def amount_click(self, **event_args):
     self.text_box_1.visible = True
@@ -109,7 +111,8 @@ class one_transaction(one_transactionTemplate):
     else:
       self.amount.foreground = ''
     get_open_form().content_panel.get_components()[0].rake_page()
-    self.update_a_transaction('amount',self.item['amount'],self.item['transaction_id'])
+    Transaction.work_transaction_data('update',self.item)
+    # self.update_a_transaction('amount',self.item['amount'],self.item['transaction_id'])
     self.amount.visible = True
     self.text_box_1.visible = False
 
@@ -120,7 +123,8 @@ class one_transaction(one_transactionTemplate):
 
   def desc_lose_focus(self, **event_args):
     self.refresh_data_bindings()
-    self.update_a_transaction('description',self.item['description'],self.item['transaction_id'])
+    Transaction.work_transaction_data('update',self.item)
+    # self.update_a_transaction('description',self.item['description'],self.item['transaction_id'])
     self.description.visible = True
     self.text_box_2.visible = False
 
@@ -139,14 +143,15 @@ class one_transaction(one_transactionTemplate):
       # (if there is one) or change its category to None?
       # First, either way, we change the category
       self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
-      self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
+      Transaction.work_transaction_data('update',self.item)
+      # self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
       self.category.text = self.autocomplete_1.text
       corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
       if corr_id:
         from ....F_PopUps.remove_transfer import remove_transfer
         if alert(remove_transfer(corr_id),buttons=[],large=False,dismissible=False):
           # we must delete
-          Global.Transactions_Form.delete_trans_click([corr_id])
+          Transaction.work_transaction_data('delete_immediate',[corr_id])
         else:
           #we must change to none
           app_tables.transactions.get(transaction_id=corr_id).update(category=None)
@@ -163,7 +168,8 @@ class one_transaction(one_transactionTemplate):
     #Otherwise we just do a normal update.
     else:
       self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
-      self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
+      Transaction.work_transaction_data('update',self.item)
+      # self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
       self.category.text = self.autocomplete_1.text
     
     if self.item['category']:
@@ -216,12 +222,6 @@ class one_transaction(one_transactionTemplate):
   def confirm_click(self, **event_args):
     self.autocomplete_1.text = self.category.text
     self.category_choose()
-
-  def update_a_transaction(self,key,value,id,**event_args):
-    acc = 'none_yet' if not self.item['account'] else self.item['account']
-    self.item['hash'] = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year) + str(self.item['amount']) + acc
-    up_dict = {'hash':self.item['hash'],key:value}
-    app_tables.transactions.get(transaction_id=id).update(**up_dict)
 
   def check_box_1_change(self, **event_args):
     get_open_form().content_panel.get_components()[0].rake_page()
