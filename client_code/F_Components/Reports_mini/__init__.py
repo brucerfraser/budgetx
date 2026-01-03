@@ -10,20 +10,24 @@ import plotly.graph_objects as go
 import random
 from datetime import date, timedelta
 import math
-from ...F_Global_Logic import Global
+from ...F_Global_Logic import Global,Responsive
 import re
 
 
 class Reports_mini(Reports_miniTemplate):
   def __init__(self, full_screen=False, **properties):
     self.init_components(**properties)
+    self.mobile = Responsive.is_mobile()
     self.full_screen = full_screen
     if full_screen:
       self.plot_1.height = 600
       self.plot_1.interactive = True
+    elif self.mobile:
+      self.plot_1.height = 450
+      self.plot_1.interactive = True
 
     self.build_two_month_balance_plot()
-
+    
   # ---------------------------
   # Date helpers
   # ---------------------------
@@ -183,7 +187,7 @@ class Reports_mini(Reports_miniTemplate):
     for acc_id, m in recon_by_acc.items():
       recon_dates_by_acc[acc_id] = sorted(m.keys())
     
-      starting = {acc_id: 0 for acc_id in account_names_by_id.keys()}
+    starting = {acc_id: 0 for acc_id in account_names_by_id.keys()}
     deltas = {acc_id: {} for acc_id in account_names_by_id.keys()}
 
     # Collect pre-window txns per account (so we can apply "latest recon before window")
@@ -328,6 +332,24 @@ class Reports_mini(Reports_miniTemplate):
         "zerolinewidth": 1,
       }
     }
+    if self.mobile:
+      # y-axis: short labels like 100k, 1M etc + slightly smaller font
+      layout["yaxis"].update({
+        "tickformat": "~s",       # 100k, 1M, etc
+        "ticksuffix": "",         # keep clean
+        "tickprefix": "R",        # R100k
+        "tickfont": {"size": 9},  # was 11 -> reduce by 2
+      })
+      layout["legend"] = {
+        "orientation": "h",
+        "yanchor": "top",
+        "y": -0.22,          # move further down for mobile
+        "xanchor": "left",
+        "x": 0.0,
+        "font": {"size": 9}, # smaller on mobile
+        "itemwidth": 70      # helps prevent tall stacking
+      }
+      layout["margin"] = {"l": 90, "r": 10, "t": 40, "b": 25}
 
     if len(traces) == 0:
       traces = [{
@@ -376,6 +398,14 @@ class Reports_mini(Reports_miniTemplate):
       "customdata": total_y,
       "showlegend": False
     }
+
+    self.plot_1.config = {
+      "doubleClick": "reset",   # instead of fullscreen
+      "displaylogo": False,
+      "scrollZoom": False,
+      "responsive": True
+    }
+
     
     # Put them behind everything else
     traces.insert(0, total_neg_trace)

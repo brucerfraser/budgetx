@@ -22,10 +22,12 @@ components:
   name: card_1
   properties:
     background: ''
+    col_widths: '{"KZBAON":25,"HWTEBP":35}'
     role: card
     spacing:
       margin: [0, null, 0, null]
       padding: [0, null, 0, null]
+    wrap_on: never
   type: ColumnPanel
 container:
   properties:

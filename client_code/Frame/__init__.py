@@ -13,7 +13,12 @@ from ..F_Components.Transactions import Transactions
 from ..F_Components.Budget import Budget
 from ..F_Components.Reports import Reports
 from ..F_Components.Settings import Settings
+
+from ..F_Components_Mobile.BottomBar import BottomBar
+from ..F_Components_Mobile.Dashboard_Screen_Mobile import Dashboard_Screen_Mobile
+
 from ..F_Global_Logic import Global
+from ..F_Global_Logic import Responsive
 
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
@@ -21,9 +26,22 @@ class Frame(FrameTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
+    # Ensure content panel uses the correct scrolling role
+    if Responsive.is_mobile():
+      self.content_panel.role = "fixed-holder-page-mobile"
     
+      self.bottom_bar = BottomBar()
+      self.bottom_bar.set_event_handler("x-navigate", self._bottom_bar_navigate)
+    
+      # Add to the default slot so it exists on the page (CSS makes it fixed anyway)
+      self.add_component(self.bottom_bar, slot="default")
+    
+    else:
+      self.content_panel.role = "fixed-holder-page"
+
     #Present users with a login form with just one line of code:
     anvil.users.login_with_form()
+    # Laod app data into Global module
     Global.make_date()
     Global.all_categories()
     Global.smarter()
@@ -109,7 +127,10 @@ class Frame(FrameTemplate):
   def dashboard_page_link_click(self, **event_args):
     self.content_panel.clear()
     self.content_panel.visible = False
-    self.content_panel.add_component(Dashboard_Screen())
+    if Responsive.is_mobile():
+      self.content_panel.add_component(Dashboard_Screen_Mobile())
+    else:
+      self.content_panel.add_component(Dashboard_Screen())
     #Change the color of the sales_page_link to indicate that the Reports page has been selected
     self.dashboard_page_link.background = app.theme_colors['Primary Container']
     clear_list = [self.transactions_page_link,self.reports_page_link,
@@ -145,6 +166,17 @@ class Frame(FrameTemplate):
     for obj in clear_list:
       obj.background = "transparent"
     self.content_panel.visible = True
+
+  def _bottom_bar_navigate(self, key, **event_args):
+  # For now, just call the same methods your sidebar buttons already call:
+    if key == "butt1":
+      self.dashboard_page_link_click()
+    elif key == "butt2":
+      self.budget_page_link_click()
+    elif key == "butt3":
+      self.transactions_page_link_click()
+    elif key == "butt4":
+      self.reports_page_link_click()
 
   
 

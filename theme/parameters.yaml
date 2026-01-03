@@ -322,3 +322,5 @@ roles:
 - {name: button-green}
 - {name: button-blue}
 - {name: button-red}
+- {name: fixed-holder-page-mobile}
+- {name: bottom-bar-mobile}

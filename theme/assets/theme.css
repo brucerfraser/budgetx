@@ -351,6 +351,15 @@ input[disabled] ~ span {
   transition: all 0.3s ease;
 }
 
+/* BRUCE ADD-ONS */
+
+:root {
+  --mobile-topbar: 56px;   /* your slide-in toggle row height */
+  --mobile-bottombar: 72px;
+  --mobile-gap: 10px;
+}
+
+
 .anvil-role-fixed-repeating-panel {
   border-bottom: 1px solid grey
   height: 300px; !important /* Set your desired fixed height */
@@ -375,12 +384,15 @@ input[disabled] ~ span {
 }
 
 .anvil-role-fixed-holder-page {
-  height: 600px; !important /* Set your desired fixed height */
+  height: calc(100vh - 10px);
+  /* height: 600px; !important /* Set your desired fixed height */
   background: %color:Surface Variant%;
   padding: 8px 12px;
   overflow-y: auto;
   border-bottom: 1px solid white
 }
+
+
 
 .anvil-role-boundary-horiz {
   background: %color:Surface Variant%;
@@ -407,14 +419,6 @@ input[disabled] ~ span {
 }
 
 .progress-container {
-  /* display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 20px;
-  background-color: #eee;
-  border-radius: 10px;
-  overflow: hidden; */
   width: 100%;
   height: 20px;
   background-color: #e0e0e0;
@@ -424,11 +428,6 @@ input[disabled] ~ span {
 }
 
 .progress-bar-negative {
-  /* height: 100%;
-  background-color: #ff6961; /* Negative progress color
-  border-radius: 10px 0 0 10px;
-  transition: width 0.3s ease-in-out;
-  transform: translateX(100%); */
   height: 100%;
   background-color: #f44336; /* Negative value color */
   border-radius: 10px;
@@ -439,10 +438,6 @@ input[disabled] ~ span {
 }
 
 .progress-bar-positive {
-  /* height: 100%;
-  background-color: #77dd77; /* Positive progress color
-  border-radius: 0 10px 10px 0;
-  transition: width 0.3s ease-in-out; */
   height: 100%;
   background-color: #4CAF50; /* Positive value color */
   border-radius: 10px;
@@ -467,6 +462,44 @@ input[disabled] ~ span {
 .anvil-role-label-right {
   border-right: 1px solid white
 }
+
+/* ALL BRUCE MOBILE CSS BELOW */
+
+.anvil-role-fixed-holder-page-mobile {
+  height: calc(100vh - var(--mobile-topbar) - var(--mobile-bottombar) - (2 * var(--mobile-gap)));
+  /* height: calc(100vh - 82px); /* 72px bar + 10px breathing room */
+  background: %color:Surface Variant%;
+  padding: 8px 12px;
+  overflow-y: auto;
+  border-bottom: 1px solid white;
+}
+
+.anvil-role-bottom-bar-mobile {
+  position: fixed;
+  left: var(--mobile-gap);
+  right: var(--mobile-gap);
+  bottom: calc(var(--mobile-gap) + env(safe-area-inset-bottom, 0px));
+  height: var(--mobile-bottombar);
+  margin-bottom: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+  z-index: 9999;
+}
+
+.anvil-role-bottom-bar-mobile .btn {
+  border-radius: 16px;
+  padding: 10px 14px;
+  min-height: 44px;
+  border: 0;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+}
+
 
 /* Modals */
 

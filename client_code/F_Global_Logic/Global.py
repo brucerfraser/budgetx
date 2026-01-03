@@ -28,11 +28,15 @@ accounts,ACCOUNTS_WHOLE = anvil.server.call('get_accounts')
 keys = list(accounts.keys())
 ACCOUNTS = [(accounts[k],k) for k in keys]
 
-def open_transactions_instance():
+def open_transactions_instance(mobile):
   global Transactions_Form,TRANSACTIONS
-  from ..F_Components.Transactions import Transactions
   TRANSACTIONS = anvil.server.call('load_budget_data',True)
-  Transactions_Form = Transactions(dash=True)
+  if mobile:
+    from ..F_Components_Mobile.Transactions_Mobile import Transactions_Mobile
+    Transactions_Form = Transactions_Mobile(dash=True)
+  else:
+    from ..F_Components.Transactions import Transactions
+    Transactions_Form = Transactions(dash=True)
 
 def all_categories():
   global CATEGORIES
