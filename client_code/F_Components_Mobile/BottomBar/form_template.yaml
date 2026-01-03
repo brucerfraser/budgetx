@@ -1,0 +1,24 @@
+components:
+- components:
+  - layout_properties: {}
+    name: button_1
+    properties: {icon: 'fa:code', role: button-blue, text: ''}
+    type: Button
+  - layout_properties: {}
+    name: button_2
+    properties: {icon: 'fa:code', role: button-blue, text: ''}
+    type: Button
+  - layout_properties: {}
+    name: button_3
+    properties: {icon: 'fa:code', role: button-blue, text: ''}
+    type: Button
+  - layout_properties: {}
+    name: button_4
+    properties: {icon: 'fa:code', role: button-blue, text: ''}
+    type: Button
+  layout_properties: {full_width_row: true, grid_position: 'HXENVA,ZXKMED'}
+  name: flow_panel_1
+  properties: {}
+  type: FlowPanel
+container: {type: ColumnPanel}
+is_package: true

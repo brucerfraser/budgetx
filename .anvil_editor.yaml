@@ -23,6 +23,7 @@ unique_ids:
     F_Components.Transactions: '1759640236173825242359712.6605'
     F_Components.Transactions.one_transaction: '1759654767641900803673532.0245'
     F_Components.date_picker_bruce: '1762075111487592397844859.0107'
+    F_Components_Mobile.BottomBar: '1767416384861136914887732.86276'
     F_PopUps.add_transaction: '1767261946789404351154403.00775'
     F_PopUps.colorpicker: '1760788915019445279637072.4802'
     F_PopUps.csv_confirm: '1759553578501141641576963.3974'
@@ -41,6 +42,7 @@ unique_ids:
     F_Global_Logic: '1767366825892936969170347.8213'
     F_Global_Logic.BUDGET: '1764872399518716669673358.9922'
     F_Global_Logic.Global: '175966995946135121435252.51754'
+    F_Global_Logic.Responsive: '1767415475041710767207726.8877'
     F_PopUps: '1767366931446303261814909.30035'
   scripts: {}
   server_modules:
