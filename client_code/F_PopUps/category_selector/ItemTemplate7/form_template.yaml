@@ -1,0 +1,17 @@
+components:
+- components:
+  - data_bindings:
+    - {code: self.item, property: text, writeback: false}
+    layout_properties: {full_width_row: true, grid_position: 'THZZES,FFVKTA'}
+    name: lbl_option
+    properties: {foreground: black, role: category-option, text: ''}
+    type: Label
+  layout_properties: {full_width_row: true, grid_position: 'VWDMFR,UKCCWM'}
+  name: card_1
+  properties: {background: white, role: card}
+  type: ColumnPanel
+container:
+  event_bindings: {}
+  properties: {background: white}
+  type: ColumnPanel
+is_package: true

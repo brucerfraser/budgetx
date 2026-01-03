@@ -10,7 +10,7 @@ components:
     type: Button
   - layout_properties: {}
     name: button_3
-    properties: {icon: 'fa:code', role: button-blue, text: ''}
+    properties: {icon: 'fa:code', role: button-blue, text: '', visible: false}
     type: Button
   - layout_properties: {}
     name: button_4
@@ -18,7 +18,7 @@ components:
     type: Button
   layout_properties: {full_width_row: true, grid_position: 'HXENVA,ZXKMED'}
   name: flow_panel_1
-  properties: {}
+  properties: {align: center}
   type: FlowPanel
 container: {type: ColumnPanel}
 is_package: true

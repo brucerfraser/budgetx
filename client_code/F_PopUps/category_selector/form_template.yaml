@@ -1,0 +1,22 @@
+components:
+- layout_properties: {grid_position: 'NFSMIG,ROVHEO'}
+  name: lbl_description
+  properties: {align: center}
+  type: Label
+- components:
+  - layout_properties: {grid_position: 'IKBZOW,HNDJRM'}
+    name: rp_options
+    properties: {background: white, item_template: F_PopUps.category_selector.ItemTemplate7, role: null}
+    type: RepeatingPanel
+  layout_properties: {grid_position: 'BKHAHU,HKYGMV'}
+  name: card_1
+  properties: {role: fixed-holder}
+  type: ColumnPanel
+- layout_properties: {grid_position: 'DOPZMH,HONOUM'}
+  name: txt_entry
+  properties: {}
+  type: TextBox
+container:
+  event_bindings: {}
+  type: ColumnPanel
+is_package: true

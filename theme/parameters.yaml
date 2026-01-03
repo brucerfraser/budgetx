@@ -316,7 +316,7 @@ roles:
 - {name: boundary-horiz}
 - components: [Link, RepeatingPanel, ColumnPanel]
   name: fixed-holder-page
-- components: [Link]
+- components: [Link, Label]
   name: category-link
 - {name: fixed-holder-small}
 - {name: button-green}
@@ -324,3 +324,6 @@ roles:
 - {name: button-red}
 - {name: fixed-holder-page-mobile}
 - {name: bottom-bar-mobile}
+- {name: txn-card-mobile}
+- {name: txn-card-mobile-selected}
+- {name: category-option}

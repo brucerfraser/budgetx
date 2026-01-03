@@ -53,14 +53,10 @@ components:
         text: TRANSACTIONS
         underline: true
       type: Label
-    - event_bindings: {click: link_transactions_click}
-      layout_properties: {full_width_row: true, grid_position: 'RSIZQC,ORDBKQ'}
-      name: link_transactions
-      properties:
-        role: null
-        spacing:
-          margin: [0, null, 0, null]
-      type: Link
+    - layout_properties: {full_width_row: true, grid_position: 'IVTXPH,QPQHOD'}
+      name: crd_trans_list
+      properties: {role: fixed-holder}
+      type: ColumnPanel
     layout_properties: {full_width_row: true, grid_position: 'TKSQUO,KIJKHZ'}
     name: card_transactions
     properties:

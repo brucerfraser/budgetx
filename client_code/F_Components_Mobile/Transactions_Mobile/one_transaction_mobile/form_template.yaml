@@ -1,0 +1,46 @@
+components:
+- components:
+  - components:
+    - data_bindings:
+      - {code: '"{d:%d %b %Y}".format(d=self.item[''date''])', property: text, writeback: false}
+      layout_properties: {full_width_row: true, grid_position: 'HNQWDF,PHXHLH'}
+      name: lbl_date
+      properties: {}
+      type: Label
+    - layout_properties: {grid_position: 'HNQWDF,GKJEWW'}
+      name: lbl_account
+      properties: {}
+      type: Label
+    - data_bindings:
+      - {code: '"R{a:.2f}".format(a=self.item[''amount'']/100)', property: text, writeback: false}
+      layout_properties: {grid_position: 'HNQWDF,BIXOGM'}
+      name: lbl_amount
+      properties: {}
+      type: Label
+    layout_properties: {full_width_row: true, grid_position: 'JOTYSN,OLJSRB'}
+    name: column_panel_1
+    properties: {spacing_above: none, spacing_below: none, wrap_on: never}
+    type: ColumnPanel
+  - components:
+    - data_bindings:
+      - {code: 'self.item[''description'']', property: text, writeback: false}
+      layout_properties: {full_width_row: true, grid_position: 'GQKVYK,PRSKCP'}
+      name: lbl_description
+      properties: {}
+      type: Label
+    - layout_properties: {grid_position: 'GQKVYK,GBEIVO'}
+      name: lbl_category
+      properties: {foreground: black, role: category-link}
+      type: Label
+    layout_properties: {full_width_row: true, grid_position: 'PUVAYS,RHHWVH'}
+    name: column_panel_2
+    properties: {col_widths: '{"PRSKCP":35,"GBEIVO":25}', spacing_above: none, spacing_below: none, wrap_on: never}
+    type: ColumnPanel
+  layout_properties: {full_width_row: true, grid_position: 'YXADJZ,HJWDHG'}
+  name: card_1
+  properties: {role: txn-card-mobile, spacing_above: none, spacing_below: none}
+  type: ColumnPanel
+container:
+  event_bindings: {}
+  type: ColumnPanel
+is_package: true

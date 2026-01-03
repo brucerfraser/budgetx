@@ -46,7 +46,7 @@ class Frame(FrameTemplate):
     Global.all_categories()
     Global.smarter()
     self.content_panel.visible = False
-    Global.open_transactions_instance()
+    Global.open_transactions_instance(Responsive.is_mobile())
     #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
     self.paths = {"transactions":self.transactions_page_link,

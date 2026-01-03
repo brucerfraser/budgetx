@@ -463,6 +463,10 @@ input[disabled] ~ span {
   border-right: 1px solid white
 }
 
+.anvil-role-category-option {
+  border-bottom: 2px solid rgba(80, 160, 255, 0.85);
+}
+
 /* ALL BRUCE MOBILE CSS BELOW */
 
 .anvil-role-fixed-holder-page-mobile {
@@ -499,6 +503,41 @@ input[disabled] ~ span {
   border: 0;
   box-shadow: 0 6px 14px rgba(0,0,0,0.10);
 }
+
+.anvil-role-txn-card-mobile {
+  border: 2px solid transparent;   /* keeps layout stable */
+  border-radius: 18px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+  padding: 0 12px;
+}
+
+.anvil-role-txn-card-mobile-selected {
+  border: 3px solid rgba(80, 160, 255, 0.85); /* calm blue */
+  box-shadow: 0 0 0 2px rgba(80, 160, 255, 0.15);
+  border-radius: 18px;
+  padding: 0 12px;
+}
+
+.anvil-role-txn-card-mobile:active,
+.anvil-role-txn-card-mobile-selected:active {
+  transform: scale(0.985);
+}
+
+/* Prevent iOS long-press text selection + callout inside cards */
+.anvil-role-txn-card-mobile,
+.anvil-role-txn-card-mobile-selected {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;   /* disables iOS text callout */
+}
+
+.anvil-role-txn-card-mobile *,
+.anvil-role-txn-card-mobile-selected * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
 
 
 /* Modals */

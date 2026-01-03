@@ -181,9 +181,9 @@ class Transactions_Mobile(Transactions_MobileTemplate):
         o += trans.item["amount"]
       else:
         i += trans.item["amount"]
-      trans.check_box_1.enabled = chk
+      trans.card_1.role = 'txn-card-mobile-selected' if trans.checked else 'txn-card-mobile'
       if chk:
-        if trans.check_box_1.checked:
+        if trans.checked:
           if trans.item["transaction_id"] not in self.delete_list:
             self.delete_list.append(trans.item["transaction_id"])
         else:
