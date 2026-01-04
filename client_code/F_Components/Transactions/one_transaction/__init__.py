@@ -33,16 +33,16 @@ class one_transaction(one_transactionTemplate):
     
     
   def categorise(self,**event_args):
-    names_list = sorted(list(map(lambda x: x['display'], Global.CATEGORIES.values())))
-    names_list.insert(0,"None")
-    self.autocomplete_1.suggestions = names_list
+    # names_list = sorted(list(map(lambda x: x['display'], Global.CATEGORIES.values())))
+    # names_list.insert(0,"None")
+    # self.autocomplete_1.suggestions = names_list
     if self.item['category'] == None:
       self.category.text = "None"
     else:
       # print(Global.CATEGORIES[self.item['category']])
       self.category.text = Global.CATEGORIES[self.item['category']]['display']
       self.category.background = Global.CATEGORIES[self.item['category']]['colour']
-      self.autocomplete_1.text = self.category.text
+      # self.autocomplete_1.text = self.category.text
     
   def set_bg(self,odd,**event_args):
     objs = [self.account,self.date,self.amount,self.category,self.description,self.card_1,
@@ -131,7 +131,9 @@ class one_transaction(one_transactionTemplate):
   def category_click(self, **event_args):
     # rework 1: Link opens our quick quick
     from ....F_PopUps.category_selector import category_selector
-    result = alert(category_selector(),buttons=[],large=False)
+    c = None if self.category.text in ['None',''] else self.category.text
+    result = alert(category_selector(self.item['description'],
+                                    c),buttons=[],large=False)
     if result:
       self.category_choose(result)
     
@@ -165,18 +167,17 @@ class one_transaction(one_transactionTemplate):
           Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
           
     # Then we check if it changed to Transfer
-    elif self.autocomplete_1.text == "Transfer":
+    elif cat_name == "Transfer":
       if Global.Transactions_Form.handle_transfers(from_one_t=self.item['transaction_id']):
-        self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
-        self.category.text = self.autocomplete_1.text
-      else:
-        self.autocomplete_1.text = ''
+        self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
+        self.category.text = cat_name
+      
     #Otherwise we just do a normal update.
     else:
-      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
+      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
       Transaction.work_transaction_data('update',self.item)
       # self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
-      self.category.text = self.autocomplete_1.text
+      self.category.text = cat_name
     
     if self.item['category']:
       Global.smarter(first=False,update=(self.item['category'],self.item['description']))
@@ -185,8 +186,7 @@ class one_transaction(one_transactionTemplate):
       self.category.border = ''
     else:
       self.categorise()
-    self.category.visible = True
-    self.autocomplete_1.visible = False
+    
     self.confirm.visible = False
     if self.item['category']:
       frame = get_open_form()
@@ -194,16 +194,16 @@ class one_transaction(one_transactionTemplate):
       frm.smart_cat_update()
 
 
-  def autocomplete_1_lost_focus(self, **event_args):
-    if self.item['category']:
-      self.autocomplete_1.text = self.category.text
-      self.category.visible = True
-      self.autocomplete_1.visible = False
-    else:
-      self.category.text = "None"
-      self.category.background = 'theme:Amount Negative'
-      self.category.visible = True
-      self.autocomplete_1.visible = False
+  # def autocomplete_1_lost_focus(self, **event_args):
+  #   if self.item['category']:
+  #     self.autocomplete_1.text = self.category.text
+  #     self.category.visible = True
+  #     self.autocomplete_1.visible = False
+  #   else:
+  #     self.category.text = "None"
+  #     self.category.background = 'theme:Amount Negative'
+  #     self.category.visible = True
+  #     self.autocomplete_1.visible = False
     
 
   def am_i_smart(self,**event_args):
@@ -226,8 +226,8 @@ class one_transaction(one_transactionTemplate):
 
   @handle('confirm','click')
   def confirm_click(self, **event_args):
-    self.autocomplete_1.text = self.category.text
-    self.category_choose()
+    # self.autocomplete_1.text = self.category.text
+    self.category_choose(cat_name=self.category.text)
 
   def check_box_1_change(self, **event_args):
     get_open_form().content_panel.get_components()[0].rake_page()
