@@ -182,8 +182,16 @@ class Transactions_Mobile(Transactions_MobileTemplate):
           if trans.item["transaction_id"] in self.delete_list:
             self.delete_list.remove(trans.item["transaction_id"])
       trans.am_i_smart()
-    # self.delete_trans.enabled = True if len(self.delete_list) > 0 else False
-    # self.btn_tfer.enabled = True if len(self.delete_list) > 0 else False
+    en = True if len(self.delete_list) > 0 else False
+    b_list = [
+      {'text':'','icon':'fa:search','role':'button-blue','colour':'blue','enabled':True},
+      {'text':'UnCat','icon':'','role':'button-blue','colour':'blue','enabled':True},
+      {'text':'','icon':'fa:plus','role':'button-green','colour':'green','enabled':True},
+      {'text':'','icon':'fa:exchange','role':'button-blue','colour':'blue','enabled':en},
+      {'text':'','icon':'fa:trash-o','role':'button-red','colour':'red','enabled':en},
+    ]
+    self.parent.raise_event('x-whisper',package={'what':'bb_buttons',
+                                                'b_list':b_list})
     self.inflow.text = "Inflow: R{a:.2f}".format(a=i / 100)
     self.outflow.text = "Outflow: R{a:.2f}".format(a=o / 100)
 

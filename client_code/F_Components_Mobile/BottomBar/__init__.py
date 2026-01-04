@@ -46,6 +46,7 @@ class BottomBar(BottomBarTemplate):
         objs[i].role = button['role']
         objs[i].icon = button['icon']
         objs[i].foreground = button['colour']
+        objs[i].enabled = button['enabled']
         objs[i].visible = True
         i += 1
       if i < len(objs):

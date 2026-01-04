@@ -30,7 +30,7 @@ class Frame(FrameTemplate):
     # Ensure content panel uses the correct scrolling role
     if Responsive.is_mobile():
       self.content_panel.role = "fixed-holder-page-mobile"
-      butt = {'text':'info','icon':'','role':'button-blue','colour':'blue'}
+      butt = {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
       self.bottom_bar = BottomBar([butt])
       self.bottom_bar.set_event_handler("x-navigate", self._bottom_bar_navigate)
     
@@ -39,7 +39,6 @@ class Frame(FrameTemplate):
     
     else:
       self.content_panel.role = "fixed-holder-page"
-    # self.content_panel.add_component(Tester(False,True))
     #Present users with a login form with just one line of code:
     anvil.users.login_with_form()
     # Laod app data into Global module
@@ -53,6 +52,7 @@ class Frame(FrameTemplate):
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
+    self.content_panel.set_event_handler('x-whisper',self.content_listener)
     self.content_panel.visible = True
     
   def budget_page_link_click(self, **event_args):
@@ -177,32 +177,26 @@ class Frame(FrameTemplate):
   def _bottom_bar_navigate(self, key, **event_args):
   # For now, just call the same methods your sidebar buttons already call:
     self.content_panel.get_components()[0].bottom_button_incoming(key)
-    # if key == "butt1":
-    #   self.dashboard_page_link_click()
-    # elif key == "butt2":
-    #   self.budget_page_link_click()
-    # elif key == "butt3":
-    #   self.transactions_page_link_click()
-    # elif key == "butt4":
-    #   self.reports_page_link_click()
-    # elif key == "butt5":
-    #   self.reports_page_link_click()
+
+  def content_listener(self,package,**event_args):
+    if package['what'] == 'bb_buttons':
+      self.bottom_bar.update_buttons(package['b_list'])
 
   def bottom_bar_buttons(self,**event_args):
     if Responsive.is_mobile():
       b_list = []
       if self.content_panel.get_components()[0].which_form == 'transactions':
         b_list = [
-          {'text':'','icon':'fa:search','role':'button-blue','colour':'blue'},
-          {'text':'UnCat','icon':'','role':'button-blue','colour':'blue'},
-          {'text':'','icon':'fa:plus','role':'button-green','colour':'green'},
-          {'text':'','icon':'fa:exchange','role':'button-blue','colour':'blue'},
-          {'text':'','icon':'fa:trash-o','role':'button-red','colour':'red'},
+          {'text':'','icon':'fa:search','role':'button-blue','colour':'blue','enabled':True},
+          {'text':'UnCat','icon':'','role':'button-blue','colour':'blue','enabled':True},
+          {'text':'','icon':'fa:plus','role':'button-green','colour':'green','enabled':True},
+          {'text':'','icon':'fa:exchange','role':'button-blue','colour':'blue','enabled':False},
+          {'text':'','icon':'fa:trash-o','role':'button-red','colour':'red','enabled':False},
         ]
         
       elif self.content_panel.get_components()[0].which_form == 'dashboard':
         b_list = [
-          {'text':'info','icon':'','role':'button-blue','colour':'blue'}
+          {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
         ]
       self.bottom_bar.update_buttons(b_list)
 

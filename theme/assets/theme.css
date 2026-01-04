@@ -258,7 +258,27 @@ input[disabled] ~ span {
   border-bottom: 1px solid %color:Outline%;
 }
 
+
+
+[class*="anvil-role-button-"]:active {
+  transform: scale(0.98);  /* "Click" feedback */
+}
+
+[class*="anvil-role-button-"]:hover {
+  transform: scale(1.05);
+  filter: brightness(0.95);
+  transition: all 0.3s ease;
+}
+
+/* BRUCE ADD-ONS */
 /* BRUCE BUDGET SPECIALS */
+:root {
+  --mobile-topbar: 56px;   /* your slide-in toggle row height */
+  --mobile-bottombar: 72px;
+  --mobile-gap: 10px;
+  --mobile-headertransaction: 315px; /*extra heading stuff at top of transactions page */
+}
+
 
 .anvil-role-button-green {
   /* Layout: Perfectly Centered */
@@ -340,26 +360,6 @@ input[disabled] ~ span {
   background-color: #ffb3ba;
   color: #5e3a3d;
 }
-
-[class*="anvil-role-button-"]:active {
-  transform: scale(0.98);  /* "Click" feedback */
-}
-
-[class*="anvil-role-button-"]:hover {
-  transform: scale(1.05);
-  filter: brightness(0.95);
-  transition: all 0.3s ease;
-}
-
-/* BRUCE ADD-ONS */
-
-:root {
-  --mobile-topbar: 56px;   /* your slide-in toggle row height */
-  --mobile-bottombar: 72px;
-  --mobile-gap: 10px;
-  --mobile-headertransaction: 315px; /*extra heading stuff at top of transactions page */
-}
-
 
 .anvil-role-fixed-repeating-panel {
   border-bottom: 1px solid grey
@@ -498,7 +498,8 @@ input[disabled] ~ span {
 
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
+  gap: 12px
 
   border-radius: 20px;
   background: white;

@@ -47,7 +47,7 @@ components:
           icon: ''
           icon_align: right
           spacing:
-            margin: [0, null, 0, null]
+            margin: [0, null, 0, 6]
           spacing_above: none
           spacing_below: none
           text: DATE
@@ -90,7 +90,7 @@ components:
           foreground: theme:Tertiary
           icon_align: right
           spacing:
-            margin: [0, null, 0, null]
+            margin: [0, null, 0, 6]
           spacing_above: none
           spacing_below: none
           text: DESCRIPTION

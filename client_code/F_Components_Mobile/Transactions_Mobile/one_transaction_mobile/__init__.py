@@ -138,8 +138,10 @@ class one_transaction_mobile(one_transaction_mobileTemplate):
         
   
       def do_long_press():
-        alert("LONG PRESS (open/edits")  # (keep for testing)
-        # e.g. self.raise_event("x-open", txn_id=self.item["id"])
+        from ....F_PopUps.edit_transaction import edit_transaction
+        alert(edit_transaction(self.item),buttons=[],large=True,dismissable=False)
+        self.refresh_data_bindings()
+        
   
       def start_press(evt=None):
         clear_press_timer()

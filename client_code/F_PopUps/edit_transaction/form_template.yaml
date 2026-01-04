@@ -10,7 +10,7 @@ components:
       properties: {align: right, font_size: 14, text: 'Date:'}
       type: Label
     - data_bindings:
-      - {code: 'self.item[''date'']', property: date, writeback: true}
+      - {code: 'self.item[''date'']', property: date, writeback: false}
       layout_properties: {grid_position: 'NRLEAB,QXSORE'}
       name: date_picker_1
       properties: {format: '%d %b %Y'}
@@ -25,7 +25,7 @@ components:
       properties: {align: right, font_size: 14, text: 'Account:'}
       type: Label
     - data_bindings:
-      - {code: 'self.item[''account'']', property: selected_value, writeback: true}
+      - {code: 'self.item[''account'']', property: selected_value, writeback: false}
       layout_properties: {grid_position: 'HPHRRA,FJUVKH'}
       name: drop_down_1
       properties: {include_placeholder: true, placeholder: Select Account}
@@ -39,8 +39,7 @@ components:
       name: label_2_copy_copy
       properties: {align: right, font_size: 14, text: 'Amount:'}
       type: Label
-    - data_bindings:
-      - {code: 'self.item[''amount'']', property: text, writeback: true}
+    - data_bindings: []
       layout_properties: {grid_position: 'HPHRRA,FJUVKH SCBAUW,AROUWX'}
       name: text_box_1
       properties: {text: '0', type: number}
@@ -67,7 +66,8 @@ components:
       name: label_2_copy_copy_copy
       properties: {align: right, font_size: 14, text: 'Category:'}
       type: Label
-    - layout_properties: {grid_position: 'HPHRRA,JAAHFY BYVRGZ,PAMFNM'}
+    - data_bindings: []
+      layout_properties: {grid_position: 'HPHRRA,JAAHFY BYVRGZ,PAMFNM'}
       name: txt_category
       properties: {visible: false}
       type: TextBox
@@ -82,10 +82,10 @@ components:
   - components:
     - layout_properties: {grid_position: 'HPHRRA,HQQUHT'}
       name: label_2_copy_copy_copy_copy
-      properties: {align: right, font_size: 14, text: 'Description:'}
+      properties: {align: right, font_size: 14, role: txn-card-mobile, text: 'Description:'}
       type: Label
     - data_bindings:
-      - {code: 'self.item[''description'']', property: text, writeback: true}
+      - {code: 'self.item[''description'']', property: text, writeback: false}
       layout_properties: {grid_position: 'HPHRRA,GZOTFO'}
       name: txt_description
       properties: {}
@@ -100,7 +100,7 @@ components:
       properties: {align: center, background: 'theme:Surface Variant', foreground: 'theme:Amount Negative', text: Testing}
       type: Label
     - data_bindings:
-      - {code: 'self.item[''transfer_account'']', property: selected_value, writeback: true}
+      - {code: 'self.item[''transfer_account'']', property: selected_value, writeback: false}
       layout_properties: {full_width_row: true, grid_position: 'EMHTYX,PJVIJY'}
       name: dd_transfer
       properties: {include_placeholder: true, placeholder: Select Transfer Account}

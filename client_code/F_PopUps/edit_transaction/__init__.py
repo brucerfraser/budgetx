@@ -17,11 +17,14 @@ class edit_transaction(edit_transactionTemplate):
     self.item = new_trans
     self.holder = ""
     self.init_components(**properties)
+    self.cats = [item['display'] for item in Global.CATEGORIES.values()]
+    self.rp_category.set_event_handler('x-close-up-shop',self.close_category)
 
   @handle("", "show")
   def form_show(self, **event_args):
     self.drop_down_1.items = Global.ACCOUNTS
     self.dd_transfer.items = Global.ACCOUNTS
+    self.text_box_1.text = self.item['amount'] / 100
     self.categorise()
 
   @handle("btn_cancel", "click")
@@ -46,27 +49,14 @@ class edit_transaction(edit_transactionTemplate):
           on = not on
           time.sleep(0.2)
         self.cp_transfer.background = "#FFCDC9"
-    elif event_args["sender"].text == "save and add":
-      # save, clear, and wait
-      if self.cp_transfer.visible and self.cp_transfer.background == "#b2d8b2":
-        # we can save
-        self.save_and_send()
-        self.refresh_form()
-      elif not self.cp_transfer.visible:
-        # we can save
-        self.save_and_send()
-        self.refresh_form()
-      else:
-        # flash a bit
-        on = False
-        for i in range(0, 5):
-          self.cp_transfer.background = "#FFCDC9" if on else ""
-          on = not on
-          time.sleep(0.2)
-        self.cp_transfer.background = "#FFCDC9"
 
   def save_and_send(self, **event_args):
-    self.item["amount"] = self.item["amount"] * 100
+    # we have to manually assign here due to the Cancel philosophy - write-back on fields auto updates TRANSACTIONS
+    self.item["amount"] = self.text_box_1.text * 100
+    self.item['date'] = self.date_picker_1.date
+    self.item['description'] = self.txt_description.text
+    self.item['transfer_account'] = self.dd_transfer.selected_value
+    self.item['account'] = self.drop_down_1.selected_value
     self.item["hash"] = (
       str(self.item["date"].day)
       + str(self.item["date"].month)
@@ -74,7 +64,7 @@ class edit_transaction(edit_transactionTemplate):
       + str(self.item["amount"])
       + str(self.item["account"])
     )
-    Transaction.work_transaction_data("add", self.item)
+    Transaction.work_transaction_data("update", self.item)
     # was this a transfer? Need to make a new transaction if so.
     if self.item["category"] == "ec8e0085-8408-43a2-953f-ebba24549d96":
       hash_new = (
@@ -103,58 +93,55 @@ class edit_transaction(edit_transactionTemplate):
       }
       Transaction.work_transaction_data("add", new_trans)
 
-  def refresh_form(self, **event_args):
-    date_new = date.today()
-    hash_new = (
-      str(date_new.day) + str(date_new.month) + str(date_new.year) + "0" + "none_yet"
-    )
-    id_new = Global.new_id_needed()
-    self.item = {
-      "date": date_new,
-      "amount": 0,
-      "description": "",
-      "category": None,
-      "account": None,
-      "notes": "",
-      "hash": hash_new,
-      "transaction_id": id_new,
-      "transfer_account": None,
-    }
-    self.refresh_data_bindings()
-    self.categorise()
-
   def categorise(self, **event_args):
-    names_list = sorted(list(map(lambda x: x["display"], Global.CATEGORIES.values())))
-    names_list.insert(0, "None")
-    self.autocomplete_1.suggestions = names_list
-    self.autocomplete_1.text = ""
-    self.autocomplete_1.background = ""
-    self.autocomplete_1.foreground = ""
+    if self.item['category']:
+      self.link_category.text = Global.CATEGORIES[self.item['category']]['display']
+      self.link_category.background = Global.CATEGORIES[self.item['category']]['colour']
+      self.link_category.foreground = 'black'
+    self.txt_category.visible = False
+    self.cp_selector.visible = False
 
-  @handle("autocomplete_1", "pressed_enter")
-  @handle("autocomplete_1", "suggestion_clicked")
-  @handle("autocomplete_1", "lost_focus")
-  def category_choose(self, **event_args):
-    self.item["category"] = next(
-      (
-        k
-        for k, v in Global.CATEGORIES.items()
-        if v.get("display") == self.autocomplete_1.text
-      ),
-      None,
-    )
-    if self.item["category"]:
-      Global.smarter(
-        first=False, update=(self.item["category"], self.item["description"])
-      )
-      self.autocomplete_1.background = Global.CATEGORIES[self.item["category"]][
-        "colour"
-      ]
-      self.autocomplete_1.foreground = "theme:Surface"
+  @handle('link_category','click')
+  def open_category(self,**event_args):
+    if self.link_category.text not in ['','None']:
+      self.txt_category.text = self.link_category.text
+    if self.txt_category.text:
+      t = self.txt_category.text
+      self.rp_category.items = [l for l in self.cats if t.lower() in l.lower()]
+    self.link_category.visible = False
+    self.txt_category.visible = True
+    self.cp_selector.visible = True
+    self.txt_category.select()
+
+  @handle('txt_category','change')
+  def ping_ping(self,**event_args):
+    if self.txt_category.text:
+      self.rp_category.visible = True
+      t = self.txt_category.text
+      self.rp_category.items = [l for l in self.cats if t.lower() in l.lower()]
     else:
-      self.categorise()
-    self.update_transfer()
+      self.rp_category.visible = False
+      self.rp_category.items = []
 
+  @handle('txt_category','pressed_enter')
+  def close_category_enter(self,**event_args):
+    l = self.rp_category.items
+    if l:
+      self.close_category(cat=l[0])
+
+    
+  @handle('txt_category','lost_focus')
+  def close_category(self,cat=None,**event_args):
+    cat = cat if cat else self.txt_category.text
+    c = next((k for k, v in Global.CATEGORIES.items() if v.get("display") == cat),None)    
+    self.item['category'] = c if c else self.item['category']
+    self.categorise()
+    self.cp_selector.visible = False
+    self.txt_category.visible = False
+    self.txt_category.text = ''
+    self.link_category.visible = True
+    self.update_transfer()
+      
   @handle("drop_down_1", "change")
   @handle("text_box_1", "lost_focus")
   @handle("date_picker_1", "change")
@@ -186,11 +173,12 @@ class edit_transaction(edit_transactionTemplate):
       )
       self.cp_transfer.visible = True
     else:
-      self.item["description"] = self.txt_description.text = self.holder
-      self.lbl_tfer_detail.text = ""
-      self.lbl_tfer_amount.text = ""
-      self.dd_transfer.selected_value = None
-      self.cp_transfer.visible = False
+      if self.cp_transfer.visible:
+        self.item["description"] = self.txt_description.text = self.holder
+        self.lbl_tfer_detail.text = ""
+        self.lbl_tfer_amount.text = ""
+        self.dd_transfer.selected_value = None
+        self.cp_transfer.visible = False
 
   @handle("dd_transfer", "change")
   def tfer_account(self, **event_args):

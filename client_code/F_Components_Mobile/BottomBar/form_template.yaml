@@ -9,9 +9,9 @@ components:
       name: button_2
       properties: {icon: 'fa:code', role: button-blue, text: ''}
       type: Button
-    - layout_properties: {}
+    - layout_properties: {expand: false}
       name: button_3
-      properties: {icon: 'fa:code', role: button-blue, text: '', visible: true}
+      properties: {font_size: null, icon: 'fa:code', role: button-blue, text: '', visible: true}
       type: Button
     - layout_properties: {}
       name: button_4

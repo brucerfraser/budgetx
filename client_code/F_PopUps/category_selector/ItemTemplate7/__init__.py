@@ -69,11 +69,7 @@ class ItemTemplate7(ItemTemplate7Template):
 
       def do_single_tap():
         # Your existing single-tap behavior (toggle selection)
-        
-        print(self.item)
-        # self.raise_event('x-close-alert',value=self.item)
         self.parent.raise_event('x-close-up-shop',cat=self.item)
-        # print('fired-template')
 
       def do_double_tap():
         # Double-tap behavior (open/edit) — replace later with your popup
