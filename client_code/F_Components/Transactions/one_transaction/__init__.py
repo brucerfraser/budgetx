@@ -129,23 +129,29 @@ class one_transaction(one_transactionTemplate):
     self.text_box_2.visible = False
 
   def category_click(self, **event_args):
-    self.autocomplete_1.visible = True
-    if self.autocomplete_1.text == '':
-      self.autocomplete_1.focus()
-    else:
-      self.autocomplete_1.select()
-    self.category.visible = False
+    # rework 1: Link opens our quick quick
+    from ....F_PopUps.category_selector import category_selector
+    result = alert(category_selector(),buttons=[],large=False)
+    if result:
+      self.category_choose(result)
+    
+    # self.autocomplete_1.visible = True
+    # if self.autocomplete_1.text == '':
+    #   self.autocomplete_1.focus()
+    # else:
+    #   self.autocomplete_1.select()
+    # self.category.visible = False
 
-  def category_choose(self,**event_args):
+  def category_choose(self,cat_name,**event_args):
     # first we check if it was Transfer and changed:
-    if self.item['category'] == 'ec8e0085-8408-43a2-953f-ebba24549d96' and self.autocomplete_1.text != "Transfer":
+    if self.item['category'] == 'ec8e0085-8408-43a2-953f-ebba24549d96' and cat_name != "Transfer":
       # we need to handle by giving a choice - do we delete corresponding 
       # (if there is one) or change its category to None?
       # First, either way, we change the category
-      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == self.autocomplete_1.text), None)
+      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
       Transaction.work_transaction_data('update',self.item)
       # self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
-      self.category.text = self.autocomplete_1.text
+      self.category.text = cat_name
       corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
       if corr_id:
         from ....F_PopUps.remove_transfer import remove_transfer

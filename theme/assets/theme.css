@@ -499,7 +499,8 @@ input[disabled] ~ span {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px
+  gap: 12px;
+  padding: 10px 12px;
 
   border-radius: 20px;
   background: white;
@@ -507,9 +508,16 @@ input[disabled] ~ span {
   z-index: 9999;
 }
 
+/* Make each component inside the bar take equal width */
+.anvil-role-bottom-bar-mobile > *{
+  flex: 1 1 0;
+  min-width: 0;                       /* prevents overflow weirdness */
+}
+
 .anvil-role-bottom-bar-mobile .btn {
   border-radius: 16px;
-  padding: 10px 14px;
+  padding: 12px 0;
+  width: 100%;
   min-height: 44px;
   border: 0;
   box-shadow: 0 6px 14px rgba(0,0,0,0.10);
