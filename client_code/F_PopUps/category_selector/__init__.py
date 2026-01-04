@@ -33,7 +33,7 @@ class category_selector(category_selectorTemplate):
       c = self.rp_options.get_components()[0].item
       self.return_value(cat=c)
     else:
-      self.raise_event('x-close-alert',value="")
+      self.raise_event('x-close-alert',value=None)
 
   @handle('txt_entry','change')
   def ping_ping(self,**event_args):

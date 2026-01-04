@@ -130,10 +130,11 @@ class one_transaction_mobile(one_transaction_mobileTemplate):
         if self.lbl_category.text != "None":
           c = self.lbl_category.text 
         cat_name = alert(category_selector(self.item['description'],c),buttons=[],large=False)
-        self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
-        self.lbl_category.text = cat_name
-        Transaction.work_transaction_data('update',self.item)
-        Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+        if cat_name:
+          self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
+          self.lbl_category.text = cat_name
+          Transaction.work_transaction_data('update',self.item)
+          Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
         
   
       def do_long_press():

@@ -36,7 +36,6 @@ def work_transaction_data(mode,transaction):
     Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
     note.hide()
   elif mode == 'delete_confirm':
-    print("delete_confirm_fired")
     num = str(len(transaction)) + ' ' if len(transaction) > 1 else ''
     tra = 'transactions' if len(transaction) > 1 else 'transaction'
     m = "Are you sure you wish to delete the {n}highlighted {t}?".format(n=num,t=tra)

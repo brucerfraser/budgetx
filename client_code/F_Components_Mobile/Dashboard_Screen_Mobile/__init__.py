@@ -117,7 +117,6 @@ class Dashboard_Screen_Mobile(Dashboard_Screen_MobileTemplate):
 
         # Otherwise it's a normal tap
         get_open_form().ping_ping("transactions")
-        print("fired")
 
       def cancel_press(evt=None):
         clear_timer()

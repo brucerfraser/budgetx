@@ -186,7 +186,6 @@ class Transactions_Mobile(Transactions_MobileTemplate):
     # self.btn_tfer.enabled = True if len(self.delete_list) > 0 else False
     self.inflow.text = "Inflow: R{a:.2f}".format(a=i / 100)
     self.outflow.text = "Outflow: R{a:.2f}".format(a=o / 100)
-    print(self.delete_list)
 
   def un_cat_button_click(self, **event_args):
     # if self.un_cat_button.foreground == "theme:Primary":

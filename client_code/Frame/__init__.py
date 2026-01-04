@@ -176,7 +176,6 @@ class Frame(FrameTemplate):
 
   def _bottom_bar_navigate(self, key, **event_args):
   # For now, just call the same methods your sidebar buttons already call:
-    print('fired',key)
     self.content_panel.get_components()[0].bottom_button_incoming(key)
     # if key == "butt1":
     #   self.dashboard_page_link_click()
