@@ -32,7 +32,7 @@ components:
       type: ColumnPanel
     layout_properties: {grid_position: 'PGDRIU,NEDVPO'}
     name: card_header
-    properties: {role: card}
+    properties: {role: null}
     type: ColumnPanel
   - components:
     - components:
@@ -113,16 +113,16 @@ components:
       spacing_above: none
       spacing_below: none
     type: ColumnPanel
-  - layout_properties: {full_width_row: true, grid_position: 'BEQGJZ,JGWJGD'}
-    name: repeating_panel_1
-    properties: {item_template: F_Components_Mobile.Transactions_Mobile.one_transaction_mobile, role: loose-inner, spacing_above: none, spacing_below: none}
-    type: RepeatingPanel
   layout_properties: {grid_position: 'RRNDAL,EUZJRT'}
   name: card_3
   properties: {role: null, visible: true}
   type: ColumnPanel
+- layout_properties: {grid_position: 'BDQIKF,AJAYQT'}
+  name: repeating_panel_1
+  properties: {item_template: F_Components_Mobile.Transactions_Mobile.one_transaction_mobile, role: limited-container-mobile-transaction, spacing_above: none, spacing_below: none}
+  type: RepeatingPanel
 container:
   event_bindings: {show: form_show}
-  properties: {role: fixed-outer}
+  properties: {role: null}
   type: ColumnPanel
 is_package: true

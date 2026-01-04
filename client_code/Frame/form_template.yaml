@@ -51,7 +51,7 @@ components:
   name: content_panel
   properties:
     col_spacing: tiny
-    role: fixed-outer
+    role: null
     spacing:
       padding: [null, 0, null, 0]
   type: ColumnPanel

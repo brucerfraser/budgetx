@@ -357,7 +357,7 @@ input[disabled] ~ span {
   --mobile-topbar: 56px;   /* your slide-in toggle row height */
   --mobile-bottombar: 72px;
   --mobile-gap: 10px;
-  --mobile-topbartrans: 156px; /*extra heading stuff at top of transactions page */
+  --mobile-headertransaction: 315px; /*extra heading stuff at top of transactions page */
 }
 
 
@@ -385,7 +385,7 @@ input[disabled] ~ span {
 }
 
 .anvil-role-fixed-holder-page {
-  height: calc(100vh - 10px);
+  height: calc(100vh - 20px);
   /* height: 600px; !important /* Set your desired fixed height */
   background: %color:Surface Variant%;
   padding: 8px 12px;
@@ -471,7 +471,7 @@ input[disabled] ~ span {
 /* ALL BRUCE MOBILE CSS BELOW */
 
 .anvil-role-fixed-holder-page-mobile {
-  height: calc(100vh - var(--mobile-topbar) - var(--mobile-bottombar) - (2 * var(--mobile-gap)));
+  height: calc(100vh - var(--mobile-topbar) - var(--mobile-bottombar) - (3 * var(--mobile-gap)));
   /* height: calc(100vh - 82px); /* 72px bar + 10px breathing room */
   background: %color:Surface Variant%;
   padding: 8px 12px;
@@ -479,31 +479,13 @@ input[disabled] ~ span {
   border-bottom: 1px solid white;
 }
 
-.anvil-role-mobile-fixed-outer {
-  height: calc(100vh - var(--mobile-topbar) - var(--mobile-bottombar) - (2 * var(--mobile-gap)));
-  /* height: calc(100vh - 82px); /* 72px bar + 10px breathing room */
-  background: %color:Surface Variant%;
-  padding: 8px 12px;
-  overflow-y: hidden;
-  border-bottom: 1px solid green;
-}
-
-.anvil-role-mobile-loose-inner {
-  height: 400px;
+.anvil-role-limited-container-mobile-transaction {
+  height: calc(100vh - var(--mobile-headertransaction) - var(--mobile-bottombar) - (3 * var(--mobile-gap)));
   /* height: calc(100vh - 82px); /* 72px bar + 10px breathing room */
   background: %color:Surface Variant%;
   padding: 8px 12px;
   overflow-y: auto;
-  border-bottom: 1px solid blue;
-}
-
-.anvil-role-fixed-repeating-panel-mobile {
-  border-bottom: 1px solid grey;
-  height: 200px !important;
-  /*height: calc(100vh - var(--mobile-topbartrans) - var(--mobile-bottombar) - (2 * var(--mobile-gap)));*/
-  overflow-y: auto; /* Enable vertical scrolling when content exceeds height */
-  background: %color:Surface Variant%;
-  padding: 8px 12px;
+  border-bottom: 1px solid white;
 }
 
 .anvil-role-bottom-bar-mobile {

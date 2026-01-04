@@ -52,10 +52,10 @@ class Transactions_Mobile(Transactions_MobileTemplate):
     sub_cat is a tuple of (key,value)
     """
     if self.dash:
-      self.card_3.role = "fixed-holder"
+      # self.card_3.role = "fixed-holder"
       self.card_header.visible = False
     else:
-      self.card_3.role = "fixed-holder-page"
+      # self.card_3.role = "fixed-holder-page"
       self.card_header.visible = True
     fd, ld = Transaction.date_me(dash)
     if not uncat and not search and not sub_cat:

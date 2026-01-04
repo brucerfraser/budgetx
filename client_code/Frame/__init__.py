@@ -18,6 +18,8 @@ from ..F_Components_Mobile.BottomBar import BottomBar
 from ..F_Components_Mobile.Dashboard_Screen_Mobile import Dashboard_Screen_Mobile
 
 from ..F_Global_Logic import Global,Responsive,Transaction
+# from ..F_Global_Logic import Responsive
+# from .Tester import Tester
 
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
@@ -37,7 +39,7 @@ class Frame(FrameTemplate):
     
     else:
       self.content_panel.role = "fixed-holder-page"
-
+    # self.content_panel.add_component(Tester(False,True))
     #Present users with a login form with just one line of code:
     anvil.users.login_with_form()
     # Laod app data into Global module
@@ -46,7 +48,7 @@ class Frame(FrameTemplate):
     Global.smarter()
     self.content_panel.visible = False
     Global.open_transactions_instance(Responsive.is_mobile())
-    #When the app starts up, the Dashboard form will be added to the page
+    # #When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,

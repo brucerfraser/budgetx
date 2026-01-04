@@ -1,0 +1,11 @@
+components:
+- layout_properties: {grid_position: 'MFUYPO,CPNFXQ'}
+  name: label_1
+  properties: {text: Hello}
+  type: Label
+- layout_properties: {grid_position: 'JDUPEF,UAZDIP'}
+  name: repeating_panel_1
+  properties: {item_template: Frame.Tester.ItemTemplate8, role: limited-container-mobile-transaction}
+  type: RepeatingPanel
+container: {type: ColumnPanel}
+is_package: true
