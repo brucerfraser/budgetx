@@ -498,9 +498,6 @@ input[disabled] ~ span {
 
 .anvil-role-top-bar-mobile {
   border-bottom: 1px solid white;
-  font-size: 22px;
-  line-height: 28px;
-  font-weight: 400;
 }
 
 .anvil-role-bottom-bar-mobile {

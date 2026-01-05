@@ -42,6 +42,8 @@ class one_transaction_mobile(one_transaction_mobileTemplate):
         self.card_1.role = 'txn-card-mobile'
     if self.item['amount'] < 0:
       self.lbl_amount.foreground = 'theme:Amount Negative'
+    else:
+      self.lbl_amount.foreground = 'green'
     if self.item['category'] == None:
       self.lbl_category.background = 'theme:Amount Negative'
     else:

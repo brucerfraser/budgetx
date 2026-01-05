@@ -76,7 +76,7 @@ components:
       properties: {role: category-link}
       type: Link
     layout_properties: {grid_position: 'MMCQRJ,ZSHWLP'}
-    name: column_panel_3_copy_copy
+    name: cp_category
     properties: {wrap_on: never}
     type: ColumnPanel
   - components:
@@ -95,23 +95,23 @@ components:
     properties: {wrap_on: never}
     type: ColumnPanel
   - components:
-    - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,SKXFJF'}
+    - layout_properties: {full_width_row: true, grid_position: 'MMPTAK,CAFNVS'}
       name: lbl_tfer_detail
       properties: {align: center, background: 'theme:Surface Variant', foreground: 'theme:Amount Negative', text: Testing}
       type: Label
     - data_bindings:
       - {code: 'self.item[''transfer_account'']', property: selected_value, writeback: false}
-      layout_properties: {full_width_row: true, grid_position: 'EMHTYX,PJVIJY'}
+      layout_properties: {grid_position: 'DFPNSK,YMAACX'}
       name: dd_transfer
       properties: {include_placeholder: true, placeholder: Select Transfer Account}
       type: DropDown
-    - layout_properties: {full_width_row: true, grid_position: 'EMHTYX,ZRTVRL'}
+    - layout_properties: {grid_position: 'DFPNSK,AROEXE'}
       name: lbl_tfer_amount
       properties: {align: center, background: 'theme:Surface Variant', foreground: '', text: Testing}
       type: Label
     layout_properties: {grid_position: 'KKJGKG,DPQGQQ'}
     name: cp_transfer
-    properties: {background: '#FFCDC9', col_widths: '{"SKXFJF":40,"PJVIJY":15,"ZRTVRL":10}', role: one-liner, visible: false, wrap_on: never}
+    properties: {background: '#FFCDC9', col_widths: '{"SKXFJF":40}', role: one-liner, visible: false, wrap_on: never}
     type: ColumnPanel
   layout_properties: {full_width_row: true, grid_position: 'JQPABZ,HBWYEY'}
   name: column_panel_1

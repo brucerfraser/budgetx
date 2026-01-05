@@ -10,10 +10,10 @@ from ...F_Global_Logic import Global
 
 
 class remove_transfer(remove_transferTemplate):
-  def __init__(self,t_id, **properties):
+  def __init__(self,t_id,in_alert=False, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-
+    self.in_alert = in_alert
     self.lbl = """
     You are changing a transfer transaction with a corresponding transaction for {R:.2f} on {D} from {A}.
     Would you like to delete this corresponding transaction or change its category to None?
@@ -31,8 +31,14 @@ class remove_transfer(remove_transferTemplate):
   @handle('btn_none','click')
   @handle('btn_delete','click')
   def answer(self,**event_args):
-    if event_args['sender'].text == "none":
-      self.raise_event('x-close-alert',value=False)
+    if not self.in_alert:
+      if event_args['sender'].text == "none":
+        self.raise_event('x-close-alert',value=False)
+      else:
+        self.raise_event('x-close-alert',value=True)
     else:
-      self.raise_event('x-close-alert',value=True)
+      if event_args['sender'].text == "none":
+        self.parent.raise_event('x-answer',value="none")
+      else:
+        self.parent.raise_event('x-answer',value="delete")
     

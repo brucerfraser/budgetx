@@ -15,10 +15,13 @@ class edit_transaction(edit_transactionTemplate):
   def __init__(self, new_trans, **properties):
     # Set Form properties and Data Bindings.
     self.item = new_trans
+    self.was_transfer = self.item['category'] == "ec8e0085-8408-43a2-953f-ebba24549d96"
     self.holder = ""
     self.init_components(**properties)
     self.cats = [item['display'] for item in Global.CATEGORIES.values()]
     self.rp_category.set_event_handler('x-close-up-shop',self.close_category)
+    self.cp_category.set_event_handler('x-answer',self.save_handler)
+    self.remove_box = None
 
   @handle("", "show")
   def form_show(self, **event_args):
@@ -64,34 +67,7 @@ class edit_transaction(edit_transactionTemplate):
       + str(self.item["amount"])
       + str(self.item["account"])
     )
-    Transaction.work_transaction_data("update", self.item)
-    # was this a transfer? Need to make a new transaction if so.
-    if self.item["category"] == "ec8e0085-8408-43a2-953f-ebba24549d96":
-      hash_new = (
-        str(self.item["date"].day)
-        + str(self.item["date"].month)
-        + str(self.item["date"].year)
-        + str(-1 * self.item["amount"])
-        + self.dd_transfer.selected_value
-      )
-      for g in Global.ACCOUNTS:
-        # print(g[0],g[1],g[1]==transfer['account_one'])
-        if g[1] == self.item["account"]:
-          acc_name = g[0]
-          break
-      f_t = "From" if self.item["amount"] < 0 else "To"
-      new_trans = {
-        "date": self.item["date"],
-        "amount": -1 * self.item["amount"],
-        "description": "{f} {a}".format(f=f_t, a=acc_name),
-        "category": "ec8e0085-8408-43a2-953f-ebba24549d96",
-        "account": self.dd_transfer.selected_value,
-        "notes": "",
-        "hash": hash_new,
-        "transaction_id": Global.new_id_needed(),
-        "transfer_account": self.item["account"],
-      }
-      Transaction.work_transaction_data("add", new_trans)
+    self.save_handler()
 
   def categorise(self, **event_args):
     if self.item['category']:
@@ -195,3 +171,63 @@ class edit_transaction(edit_transactionTemplate):
       )
     else:
       self.cp_transfer.background = "#FFCDC9"
+
+  def save_handler(self,confirm=None,**event_args):
+    # first we check if it was Transfer and changed:
+    if confirm:
+      if confirm == "delete":
+        corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
+        Transaction.work_transaction_data('delete_immediate',[corr_id])
+      else:
+        Transaction.work_transaction_data('change_on_key',{'transaction_id':corr_id,'key':'category','value':None})
+      Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+      self.remove_box.remove_from_parent()
+      
+    elif self.item['category'] != 'ec8e0085-8408-43a2-953f-ebba24549d96' and self.was_transfer:
+      # we need to handle by giving a choice - do we delete corresponding 
+      # (if there is one) or change its category to None?
+      # First, either way, we change the category
+      Transaction.work_transaction_data('update',self.item)
+      corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
+      if corr_id:
+        from ...F_PopUps.remove_transfer import remove_transfer
+        self.remove_box = remove_transfer(corr_id,True)
+        for obj in self.cp_category.get_components():
+          obj.visible = False
+        self.cp_category.add_component(self.remove_box)
+
+    # Then we check if it changed to Transfer
+    elif self.item['category'] == 'ec8e0085-8408-43a2-953f-ebba24549d96' and not self.was_transfer:
+      # First update transaction
+      Transaction.work_transaction_data('update',self.item)
+      # now we check if there's a corresponding
+      corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
+      if corr_id:
+        Transaction.work_transaction_data('change_one_key',{'transaction_id':corr_id,'key':'category',
+                                                            'value':'ec8e0085-8408-43a2-953f-ebba24549d96'})
+      else:
+        hash_new = str(self.item['date'].day) + str(self.item['date'].month) + str(self.item['date'].year) + str(-1 * self.item['amount']) + self.item['transfer_account']
+        for g in Global.ACCOUNTS:
+          # print(g[0],g[1],g[1]==transfer['account_one'])
+          if g[1] == self.item['account']:
+            acc_name = g[0]
+            break
+        f_t = "From" if self.item['amount'] < 0 else "To"
+        new_trans = {'date':self.item['date'],
+                    'amount':-1 * self.item['amount'],
+                    'description':"{f} {a}".format(f=f_t,a=acc_name),
+                    'category':"ec8e0085-8408-43a2-953f-ebba24549d96",
+                    'account':self.item['transfer_account'],
+                    'notes':'',
+                    'hash':hash_new,'transaction_id':Global.new_id_needed(),
+                    'transfer_account':self.item['account']}
+        Transaction.work_transaction_data('add',new_trans)
+      
+    #Otherwise we just do a normal update.
+    else:
+      Transaction.work_transaction_data('update',self.item)
+
+    if self.item['category']:
+      Global.smarter(first=False,update=(self.item['category'],self.item['description']))
+      Global.Transactions_Form.smart_cat_update()
+    

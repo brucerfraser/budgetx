@@ -170,12 +170,12 @@ components:
   properties:
     background: theme:Surface Variant
     col_widths: '{"HKKOLQ":8,"ZATXLD":15,"LHIJXE":10,"NWLOWG":15,"IHUSGZ":20,"HBUXBT":2}'
-    role: one-liner
+    role: txn-card-mobile
     spacing:
-      margin: [0, null, 0, null]
+      margin: [2, null, 2, null]
       padding: [0, null, null, null]
-    spacing_above: none
-    spacing_below: none
+    spacing_above: small
+    spacing_below: small
   type: ColumnPanel
 container:
   properties:

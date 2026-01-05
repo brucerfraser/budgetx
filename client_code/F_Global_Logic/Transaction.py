@@ -18,6 +18,7 @@ def work_transaction_data(mode,transaction):
     delete_confirm     list of transaction ids to delete (use from tranactions page, mulitple selected)
     reload             list of new transaction dictionaries
     update             one dict of transaction to be updated
+    change_one_key     one dict: {'transaction_id':'','key':'','value':''}
     """
   if mode == 'add':
     Global.TRANSACTIONS.insert(0,transaction)
@@ -68,6 +69,11 @@ def work_transaction_data(mode,transaction):
       if trans['transaction_id'] == transaction['transaction_id']:
         trans.update(transaction)
         break
+  elif mode == "change_one_key":
+    app_tables.transactions.get(transaction_id=transaction['transaction_id'])[transaction['key']] = transaction['value']
+    for trans in Global.TRANSACTIONS:
+      if trans['transaction_id'] == transaction['transaction_id']:
+        trans.update({transaction['key']:transaction['value']})
     
     
 def date_me(dashboard_mode):
