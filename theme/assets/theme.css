@@ -277,6 +277,7 @@ input[disabled] ~ span {
   --mobile-bottombar: 72px;
   --mobile-gap: 10px;
   --mobile-headertransaction: 315px; /*extra heading stuff at top of transactions page */
+  --mobile-headerdashboard: 150px; /*extra heading stuff at top of dashboard page */
 }
 
 
@@ -393,8 +394,6 @@ input[disabled] ~ span {
   border-bottom: 1px solid white
 }
 
-
-
 .anvil-role-boundary-horiz {
   background: %color:Surface Variant%;
   border-bottom: 1px solid white;
@@ -486,6 +485,22 @@ input[disabled] ~ span {
   padding: 8px 12px;
   overflow-y: auto;
   border-bottom: 1px solid white;
+}
+
+.anvil-role-limited-container-mobile-dashboard {
+  height: calc(100vh - var(--mobile-headerdashboard) - var(--mobile-bottombar) - (3 * var(--mobile-gap)));
+  /* height: calc(100vh - 82px); /* 72px bar + 10px breathing room */
+  background: %color:Surface Variant%;
+  padding: 8px 12px;
+  overflow-y: auto;
+  border-bottom: 1px solid white;
+}
+
+.anvil-role-top-bar-mobile {
+  border-bottom: 1px solid white;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 400;
 }
 
 .anvil-role-bottom-bar-mobile {

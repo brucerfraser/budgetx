@@ -1,4 +1,8 @@
 components:
+- layout_properties: {full_width_row: true, grid_position: 'KAWLDR,KPDDRE'}
+  name: label_1_copy_copy_2
+  properties: {align: center, role: title, spacing_above: none, spacing_below: none, text: 'Budget-X: Bruce and Esther Dashboard'}
+  type: Label
 - components:
   - layout_properties: {full_width_row: true, grid_position: 'MPNZMV,OTKTMF'}
     name: label_1_copy
@@ -65,9 +69,9 @@ components:
         margin: [0, null, null, null]
         padding: [0, null, null, null]
     type: ColumnPanel
-  layout_properties: {full_width_row: true, grid_position: 'JKRDVS,JJIDKW'}
+  layout_properties: {full_width_row: true, grid_position: 'NJWIAV,PCQNQZ'}
   name: card_1
-  properties: {role: card}
+  properties: {role: limited-container-mobile-dashboard}
   type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

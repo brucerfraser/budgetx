@@ -328,3 +328,5 @@ roles:
 - {name: txn-card-mobile-selected}
 - {name: category-option}
 - {name: limited-container-mobile-transaction}
+- {name: limited-container-mobile-dashboard}
+- {name: top-bar-mobile}
