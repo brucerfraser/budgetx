@@ -38,7 +38,7 @@ class Budget_Mobile(Budget_MobileTemplate):
       for inc in app_tables.categories.search(name="Income"):
         inc_d = dict(inc)
       print("Budget form: Income backup table search use because of \n", e)
-    self.card_2.add_component(Category_holder(item=inc_d))
+    self.card_2.add_component(Category_holder_mobile(item=inc_d))
     try:
       cats = sorted(
         [

@@ -59,7 +59,7 @@ components:
         type: ColumnPanel
       - layout_properties: {grid_position: 'VTICVQ,RHQMGY'}
         name: expense_categories
-        properties: {item_template: F_Components.Budget.Category_holder}
+        properties: {item_template: F_Components_Mobile.Budget_Mobile.Category_holder_mobile}
         type: RepeatingPanel
       layout_properties: {grid_position: 'YKXTUA,CGOXGK'}
       name: card_expenses

@@ -9,6 +9,7 @@ components:
           layout_properties: {grid_position: 'NUCKTN,TTSADO'}
           name: name_label
           properties:
+            font_size: 16
             spacing:
               margin: [0, null, null, null]
               padding: [3, null, null, null]
@@ -16,6 +17,7 @@ components:
         - layout_properties: {grid_position: 'NUCKTN,UOKNXE'}
           name: budget
           properties:
+            font_size: 16
             role: title
             spacing:
               margin: [0, null, null, null]
@@ -24,6 +26,7 @@ components:
         - layout_properties: {grid_position: 'NUCKTN,PHTFOM'}
           name: actual
           properties:
+            font_size: 16
             role: title
             spacing:
               margin: [0, null, null, null]
@@ -33,9 +36,25 @@ components:
           name: progress_bar_1
           properties: {}
           type: form:F_Components.ProgressBar
+        - event_bindings: {click: link_2_click}
+          layout_properties: {grid_position: 'NUCKTN,ZMVXNW'}
+          name: link_2
+          properties:
+            align: center
+            background: theme:Secondary Container
+            bold: true
+            border: solid white 1px
+            font_size: 25
+            icon: fa:plus
+            spacing:
+              margin: [0, null, 0, null]
+            spacing_above: none
+            spacing_below: none
+            text: ''
+          type: Link
         layout_properties: {grid_position: 'WRMUQV,TBVKVG'}
         name: column_panel_3
-        properties: {foreground: ''}
+        properties: {col_widths: '{"TTSADO":12,"UOKNXE":12,"PHTFOM":12,"HZUANE":19,"ZMVXNW":5}', foreground: '', role: txn-card-mobile, wrap_on: never}
         type: ColumnPanel
       data_bindings:
       - {code: 'self.item[''colour_text'']', property: foreground, writeback: false}
@@ -55,24 +74,9 @@ components:
         spacing_above: none
         spacing_below: none
       type: Link
-    - event_bindings: {click: link_2_click}
-      layout_properties: {grid_position: 'ODFYXP,OLTXVK'}
-      name: link_2
-      properties:
-        align: center
-        background: theme:Secondary Container
-        bold: true
-        border: solid white 1px
-        font_size: 25
-        spacing:
-          margin: [0, null, 0, null]
-        spacing_above: none
-        spacing_below: none
-        text: +
-      type: Link
     layout_properties: {full_width_row: true, grid_position: 'RIMGHL,JRHHQG'}
     name: column_panel_2
-    properties: {col_widths: '{"ETDMYT":55,"OLTXVK":5}'}
+    properties: {col_widths: '{"ETDMYT":55}'}
     type: ColumnPanel
   - components:
     - layout_properties: {full_width_row: true, grid_position: 'ECVDVW,CUMVJC'}
