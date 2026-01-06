@@ -1,8 +1,17 @@
 <div class="structure">
   <div class="nav-holder">
     
-    <a class="sidebar-toggle" anvil-drop-slot="top-left-btn" href="javascript:void(0)"><i class="fa fa-bars"></i></a>
-    
+    <!-- <a class="sidebar-toggle" anvil-drop-slot="top-left-btn" href="javascript:void(0)"><i class="fa fa-bars"></i></a> -->
+    <div class="mobile-topbar-row">
+      <a class="sidebar-toggle" anvil-role="top-left-btn">
+        <i class="fa fa-bars"></i>
+        <span anvil-drop-slot="default"></span>
+      </a>
+
+      <!-- New: TopBar slot area -->
+      <div class="mobile-topbar-slot" anvil-slot="topbar"></div>
+    </div>
+
     <div class="left-nav">
       <div class="logo" anvil-slot="logo">
         <div class="placeholder logo-placeholder anvil-designer-only" anvil-if-slot-empty="logo" anvil-drop-here>Add your logo here</div>

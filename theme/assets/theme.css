@@ -276,8 +276,8 @@ input[disabled] ~ span {
   --mobile-topbar: 56px;   /* your slide-in toggle row height */
   --mobile-bottombar: 72px;
   --mobile-gap: 10px;
-  --mobile-headertransaction: 270px; /*extra heading stuff at top of transactions page */
-  --mobile-headerdashboard: 150px; /*extra heading stuff at top of dashboard page */
+  --mobile-headertransaction: 250px; /*extra heading stuff at top of transactions page */
+  --mobile-headerdashboard: 80px; /*extra heading stuff at top of dashboard page */
 }
 
 
@@ -496,10 +496,46 @@ input[disabled] ~ span {
   border-bottom: 1px solid white;
 }
 
-.anvil-role-top-bar-mobile {
-  border-bottom: 1px solid white;
+/* .anvil-role-top-bar-mobile {
+  
   padding: 1px 1px 1px 1px;
+} */
+
+.mobile-topbar-row{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  height: var(--mobile-topbar);
+  padding: 0 10px;
 }
+
+.mobile-topbar-slot{
+  flex: 1;
+  min-width: 0;          /* allows ellipsis */
+  display:flex;
+  align-items:center;
+}
+
+
+.anvil-role-top-bar-mobile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 56px;                 /* matches iOS toolbar feel */
+  padding: 0 16px;
+
+  color: #e8f1ee;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.3px;
+  border-bottom: 1px solid white;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 
 .anvil-role-bottom-bar-mobile {
   position: fixed;

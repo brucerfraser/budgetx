@@ -120,7 +120,7 @@ components:
   layout_properties: {grid_position: 'RRNDAL,EUZJRT'}
   name: card_3
   properties:
-    role: top-bar-mobile
+    role: null
     spacing:
       margin: [0, null, 0, null]
     visible: true

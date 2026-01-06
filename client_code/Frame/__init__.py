@@ -16,7 +16,9 @@ from ..F_Components.Reports import Reports
 from ..F_Components.Settings import Settings
 
 from ..F_Components_Mobile.BottomBar import BottomBar
+from ..F_Components_Mobile.TopBar import TopBar
 from ..F_Components_Mobile.Dashboard_Screen_Mobile import Dashboard_Screen_Mobile
+from ..F_Components_Mobile.Budget_Mobile import Budget_Mobile
 
 from ..F_Global_Logic import Global,Responsive,Transaction
 
@@ -33,10 +35,11 @@ class Frame(FrameTemplate):
       butt = {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
       self.bottom_bar = BottomBar([butt])
       self.bottom_bar.set_event_handler("x-navigate", self._bottom_bar_navigate)
-    
+      lbl = {'text':'Dashboard: Fraser Budget','role':'title','icon':'','future':'','colour':''}
+      self.top_bar = TopBar(lbl)
       # Add to the default slot so it exists on the page (CSS makes it fixed anyway)
       self.add_component(self.bottom_bar, slot="default")
-
+      self.add_component(self.top_bar,slot="topbar")
       # set up kill keyboard scroll
       self.bind_keyboard_lock(self)
     
@@ -63,7 +66,10 @@ class Frame(FrameTemplate):
     #Clear the content panel and add the Sales Form
     self.content_panel.clear()
     self.content_panel.visible = False
-    self.content_panel.add_component(Budget())
+    if Responsive.is_mobile():
+      self.content_panel.add_component(Budget_Mobile())
+    else:
+      self.content_panel.add_component(Budget())
     #Change the color of the sales_page_link to indicate that the Sales page has been selected
     self.budget_page_link.background = app.theme_colors['Primary Container']
     clear_list = [self.transactions_page_link,self.reports_page_link,
@@ -188,6 +194,7 @@ class Frame(FrameTemplate):
   def bottom_bar_buttons(self,**event_args):
     if Responsive.is_mobile():
       b_list = []
+      lbl = {}
       if self.content_panel.get_components()[0].which_form == 'transactions':
         b_list = [
           {'text':'','icon':'fa:search','role':'button-blue','colour':'blue','enabled':True},
@@ -196,12 +203,14 @@ class Frame(FrameTemplate):
           {'text':'','icon':'fa:exchange','role':'button-blue','colour':'blue','enabled':False},
           {'text':'','icon':'fa:trash-o','role':'button-red','colour':'red','enabled':False},
         ]
-        
+        lbl = {'text':'Transactions: Fraser Budget','role':'title','icon':'','future':'','colour':''}
       elif self.content_panel.get_components()[0].which_form == 'dashboard':
         b_list = [
           {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
         ]
+        lbl = {'text':'Dashboard: Fraser Budget','role':'title','icon':'','future':'','colour':''}
       self.bottom_bar.update_buttons(b_list)
+      self.top_bar.update_label(lbl)
 
   def bind_keyboard_lock(self,root_component,**event_args):
     root = anvil.js.get_dom_node(root_component)

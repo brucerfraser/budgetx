@@ -1,0 +1,17 @@
+components:
+- components:
+  - components:
+    - layout_properties: {}
+      name: label_1
+      properties: {align: center, text: TESTER}
+      type: Label
+    layout_properties: {full_width_row: true, grid_position: 'ZUWWWF,CJHKGN'}
+    name: flow_panel_1
+    properties: {align: center}
+    type: FlowPanel
+  layout_properties: {full_width_row: true, grid_position: 'QMUNCF,NCOCTP'}
+  name: column_panel_1
+  properties: {wrap_on: never}
+  type: ColumnPanel
+container: {type: ColumnPanel}
+is_package: true
