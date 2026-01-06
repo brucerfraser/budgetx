@@ -6,6 +6,7 @@ import anvil.tables as tables
 import anvil.tables.query as q
 from anvil.tables import app_tables
 import math
+import anvil.js
 
 from ..F_PopUps.csv_confirm import csv_confirm
 from ..F_Components.Dashboard_Screen import Dashboard_Screen
@@ -18,8 +19,7 @@ from ..F_Components_Mobile.BottomBar import BottomBar
 from ..F_Components_Mobile.Dashboard_Screen_Mobile import Dashboard_Screen_Mobile
 
 from ..F_Global_Logic import Global,Responsive,Transaction
-# from ..F_Global_Logic import Responsive
-# from .Tester import Tester
+
 
 
 #This is your startup form. It has a sidebar with navigation links and a content panel where page content will be added.
@@ -36,6 +36,9 @@ class Frame(FrameTemplate):
     
       # Add to the default slot so it exists on the page (CSS makes it fixed anyway)
       self.add_component(self.bottom_bar, slot="default")
+
+      # set up kill keyboard scroll
+      self.bind_keyboard_lock(self)
     
     else:
       self.content_panel.role = "fixed-holder-page"
@@ -200,7 +203,20 @@ class Frame(FrameTemplate):
         ]
       self.bottom_bar.update_buttons(b_list)
 
+  def bind_keyboard_lock(self,root_component,**event_args):
+    root = anvil.js.get_dom_node(root_component)
 
+    def lock(evt=None):
+      anvil.js.window.document.documentElement.classList.add("kbd-lock")
+      anvil.js.window.document.body.classList.add("kbd-lock")
+  
+    def unlock(evt=None):
+      anvil.js.window.document.documentElement.classList.remove("kbd-lock")
+      anvil.js.window.document.body.classList.remove("kbd-lock")
+  
+    # capture focus anywhere inside your mobile screen
+    root.addEventListener("focusin", lock, True)
+    root.addEventListener("focusout", unlock, True)
 
 
 

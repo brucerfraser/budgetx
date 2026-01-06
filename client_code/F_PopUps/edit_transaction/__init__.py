@@ -229,5 +229,5 @@ class edit_transaction(edit_transactionTemplate):
 
     if self.item['category']:
       Global.smarter(first=False,update=(self.item['category'],self.item['description']))
-      Global.Transactions_Form.smart_cat_update()
+    Global.Transactions_Form.smart_cat_update()
     

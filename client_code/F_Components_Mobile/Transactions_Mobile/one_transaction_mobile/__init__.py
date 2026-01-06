@@ -43,7 +43,7 @@ class one_transaction_mobile(one_transaction_mobileTemplate):
     if self.item['amount'] < 0:
       self.lbl_amount.foreground = 'theme:Amount Negative'
     else:
-      self.lbl_amount.foreground = 'green'
+      self.lbl_amount.foreground = '#A8DF8E'
     if self.item['category'] == None:
       self.lbl_category.background = 'theme:Amount Negative'
     else:
@@ -131,12 +131,9 @@ class one_transaction_mobile(one_transaction_mobileTemplate):
         c = None
         if self.lbl_category.text != "None":
           c = self.lbl_category.text 
-        cat_name = alert(category_selector(self.item['description'],c),buttons=[],large=False)
+        cat_name = alert(category_selector(self.item['description'],c,self.item['category']),buttons=[],large=False)
         if cat_name:
-          self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
-          self.lbl_category.text = cat_name
-          Transaction.work_transaction_data('update',self.item)
-          Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+          self.category_choose(cat_name)
         
   
       def do_long_press():
@@ -222,3 +219,56 @@ class one_transaction_mobile(one_transaction_mobileTemplate):
   
     # ✅ ensure DOM exists before binding
     anvil.js.window.setTimeout(attach, 0)
+
+  def category_choose(self,cat_name,**event_args):
+    # first we check if it has been deliberately None'ed:
+    if self.item['category'] and cat_name == "None" and self.item['category'] != 'ec8e0085-8408-43a2-953f-ebba24549d96':
+      self.item['category'] = None
+      Transaction.work_transaction_data('change_one_key',{'transaction_id':self.item['transaction_id'],'key':'category',
+                                                          'value':None})
+      self.lbl_.text = cat_name
+      Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+    # second we check if it was Transfer and changed:
+    elif self.item['category'] == 'ec8e0085-8408-43a2-953f-ebba24549d96' and cat_name != "Transfer":
+      # we need to handle by giving a choice - do we delete corresponding 
+      # (if there is one) or change its category to None?
+      # First, either way, we change the category
+      if cat_name == "None":
+        self.item['category'] = None
+      else:
+        self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
+      Transaction.work_transaction_data('update',self.item)
+      self.lbl_category.text = cat_name
+      corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
+      if corr_id:
+        from ....F_PopUps.remove_transfer import remove_transfer
+        if alert(remove_transfer(corr_id),buttons=[],large=False,dismissible=False):
+          # we must delete
+          Transaction.work_transaction_data('delete_immediate',[corr_id])
+        else:
+          #we must change to none
+          Transaction.work_transaction_data('change_one_key',{'transaction_id':corr_id,'key':'category',
+                                                              'value':None})
+          Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+
+    # Then we check if it changed to Transfer
+    elif cat_name == "Transfer" and self.item['category'] != 'ec8e0085-8408-43a2-953f-ebba24549d96':
+      if Global.Transactions_Form.handle_transfers(from_one_t=self.item['transaction_id']):
+        self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
+        self.lbl_category.text = cat_name
+
+    #Otherwise we just do a normal update.
+    else:
+      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
+      Transaction.work_transaction_data('update',self.item)
+      self.lbl_category.text = cat_name
+
+    if self.item['category']:
+      Global.smarter(first=False,update=(self.item['category'],self.item['description']))
+      self.lbl_category.background = Global.CATEGORIES[self.item['category']]['colour']
+      self.lbl_category.foreground = 'theme:Surface'
+      self.lbl_category.border = ''
+      
+    else:
+      self.categorise()
+    Global.Transactions_Form.smart_cat_update()

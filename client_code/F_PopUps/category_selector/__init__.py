@@ -9,18 +9,19 @@ from ...F_Global_Logic import Global
 
 
 class category_selector(category_selectorTemplate):
-  def __init__(self, lbl,cat=None,**properties):
+  def __init__(self, lbl,cat_name=None,cat=None,**properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
     self.cats = [item['display'] for item in Global.CATEGORIES.values()]
     self.rp_options.set_event_handler('x-close-up-shop',self.return_value)
     self.lbl_description.text = lbl
+    self.cat_name = cat_name if cat_name else None
     self.cat = cat if cat else None
   
   @handle("", "show")
   def form_show(self, **event_args):
-    if self.cat:
-      self.txt_entry.text = self.cat
+    if self.cat_name:
+      self.txt_entry.text = self.cat_name
       self.ping_ping()
       self.txt_entry.select()
     else:
@@ -33,7 +34,11 @@ class category_selector(category_selectorTemplate):
       c = self.rp_options.get_components()[0].item
       self.return_value(cat=c)
     else:
-      self.raise_event('x-close-alert',value=None)
+      # was this transaction categorised before and now it's not?
+      if self.cat:
+        self.raise_event('x-close-alert',value="None")
+      else:
+        self.raise_event('x-close-alert',value=None)
 
   @handle('txt_entry','change')
   def ping_ping(self,**event_args):

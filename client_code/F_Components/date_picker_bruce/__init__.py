@@ -19,7 +19,11 @@ class date_picker_bruce(date_picker_bruceTemplate):
 
   def form_show(self, **event_args):
     # get transaction start and end date:
-    
+    from ...F_Global_Logic import Responsive
+    if Responsive.is_mobile():
+      self.prev.text = ""
+      self.next.text = ""
+      self.drop_down_1.font_size = 25
     for row in sorted(Global.TRANSACTIONS,
                       key = lambda x: x['date'],reverse=False):
       self.budget_x_first_date = row['date']

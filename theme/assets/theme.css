@@ -554,6 +554,32 @@ input[disabled] ~ span {
   transform: scale(0.985);
 }
 
+/* --- iOS keyboard / focus jank sledgehammer --- */
+
+/* Prevent iOS rubber-band + scroll chaining */
+html, body {
+  overscroll-behavior: none;
+}
+
+/* When we lock, kill page scrolling entirely */
+html.kbd-lock, body.kbd-lock {
+  position: fixed !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none;          /* blocks accidental gestures on the page */
+}
+
+/* Make your inner scrolling container do the scrolling (apply to your fixed holder page role) */
+.anvil-role-limited-container-mobile-transaction,
+.anvil-role-limited-container-mobile-dashboard {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+
 /* Prevent iOS long-press text selection + callout inside cards */
 .anvil-role-txn-card-mobile,
 .anvil-role-txn-card-mobile-selected {

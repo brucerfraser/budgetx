@@ -133,7 +133,8 @@ class one_transaction(one_transactionTemplate):
     from ....F_PopUps.category_selector import category_selector
     c = None if self.category.text in ['None',''] else self.category.text
     result = alert(category_selector(self.item['description'],
-                                    c),buttons=[],large=False)
+                                    c,self.item['category']),
+                                    buttons=[],large=False)
     if result:
       self.category_choose(result)
     
@@ -145,14 +146,23 @@ class one_transaction(one_transactionTemplate):
     # self.category.visible = False
 
   def category_choose(self,cat_name,**event_args):
-    # first we check if it was Transfer and changed:
-    if self.item['category'] == 'ec8e0085-8408-43a2-953f-ebba24549d96' and cat_name != "Transfer":
+    # first we check if it has been deliberately None'ed:
+    if self.item['category'] and cat_name == "None" and self.item['category'] != 'ec8e0085-8408-43a2-953f-ebba24549d96':
+      self.item['category'] = None
+      Transaction.work_transaction_data('change_one_key',{'transaction_id':self.item['transaction_id'],'key':'category',
+                                                          'value':None})
+      self.category.text = cat_name
+      Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
+    # second we check if it was Transfer and changed:
+    elif self.item['category'] == 'ec8e0085-8408-43a2-953f-ebba24549d96' and cat_name != "Transfer":
       # we need to handle by giving a choice - do we delete corresponding 
       # (if there is one) or change its category to None?
       # First, either way, we change the category
-      self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
+      if cat_name == "None":
+        self.item['category'] = None
+      else:
+        self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
       Transaction.work_transaction_data('update',self.item)
-      # self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
       self.category.text = cat_name
       corr_id = Global.Transactions_Form.check_corresponding(self.item['transaction_id'])
       if corr_id:
@@ -162,8 +172,8 @@ class one_transaction(one_transactionTemplate):
           Transaction.work_transaction_data('delete_immediate',[corr_id])
         else:
           #we must change to none
-          app_tables.transactions.get(transaction_id=corr_id).update(category=None)
-          [t for t in Global.TRANSACTIONS if t['transaction_id'] == corr_id][0]['category'] = None
+          Transaction.work_transaction_data('change_one_key',{'transaction_id':corr_id,'key':'category',
+                                                              'value':None})
           Global.Transactions_Form.load_me(Global.Transactions_Form.dash)
           
     # Then we check if it changed to Transfer
@@ -176,7 +186,6 @@ class one_transaction(one_transactionTemplate):
     else:
       self.item['category'] = next((k for k, v in Global.CATEGORIES.items() if v.get('display') == cat_name), None)
       Transaction.work_transaction_data('update',self.item)
-      # self.update_a_transaction('category',self.item['category'],self.item['transaction_id'])
       self.category.text = cat_name
     
     if self.item['category']:
@@ -184,14 +193,12 @@ class one_transaction(one_transactionTemplate):
       self.category.background = Global.CATEGORIES[self.item['category']]['colour']
       self.category.foreground = 'theme:Surface'
       self.category.border = ''
+      
     else:
       self.categorise()
     
     self.confirm.visible = False
-    if self.item['category']:
-      frame = get_open_form()
-      frm = frame.content_panel.get_components()[0]
-      frm.smart_cat_update()
+    Global.Transactions_Form.smart_cat_update()
 
 
   # def autocomplete_1_lost_focus(self, **event_args):
