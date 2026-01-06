@@ -48,6 +48,7 @@ class Reports(ReportsTemplate):
   # UI helpers
   # ----------------------------
 
+  
   def _update_slider_label(self):
     v = int(self.slider_1.value or 0)
     self.label_1.text = Reporting.slider_label(v)
@@ -89,15 +90,18 @@ class Reports(ReportsTemplate):
   # Event handlers
   # ----------------------------
 
+  @handle('slider_1','change')
   def slider_1_change(self, **event_args):
     self._update_slider_label()
+    self.button_1_click()
     # UX: don’t auto-rebuild on slide unless you want it.
     # For now: just update label. Button triggers render.
     # If you want live-update later: call self._render_selected_visual()
 
   def drop_down_1_change(self, **event_args):
     # optional: keep UI ready; still render only on button click
-    pass
+    self.button_1_click()
 
+  @handle('button_1','click')
   def button_1_click(self, **event_args):
     self._render_selected_visual()

@@ -293,6 +293,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
   """
   txns = getattr(Global, "TRANSACTIONS", []) or []
   cats = getattr(Global, "CATEGORIES", {}) or {}  # {cat_id: [name, back, text], ...}
+  main_cats = getattr(Global, "MAIN_CATS", {}) or {}
 
   totals_cents = {}  # {cat_name: cents}
 
@@ -301,7 +302,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
     if not (isinstance(d, date) and start <= d <= end):
       continue
 
-    cat_id = t.get("category")
+    cat_id = cats[t.get("category")]['belongs_to']
     if not cat_id:
       continue
 
@@ -313,7 +314,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
     if amt_c >= 0:
       continue  # only spend
 
-    cat_name = cats.get(cat_id, [str(cat_id)])[0]
+    cat_name = main_cats.get(cat_id, "None")[0]
     totals_cents[cat_name] = totals_cents.get(cat_name, 0) + abs(amt_c)
 
   items = sorted(totals_cents.items(), key=lambda kv: kv[1], reverse=True)

@@ -9,8 +9,8 @@ from datetime import date
 global ACCOUNTS,ACCOUNTS_WHOLE
 ACCOUNTS,ACCOUNTS_WHOLE = [],[]
 
-global CATEGORIES
-CATEGORIES = {}
+global CATEGORIES,MAIN_CATS
+CATEGORIES,MAIN_CATS = {},{}
 
 global SMART
 SMART = {}
@@ -39,15 +39,15 @@ def open_transactions_instance(mobile):
     Transactions_Form = Transactions(dash=True)
 
 def all_categories():
-  global CATEGORIES
-  cats = {}
+  global CATEGORIES,MAIN_CATS
+  MAIN_CATS = {}
   for row in app_tables.categories.search():
-    cats[row['category_id']] = [row['name'],row['colour_back'],row['colour_text']]
+    MAIN_CATS[row['category_id']] = [row['name'],row['colour_back'],row['colour_text']]
   for row in app_tables.sub_categories.search():
-    display = cats[row['belongs_to']][0] + " - " + row['name']
-    CATEGORIES[row['sub_category_id']] = {'display':display,'colour':cats[row['belongs_to']][1]}
+    display = MAIN_CATS[row['belongs_to']][0] + " - " + row['name']
+    CATEGORIES[row['sub_category_id']] = {'display':display,'colour':MAIN_CATS[row['belongs_to']][1],'belongs_to':row['belongs_to']}
   # one special last line for transfers
-  CATEGORIES['ec8e0085-8408-43a2-953f-ebba24549d96'] = {'display':'Transfer','colour':cats['ec8e0085-8408-43a2-953f-ebba24549d96'][1]}
+  CATEGORIES['ec8e0085-8408-43a2-953f-ebba24549d96'] = {'display':'Transfer','colour':MAIN_CATS['ec8e0085-8408-43a2-953f-ebba24549d96'][1]}
     
 
 def new_id_needed():
