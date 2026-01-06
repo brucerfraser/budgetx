@@ -276,7 +276,7 @@ input[disabled] ~ span {
   --mobile-topbar: 56px;   /* your slide-in toggle row height */
   --mobile-bottombar: 72px;
   --mobile-gap: 10px;
-  --mobile-headertransaction: 315px; /*extra heading stuff at top of transactions page */
+  --mobile-headertransaction: 270px; /*extra heading stuff at top of transactions page */
   --mobile-headerdashboard: 150px; /*extra heading stuff at top of dashboard page */
 }
 
@@ -498,6 +498,7 @@ input[disabled] ~ span {
 
 .anvil-role-top-bar-mobile {
   border-bottom: 1px solid white;
+  padding: 1px 1px 1px 1px;
 }
 
 .anvil-role-bottom-bar-mobile {
