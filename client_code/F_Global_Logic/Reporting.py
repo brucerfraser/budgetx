@@ -11,23 +11,21 @@ from . import Global
 # ============================================================
 
 def _first_of_month(d: date) -> date:
-  return date(d.year, d.month, 1)
+    return date(d.year, d.month, 1)
 
 def _add_months(d: date, months: int) -> date:
-  y = d.year + (d.month - 1 + months) // 12
-  m = (d.month - 1 + months) % 12 + 1
-
-  # clamp day to month length
-  month_days = [31, 29 if (y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)) else 28,
-                31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-  day = min(d.day, month_days[m - 1])
-  return date(y, m, day)
+    y = d.year + (d.month - 1 + months) // 12
+    m = (d.month - 1 + months) % 12 + 1
+    month_days = [31, 29 if (y % 4 == 0 and (y % 100 != 0 or y % 400 == 0)) else 28,
+                  31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    day = min(d.day, month_days[m - 1])
+    return date(y, m, day)
 
 def _daterange(d0: date, d1: date):
-  d = d0
-  while d <= d1:
-    yield d
-    d += timedelta(days=1)
+    d = d0
+    while d <= d1:
+        yield d
+        d += timedelta(days=1)
 
 
 # ============================================================
@@ -94,26 +92,23 @@ def slider_date_range(value: int):
 
 
 # ============================================================
-# Plot factory (Reports_mini pattern)
+# Plot helpers
 # ============================================================
 
 def _make_plot(traces, layout, *, height=320, interactive=False):
-  p = Plot()
-  p.height = str(height)
-  p.interactive = bool(interactive)
-
-  # Same config style as Reports_mini
-  p.config = {
-    "doubleClick": "reset",
-    "displaylogo": False,
-    "scrollZoom": False,
-    "responsive": True
-  }
-
-  p.data = traces
-  p.layout = layout
-  p.redraw()
-  return p
+    p = Plot()
+    p.height = str(height)
+    p.interactive = bool(interactive)
+    p.config = {
+        "doubleClick": "reset",
+        "displaylogo": False,
+        "scrollZoom": False,
+        "responsive": True
+    }
+    p.data = traces
+    p.layout = layout
+    p.redraw()
+    return p
 
 
 # ============================================================
@@ -121,104 +116,98 @@ def _make_plot(traces, layout, *, height=320, interactive=False):
 # ============================================================
 
 def _build_txn_deltas_by_acc():
-  """
-  Returns:
-    deltas_by_acc: {acc_id: {date: net_delta_cents}}
-    min_date: earliest txn date found (or None)
-  """
-  txns = getattr(Global, "TRANSACTIONS", []) or []
-  deltas_by_acc = {}
-  min_date = None
+    """
+    Returns:
+      deltas_by_acc: {acc_id: {date: net_delta_cents}}
+      min_date: earliest txn date found (or None)
+    """
+    txns = getattr(Global, "TRANSACTIONS", []) or []
+    deltas_by_acc = {}
+    min_date = None
 
-  for t in txns:
-    d = t.get("date")
-    acc = t.get("account")
-    amt = t.get("amount")
+    for t in txns:
+        d = t.get("date")
+        acc = t.get("account")
+        amt = t.get("amount")
 
-    if not (isinstance(d, date) and acc):
-      continue
-    if amt is None:
-      continue
+        if not (isinstance(d, date) and acc):
+            continue
+        if amt is None:
+            continue
 
-    amt_c = int(amt)
+        amt_c = int(amt)
 
-    if acc not in deltas_by_acc:
-      deltas_by_acc[acc] = {}
-    deltas_by_acc[acc][d] = deltas_by_acc[acc].get(d, 0) + amt_c
+        if acc not in deltas_by_acc:
+            deltas_by_acc[acc] = {}
+        deltas_by_acc[acc][d] = deltas_by_acc[acc].get(d, 0) + amt_c
 
-    min_date = d if (min_date is None or d < min_date) else min_date
+        min_date = d if (min_date is None or d < min_date) else min_date
 
-  return deltas_by_acc, min_date
+    return deltas_by_acc, min_date
 
 
 def _recon_by_acc():
-  """
-  Returns:
-    {acc_id: (recon_date, recon_amount_cents)} for accounts with recon values.
-  """
-  recon = {}
-  accounts_whole = getattr(Global, "ACCOUNTS_WHOLE", []) or []
+    """
+    Returns:
+      {acc_id: (recon_date, recon_amount_cents)} for accounts with recon values.
+    """
+    recon = {}
+    accounts_whole = getattr(Global, "ACCOUNTS_WHOLE", []) or []
 
-  for a in accounts_whole:
-    acc_id = a.get("acc_id")
-    rd = a.get("recon_date")
-    ra = a.get("recon_amount")
+    for a in accounts_whole:
+        acc_id = a.get("acc_id")
+        rd = a.get("recon_date")
+        ra = a.get("recon_amount")
 
-    if not acc_id:
-      continue
-    if isinstance(rd, date) and ra is not None:
-      recon[acc_id] = (rd, int(ra))
+        if not acc_id:
+            continue
+        if isinstance(rd, date) and ra is not None:
+            recon[acc_id] = (rd, int(ra))
 
-  return recon
-
-def _daterange(self, start_d: date, end_d: date):
-  cur = start_d
-  while cur <= end_d:
-    yield cur
-    cur += timedelta(days=1)
+    return recon
 
 def _balance_series_for_account(start: date, end: date,
                                 deltas_by_day: dict,
                                 min_data_date: date,
                                 recon_tuple=None):
-  """
-  End-of-day balances (cents) for each day in [start..end].
+    """
+    End-of-day balances (cents) for each day in [start..end].
 
-  Rule:
-  - If recon exists: anchor on recon_date balance = recon_amount, work forwards and backwards.
-  - If no recon: anchor at earliest txn date balance = 0, work forwards/backwards.
-  """
-  if start > end:
-    return []
+    Rule:
+    - If recon exists: anchor on recon_date balance = recon_amount, work forwards and backwards.
+    - If no recon: anchor at earliest txn date balance = 0, work forwards/backwards.
+    """
+    if start > end:
+        return []
 
-  # Decide anchor
-  if recon_tuple is not None:
-    anchor_date, anchor_bal = recon_tuple
-  else:
-    anchor_date = min_data_date if isinstance(min_data_date, date) else start
-    anchor_bal = 0
+    # Decide anchor
+    if recon_tuple is not None:
+        anchor_date, anchor_bal = recon_tuple
+    else:
+        anchor_date = min_data_date if isinstance(min_data_date, date) else start
+        anchor_bal = 0
 
-  # Expand range to include anchor (so we can compute back/forward properly)
-  work_start = min(start, anchor_date)
-  work_end = max(end, anchor_date)
+    # Expand range to include anchor (so we can compute back/forward properly)
+    work_start = min(start, anchor_date)
+    work_end = max(end, anchor_date)
 
-  balances = {anchor_date: anchor_bal}
+    balances = {anchor_date: anchor_bal}
 
-  # forward: bal(d) = bal(d-1) + delta(d)
-  d = anchor_date + timedelta(days=1)
-  while d <= work_end:
-    balances[d] = balances[d - timedelta(days=1)] + deltas_by_day.get(d, 0)
-    d += timedelta(days=1)
+    # forward: bal(d) = bal(d-1) + delta(d)
+    d = anchor_date + timedelta(days=1)
+    while d <= work_end:
+        balances[d] = balances[d - timedelta(days=1)] + deltas_by_day.get(d, 0)
+        d += timedelta(days=1)
 
-  # backward:
-  # bal(d+1) = bal(d) + delta(d+1) => bal(d) = bal(d+1) - delta(d+1)
-  d = anchor_date - timedelta(days=1)
-  while d >= work_start:
-    balances[d] = balances[d + timedelta(days=1)] - deltas_by_day.get(d + timedelta(days=1), 0)
-    d -= timedelta(days=1)
+    # backward:
+    # bal(d+1) = bal(d) + delta(d+1) => bal(d) = bal(d+1) - delta(d+1)
+    d = anchor_date - timedelta(days=1)
+    while d >= work_start:
+        balances[d] = balances[d + timedelta(days=1)] - deltas_by_day.get(d + timedelta(days=1), 0)
+        d -= timedelta(days=1)
 
-  # Slice to requested window
-  return [balances.get(d, 0) for d in _daterange(start, end)]
+    # Slice to requested window
+    return [balances.get(d, 0) for d in _daterange(start, end)]
 
 
 # ============================================================
@@ -226,63 +215,80 @@ def _balance_series_for_account(start: date, end: date,
 # ============================================================
 
 def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot:
-  """
-  Multi-line balances by account over time, recon-aware.
-  Returns an Anvil Plot component.
-  """
-  accounts = getattr(Global, "ACCOUNTS", []) or []  # [(name, acc_id), ...]
-  acc_name_by_id = {acc_id: name for (name, acc_id) in accounts}
+    """
+    Multi-line balances by account over time, grouped by institution, recon-aware.
+    Returns an Anvil Plot component.
+    """
+    accounts = getattr(Global, "ACCOUNTS", []) or []  # [(name, acc_id, institution), ...]
+    acc_name_by_id = {acc_id: (name, institution) for (name, acc_id, institution) in accounts}
 
-  deltas_by_acc, min_d = _build_txn_deltas_by_acc()
-  recon = _recon_by_acc()
+    deltas_by_acc, min_d = _build_txn_deltas_by_acc()
+    recon = _recon_by_acc()
 
-  days = list(_daterange(start, end))
-  x = [d.isoformat() for d in days]
+    days = list(_daterange(start, end))
+    x = [d.isoformat() for d in days]
 
-  traces = []
+    traces = []
 
-  for acc_id, acc_name in sorted(acc_name_by_id.items(), key=lambda kv: kv[1].lower()):
-    deltas = deltas_by_acc.get(acc_id, {})
-    recon_tuple = recon.get(acc_id)
-
-    # If no activity and no recon, skip
-    if not deltas and recon_tuple is None:
-      continue
-
-    y_cents = _balance_series_for_account(
-      start=start,
-      end=end,
-      deltas_by_day=deltas,
-      min_data_date=min_d if min_d is not None else start,
-      recon_tuple=recon_tuple
-    )
-    y = [v / 100.0 for v in y_cents]
-
-    traces.append({
-      "type": "scatter",
-      "mode": "lines",
-      "name": acc_name,
-      "x": x,
-      "y": y,
-      "line": {"width": 2},
-      "hovertemplate": "<b>%{fullData.name}</b><br>%{x}<br>Balance: R%{y:,.2f}<extra></extra>"
-    })
-
-  layout = {
-    "height": height,
-    "margin": {"l": 10, "r": 10, "t": 20, "b": 10},
-    "showlegend": True,
-    "legend": {"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
-    "xaxis": {"showgrid": False, "fixedrange": True},
-    "yaxis": {
-      "showgrid": True,
-      "fixedrange": True,
-      "tickprefix": "R",
-      "tickformat": ","
+    # Define color palettes for institutions
+    institution_colors = {
+        "Investec": ["#FFA500", "#FFB347", "#FFD580"],  # Shades of orange
+        "FNB": ["#007BFF", "#3399FF", "#66B2FF"],       # Shades of blue
+        "Standard Bank": ["#228B22", "#32CD32", "#7CFC00"],  # Shades of green
+        "Other": ["#808080", "#A9A9A9", "#C0C0C0"]      # Shades of gray
     }
-  }
 
-  return _make_plot(traces, layout, height=height, interactive=False)
+    # Track color usage per institution
+    institution_color_index = {key: 0 for key in institution_colors}
+
+    for acc_id, (acc_name, institution) in sorted(acc_name_by_id.items(), key=lambda kv: kv[1][0].lower()):
+        deltas = deltas_by_acc.get(acc_id, {})
+        recon_tuple = recon.get(acc_id)
+
+        # If no activity and no recon, skip
+        if not deltas and recon_tuple is None:
+            continue
+
+        y_cents = _balance_series_for_account(
+            start=start,
+            end=end,
+            deltas_by_day=deltas,
+            min_data_date=min_d if min_d is not None else start,
+            recon_tuple=recon_tuple
+        )
+        y = [v / 100.0 for v in y_cents]
+
+        # Determine the color for the account based on its institution
+        institution_palette = institution_colors.get(institution, institution_colors["Other"])
+        color_index = institution_color_index[institution] % len(institution_palette)
+        color = institution_palette[color_index]
+        institution_color_index[institution] += 1
+
+        traces.append({
+            "type": "scatter",
+            "mode": "lines",
+            "name": f"{institution} - {acc_name}",
+            "x": x,
+            "y": y,
+            "line": {"width": 2, "color": color},
+            "hovertemplate": "<b>%{fullData.name}</b><br>%{x}<br>Balance: R%{y:,.2f}<extra></extra>"
+        })
+
+    layout = {
+        "height": height,
+        "margin": {"l": 10, "r": 10, "t": 20, "b": 10},
+        "showlegend": True,
+        "legend": {"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
+        "xaxis": {"showgrid": False, "fixedrange": True},
+        "yaxis": {
+            "showgrid": True,
+            "fixedrange": True,
+            "tickprefix": "R",
+            "tickformat": ","
+        }
+    }
+
+    return _make_plot(traces, layout, height=height, interactive=False)
 
 
 # ============================================================

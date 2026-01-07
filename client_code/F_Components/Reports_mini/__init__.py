@@ -13,6 +13,10 @@ import math
 from ...F_Global_Logic import Global,Responsive
 import re
 
+"""
+Base code for later edits
+"""
+
 
 class Reports_mini(Reports_miniTemplate):
   def __init__(self, full_screen=False, **properties):
