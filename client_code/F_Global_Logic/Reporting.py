@@ -476,7 +476,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
         "text": f"Range:<br>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}",
         "xref": "paper",
         "yref": "paper",
-        "x": 0.92,            # moved a bit left from the extreme right into the chart
+        "x": 0.94,            # moved a bit left from the extreme right into the chart
         "y": 0.02,            # bottom-right (paper coords)
         "xanchor": "right",
         "yanchor": "bottom",
