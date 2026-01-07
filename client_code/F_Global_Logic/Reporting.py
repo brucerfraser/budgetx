@@ -230,12 +230,15 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     traces = []
 
+    # running total across all accounts (float R)
+    totals = [0.0] * len(x)
+
     # Define a scalable color palette (20 base colors, each with 5 variations)
     base_colors = [
         "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF",  # Red, Green, Blue, Pink, Purple
-        "#FFC300", "#FF5733", "#DAF7A6", "#581845", "#C70039",  # Yellow, Orange, Light Green, Dark Purple, Crimson
-        "#900C3F", "#FF5733", "#33FFBD", "#FF33F6", "#33D4FF",  # Maroon, Coral, Teal, Magenta, Cyan
-        "#8D33FF", "#FF8D33", "#33FF8D", "#8DFF33", "#338DFF"   # Violet, Amber, Lime, Chartreuse, Azure
+        "#FFC300", "#FF8D33", "#DAF7A6", "#581845", "#C70039",  # Yellow, Orange, Light Green, Dark Purple, Crimson
+        "#900C3F", "#33FFBD", "#FF33F6", "#33D4FF", "#8D33FF",  # Maroon, Coral, Teal, Magenta, Cyan, Violet
+        "#FF8D33", "#33FF8D", "#8DFF33", "#338DFF"               # Amber, Lime, Chartreuse, Azure
     ]
     institution_colors = {}
     default_palette = ["#808080", "#A9A9A9", "#C0C0C0", "#D3D3D3", "#E0E0E0"]  # Shades of gray
@@ -254,15 +257,19 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
         for keyword, institution in keywords.items():
             if keyword.lower() in acc_name.lower():
                 return institution
-        return "Other"
+        # fallback: use first word as institution hint
+        first_word = (acc_name or "").split()[0] if acc_name else "Other"
+        return first_word or "Other"
 
     # Function to get or create a color palette for an institution
     def get_institution_palette(institution):
         if institution not in institution_colors:
-            # Assign a new color palette to the institution
             color_index = len(institution_colors) % len(base_colors)
             base_color = base_colors[color_index]
-            institution_colors[institution] = [base_color]  # Use base color directly
+            # create 5 tint/shade variations by adding alpha in rgba fill use and slightly altering hex for line colors
+            # keep line colors as solid hex, fill colors will use rgba with alpha later
+            palette = [base_color for _ in range(5)]
+            institution_colors[institution] = palette
         return institution_colors[institution]
 
     # Track color usage per institution
@@ -285,6 +292,10 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
         )
         y = [v / 100.0 for v in y_cents]
 
+        # add to running total
+        for i, v in enumerate(y):
+            totals[i] += v
+
         # Infer institution from account name
         institution = infer_institution(acc_name)
 
@@ -306,14 +317,51 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
             "hovertemplate": "<b>%{fullData.name}</b><br>%{x}<br>Balance: R%{y:,.2f}<extra></extra>"
         })
 
+    # add total area traces (drawn first so they appear behind account lines)
+    # positive area (green)
+    y_pos = [v if v > 0 else 0 for v in totals]
+    # negative area (negative values)
+    y_neg = [v if v < 0 else 0 for v in totals]
+
+    total_traces = []
+    # positive fill
+    total_traces.append({
+        "type": "scatter",
+        "mode": "lines",
+        "name": "Total (positive)",
+        "x": x,
+        "y": y_pos,
+        "line": {"width": 0, "color": "rgba(76,175,80,0.0)"},
+        "fill": "tozeroy",
+        "fillcolor": "rgba(76,175,80,0.18)",  # green with light alpha
+        "hovertemplate": "<b>Total</b><br>%{x}<br>R%{y:,.2f}<extra></extra>",
+        "showlegend": False
+    })
+    # negative fill
+    total_traces.append({
+        "type": "scatter",
+        "mode": "lines",
+        "name": "Total (negative)",
+        "x": x,
+        "y": y_neg,
+        "line": {"width": 0, "color": "rgba(229,57,53,0.0)"},
+        "fill": "tozeroy",
+        "fillcolor": "rgba(229,57,53,0.18)",  # red with light alpha
+        "hovertemplate": "<b>Total</b><br>%{x}<br>R%{y:,.2f}<extra></extra>",
+        "showlegend": False
+    })
+
+    # place total traces before account traces so they sit in the background
+    traces = total_traces + traces
+
     layout = {
         "height": height,
-        "margin": {"l": 10, "r": 10, "t": 40, "b": 40},  # Adjust margins for better label visibility
+        "margin": {"l": 50, "r": 10, "t": 40, "b": 60},  # bring left axis in, increase bottom for legend
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.3,  # Position legend below the plot
+            "y": -0.28,  # Position legend below the plot
             "xanchor": "center",
             "x": 0.5
         },
