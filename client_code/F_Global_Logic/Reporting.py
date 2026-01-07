@@ -464,20 +464,24 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
 
   layout = {
     "height": height,
-    # give room on the right for a date-range annotation; keep some bottom space for the annotation anchor
-    "margin": {"l": 10, "r": 150, "t": 20, "b": 40},
+    # reduced right margin and moved annotation slightly into the chart area
+    "margin": {"l": 10, "r": 80, "t": 20, "b": 40},
     "showlegend": True,
+    # make chart background transparent; keep legend box opaque so it remains readable
+    "paper_bgcolor": "rgba(0,0,0,0)",
+    "plot_bgcolor": "rgba(0,0,0,0)",
+    "legend": {"bgcolor": "rgba(255,255,255,0.95)"},
     "annotations": [
       {
         "text": f"Range:<br>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}",
         "xref": "paper",
         "yref": "paper",
-        "x": 1.02,            # just outside plotting area to the right
+        "x": 0.92,            # moved a bit left from the extreme right into the chart
         "y": 0.02,            # bottom-right (paper coords)
-        "xanchor": "left",
+        "xanchor": "right",
         "yanchor": "bottom",
         "showarrow": False,
-        "align": "left",
+        "align": "right",
         "font": {"size": 12, "color": "#222222"},
         "bordercolor": "#dddddd",
         "borderwidth": 1,
