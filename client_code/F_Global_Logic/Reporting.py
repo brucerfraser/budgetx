@@ -476,7 +476,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
         "text": f"Range:<br>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}",
         "xref": "paper",
         "yref": "paper",
-        "x": 0.94,            # moved a bit left from the extreme right into the chart
+        "x": 0.98,            # moved a bit left from the extreme right into the chart
         "y": 0.02,            # bottom-right (paper coords)
         "xanchor": "right",
         "yanchor": "bottom",
@@ -492,4 +492,123 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
   }
 
   return _make_plot(traces, layout, height=height, interactive=False)
+
+
+# ============================================================
+# PUBLIC: Category Variance (Graphic #2)
+# ============================================================
+
+def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot:
+    """
+    Horizontal grouped bar chart: Allocated Budget vs Actual Spending by main-category.
+    Data construction (budgets) is left minimal — actuals derived from transactions (as in category_pie_plot).
+    You will refine the budget numbers later; function currently uses 0 for budgets if none found.
+    """
+    txns = getattr(Global, "TRANSACTIONS", []) or []
+    cats = getattr(Global, "CATEGORIES", {}) or {}
+    main_cats = getattr(Global, "MAIN_CATS", {}) or {}
+    # optional budgets dict (keyed by main-category id) may be added to Global later
+    budgets = getattr(Global, "BUDGETS", {}) or {}
+
+    # build actual spend per main category (same convention as category_pie_plot)
+    totals_cents = {}
+    for t in txns:
+        d = t.get("date")
+        if not (isinstance(d, date) and start <= d <= end):
+            continue
+
+        cat_key = t.get("category")
+        if not cat_key or cat_key not in cats:
+            cat_id = "__uncat__"
+        else:
+            cat_id = cats.get(cat_key, {}).get("belongs_to") or "__uncat__"
+
+        # skip transfers (existing behaviour)
+        if cat_id == "ec8e0085-8408-43a2-953f-ebba24549d96":
+            continue
+
+        amt = t.get("amount")
+        if amt is None:
+            continue
+        amt_c = int(amt)
+        if amt_c >= 0:
+            continue  # only spend
+
+        default_main = ["Uncategorised", "#CCCCCC", "#000000"]
+        cat_name = (main_cats.get(cat_id) or default_main)[0]
+        totals_cents[cat_name] = totals_cents.get(cat_name, 0) + abs(amt_c)
+
+    # order categories same as pie (largest first)
+    items = sorted(totals_cents.items(), key=lambda kv: kv[1], reverse=True)
+    labels = [k for k, _ in items]
+    actuals = [v / 100.0 for _, v in items]
+
+    # build budgets array: try to resolve from Global.BUDGETS (optional), otherwise zeros
+    # budgets expected as {main_cat_name: cents} or {main_cat_id: cents} depending on future implementation
+    budget_vals = []
+    for name in labels:
+        b = 0
+        # try name-keyed budgets (non-breaking for now)
+        if isinstance(budgets, dict):
+            b_cents = budgets.get(name)
+            if b_cents is None:
+                # attempt to find by main_cats mapping (if budgets store by id)
+                for mid, info in main_cats.items():
+                    if info and info[0] == name and mid in budgets:
+                        b_cents = budgets.get(mid)
+                        break
+            if b_cents is not None:
+                b = int(b_cents) / 100.0
+        budget_vals.append(b)
+
+    # Colors (keep consistent with other charts)
+    actual_color = "#2b8cff"    # blue
+    budget_color = "#FF8D33"    # orange
+
+    # traces: grouped horizontal bars
+    traces = [
+        {
+            "type": "bar",
+            "name": "Actual Spending",
+            "orientation": "h",
+            "y": labels,
+            "x": actuals,
+            "marker": {"color": actual_color},
+            "hovertemplate": "<b>%{y}</b><br>Actual: R%{x:,.2f}<extra></extra>"
+        },
+        {
+            "type": "bar",
+            "name": "Allocated Budget",
+            "orientation": "h",
+            "y": labels,
+            "x": budget_vals,
+            "marker": {"color": budget_color},
+            "hovertemplate": "<b>%{y}</b><br>Budget: R%{x:,.2f}<extra></extra>"
+        }
+    ]
+
+    layout = {
+        "height": height,
+        "barmode": "group",
+        "margin": {"l": 220, "r": 40, "t": 40, "b": 60},  # large left margin for long category labels
+        "showlegend": True,
+        "legend": {"orientation": "h", "yanchor": "bottom", "y": -0.18, "xanchor": "center", "x": 0.5},
+        "xaxis": {
+            "title": "",
+            "tickprefix": "R",
+            "tickformat": ",.0f",
+            "showgrid": True,
+            "fixedrange": True
+        },
+        "yaxis": {
+            "automargin": True,
+            "categoryorder": "array",
+            "categoryarray": labels
+        },
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "title": {"text": "Budget vs Actual Analysis", "x": 0.5}
+    }
+
+    return _make_plot(traces, layout, height=height, interactive=False)
 
