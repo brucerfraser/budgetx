@@ -85,7 +85,7 @@ class Reports(ReportsTemplate):
       self._render_plot_component(plot)
 
     elif selected == "Category Variance + Income":
-      plot = Reporting.category_variance_plus_income_plot(start, end, height=500)
+      plot = Reporting.category_variance_plot(start, end, height=500,income=True)
       self._render_plot_component(plot)
 
     else:
