@@ -237,10 +237,8 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
         "#900C3F", "#FF5733", "#33FFBD", "#FF33F6", "#33D4FF",  # Maroon, Coral, Teal, Magenta, Cyan
         "#8D33FF", "#FF8D33", "#33FF8D", "#8DFF33", "#338DFF"   # Violet, Amber, Lime, Chartreuse, Azure
     ]
-    institution_colors = {f"Institution {i+1}": [f"{base_colors[i]}{hex(j)[2:]}" for j in range(5)] for i in range(20)}
-
-    # Add a default color palette for "Other"
-    institution_colors["Other"] = ["#808080", "#A9A9A9", "#C0C0C0", "#D3D3D3", "#E0E0E0"]  # Shades of gray
+    institution_colors = {}
+    default_palette = ["#808080", "#A9A9A9", "#C0C0C0", "#D3D3D3", "#E0E0E0"]  # Shades of gray
 
     # Function to infer institution from account name
     def infer_institution(acc_name):
@@ -258,8 +256,17 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
                 return institution
         return "Other"
 
+    # Function to get or create a color palette for an institution
+    def get_institution_palette(institution):
+        if institution not in institution_colors:
+            # Assign a new color palette to the institution
+            color_index = len(institution_colors) % len(base_colors)
+            base_color = base_colors[color_index]
+            institution_colors[institution] = [f"{base_color}{hex(i)[2:]}" for i in range(5)]
+        return institution_colors[institution]
+
     # Track color usage per institution
-    institution_color_index = {key: 0 for key in institution_colors}
+    institution_color_index = {}
 
     for acc_id, acc_name in sorted(acc_name_by_id.items(), key=lambda kv: kv[1].lower()):
         deltas = deltas_by_acc.get(acc_id, {})
@@ -281,8 +288,10 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
         # Infer institution from account name
         institution = infer_institution(acc_name)
 
-        # Determine the color for the account based on its institution
-        institution_palette = institution_colors.get(institution, institution_colors["Other"])
+        # Get the color palette for the institution
+        institution_palette = get_institution_palette(institution)
+        if institution not in institution_color_index:
+            institution_color_index[institution] = 0
         color_index = institution_color_index[institution] % len(institution_palette)
         color = institution_palette[color_index]
         institution_color_index[institution] += 1
