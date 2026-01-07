@@ -35,7 +35,7 @@ class Frame(FrameTemplate):
       butt = {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
       self.bottom_bar = BottomBar([butt])
       self.bottom_bar.set_event_handler("x-navigate", self._bottom_bar_navigate)
-      lbl = {'text':'Dashboard: Fraser Budget','role':'title','icon':'','future':'','colour':''}
+      lbl = {'text':'Dashboard: Github Budget','role':'title','icon':'','future':'','colour':''}
       self.top_bar = TopBar(lbl)
       # Add to the default slot so it exists on the page (CSS makes it fixed anyway)
       self.add_component(self.bottom_bar, slot="default")
