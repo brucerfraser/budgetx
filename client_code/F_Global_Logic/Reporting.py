@@ -531,10 +531,11 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             continue
         amt_c = int(amt)
 
+        # keep original signs: spends negative, incomes positive
         if amt_c < 0:
-            spends_by_main[main_id] = spends_by_main.get(main_id, 0) + abs(amt_c)
+            spends_by_main[main_id] = spends_by_main.get(main_id, 0) + amt_c  # negative total
         elif amt_c > 0:
-            incomes_by_main[main_id] = incomes_by_main.get(main_id, 0) + amt_c
+            incomes_by_main[main_id] = incomes_by_main.get(main_id, 0) + amt_c  # positive total
 
     # aggregate budgets by main-category id (cents) for periods inside selected months
     budgets_by_main = {}
@@ -582,32 +583,36 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
         name = (main_cats.get(mid) or default_main)[0]
         labels.append(name)
 
-        sp_c = spends_by_main.get(mid, 0)  # cents
-        in_c = incomes_by_main.get(mid, 0)  # cents
-        bud_c = budgets_by_main.get(mid, 0)  # cents
+        sp_c = spends_by_main.get(mid, 0)  # cents (negative or 0)
+        in_c = incomes_by_main.get(mid, 0)  # cents (positive or 0)
+        bud_c = budgets_by_main.get(mid, 0)  # cents (may be negative for spend budgets or positive for income)
 
         # classify budgets: if main category is Income, treat budgets as income budgets
         is_income_category = (name.strip().lower() == "income")
 
         if is_income_category:
-            b_income = bud_c / 100.0
+            # budgets/incomes are positive numbers for income
+            b_income = (bud_c or 0) / 100.0
+            a_income = (in_c or 0) / 100.0
+            # variance = actual - budget (negative => shortfall)
+            var = round(a_income - b_income, 2)
+            # spending fields zeroed
             b_spend = 0.0
-            a_income = in_c / 100.0
             a_spend = 0.0
-            # variance = budget_income - actual_income
-            var = round(b_income - a_income, 2)
         else:
+            # spend budgets may be stored negative; normalise to signed spend values
+            b_spend = (bud_c or 0) / 100.0
+            a_spend = (sp_c or 0) / 100.0  # sp_c is negative total of txn amounts
+            # variance = actual - budget (negative => over budget)
+            var = round(a_spend - b_spend, 2)
             b_income = 0.0
-            b_spend = bud_c / 100.0
             a_income = 0.0
-            a_spend = sp_c / 100.0
-            # variance = budget_spend - actual_spend
-            var = round(b_spend - a_spend, 2)
 
-        actuals_spend.append(a_spend)
-        budget_spend.append(b_spend)
-        actuals_income.append(a_income)
-        budget_income.append(b_income)
+        # store values for plotting/hover
+        actuals_spend.append(a_spend)            # negative for plotting left
+        budget_spend.append(b_spend)            # may be negative for spend budgets
+        actuals_income.append(a_income)         # positive
+        budget_income.append(b_income)          # positive
         variance_vals.append(var)
 
     # Colors as requested:
@@ -621,10 +626,13 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
     budget_income_color = "#8A2BE2"  # purple
     actual_income_color = "#2ecc71"  # green
 
-    variance_colors = [("#2ecc71" if v >= 0 else "#e53935") for v in variance_vals]
+    # negative variance => red (over/short), positive => green
+    variance_colors = [("#2ecc71" if v > 0 else "#e53935") for v in variance_vals]
 
-    # For spends we plot actuals to the left (negative x) so direction is obvious.
-    actuals_spend_plot = [-v for v in actuals_spend]
+    # prepare hover-friendly positive values for spends/budgets (plot uses signed values)
+    actuals_spend_plot = actuals_spend   # already negative when present
+    actuals_spend_hover = [abs(v) for v in actuals_spend]
+    budget_spend_hover = [abs(v) for v in budget_spend]
 
     traces = [
         {
@@ -633,7 +641,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             "orientation": "h",
             "y": labels,
             "x": actuals_spend_plot,
-            "customdata": actuals_spend,  # positive values for hover
+            "customdata": actuals_spend_hover,
             "marker": {"color": actual_spend_color},
             "hovertemplate": "<b>%{y}</b><br>Actual Spend: R%{customdata:,.2f}<extra></extra>"
         },
@@ -643,8 +651,9 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             "orientation": "h",
             "y": labels,
             "x": budget_spend,
+            "customdata": budget_spend_hover,
             "marker": {"color": budget_spend_color},
-            "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{x:,.2f}<extra></extra>"
+            "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{customdata:,.2f}<extra></extra>"
         },
         {
             "type": "bar",
@@ -678,7 +687,8 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
     layout = {
         "height": height,
         "barmode": "group",
-        "margin": {"l": 220, "r": 40, "t": 40, "b": 80},
+        # increase bottom margin to avoid overlap of x-axis ticks with legend
+        "margin": {"l": 220, "r": 40, "t": 40, "b": 110},
         "showlegend": True,
         "legend": {
             "orientation": "h",
@@ -704,7 +714,12 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
         },
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
-        "title": {"text": "Budget vs Actual Analysis", "x": 0.5, "font": {"color": "#ffffff", "size": 14}}
+        "title": {
+            "text": f"Budget vs Actual Analysis<br><span style='font-size:12px;color:#dddddd'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
+            "x": 0.5,
+            "xanchor": "center",
+            "font": {"color": "#ffffff", "size": 14}
+        }
     }
 
     return _make_plot(traces, layout, height=height, interactive=False)
