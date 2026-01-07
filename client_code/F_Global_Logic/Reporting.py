@@ -494,7 +494,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
 # PUBLIC: Category Variance (Graphic #2)
 # ============================================================
 
-def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot:
+def category_variance_plot(start: date, end: date, *, height: int = 360, income: bool = False) -> Plot:
     """
     Horizontal grouped bar chart showing Budget vs Actual and Variance per main-category.
     - Budgets come from BUDGET.all_budgets (list of dicts with keys: belongs_to (sub-cat id),
@@ -554,20 +554,29 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
 
     # build master list of main_ids to display (include budget-only and income)
     main_ids = set(spends_by_main) | set(incomes_by_main) | set(budgets_by_main) | set(main_cats.keys())
+
+    # If caller requests to exclude income rows, drop the Income main_id early
+    if not income:
+        for mid, info in main_cats.items():
+            if info and info[0].strip().lower() == "income":
+                main_ids.discard(mid)
+                break
+
     # sort by total activity (spend + income) descending
     def _activity_value(mid):
         return (spends_by_main.get(mid, 0) + incomes_by_main.get(mid, 0))
     ordered = sorted(list(main_ids), key=_activity_value, reverse=True)
 
-    # ensure Income appears at top if present
-    income_mid = None
-    for mid, info in main_cats.items():
-        if info and info[0].strip().lower() == "income":
-            income_mid = mid
-            break
-    if income_mid and income_mid in ordered:
-        ordered.remove(income_mid)
-        ordered.insert(0, income_mid)
+    # ensure Income appears at top if present and we're including income
+    if income:
+        income_mid = None
+        for mid, info in main_cats.items():
+            if info and info[0].strip().lower() == "income":
+                income_mid = mid
+                break
+        if income_mid and income_mid in ordered:
+            ordered.remove(income_mid)
+            ordered.insert(0, income_mid)
 
     # build plotting arrays (values in R)
     labels = []
@@ -629,12 +638,26 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
     # negative variance => red (over/short), positive => green
     variance_colors = [("#2ecc71" if v > 0 else "#e53935") for v in variance_vals]
 
-    # prepare hover-friendly positive values for spends/budgets (plot uses signed values)
-    actuals_spend_plot = actuals_spend   # already negative when present
+    # prepare plotting values: ensure spend budgets and actuals are negative for left-side plotting,
+    # while hover/customdata carries positive magnitudes for human-friendly display.
+    actuals_spend_plot = [-abs(v) for v in actuals_spend]
     actuals_spend_hover = [abs(v) for v in actuals_spend]
+    budget_spend_plot = [-abs(v) for v in budget_spend]
     budget_spend_hover = [abs(v) for v in budget_spend]
 
+    # build traces with explicit colours and offsetgroups so bars don't visually merge
     traces = [
+        {
+            "type": "bar",
+            "name": "Allocated Budget (Spend)",
+            "orientation": "h",
+            "y": labels,
+            "x": budget_spend_plot,
+            "customdata": budget_spend_hover,
+            "marker": {"color": budget_spend_color, "line": {"width": 1, "color": "#111111"}},
+            "offsetgroup": "spend",
+            "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{customdata:,.2f}<extra></extra>"
+        },
         {
             "type": "bar",
             "name": "Actual Spending",
@@ -642,18 +665,23 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             "y": labels,
             "x": actuals_spend_plot,
             "customdata": actuals_spend_hover,
-            "marker": {"color": actual_spend_color},
+            "marker": {"color": actual_spend_color, "line": {"width": 1, "color": "#111111"}},
+            "offsetgroup": "spend",
             "hovertemplate": "<b>%{y}</b><br>Actual Spend: R%{customdata:,.2f}<extra></extra>"
-        },
+        }
+    ]
+
+    # income traces (positive -> right)
+    traces += [
         {
             "type": "bar",
-            "name": "Allocated Budget (Spend)",
+            "name": "Allocated Budget (Income)",
             "orientation": "h",
             "y": labels,
-            "x": budget_spend,
-            "customdata": budget_spend_hover,
-            "marker": {"color": budget_spend_color},
-            "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{customdata:,.2f}<extra></extra>"
+            "x": budget_income,
+            "marker": {"color": budget_income_color, "line": {"width": 1, "color": "#111111"}},
+            "offsetgroup": "income",
+            "hovertemplate": "<b>%{y}</b><br>Budget (Income): R%{x:,.2f}<extra></extra>"
         },
         {
             "type": "bar",
@@ -661,33 +689,30 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             "orientation": "h",
             "y": labels,
             "x": actuals_income,
-            "marker": {"color": actual_income_color},
+            "marker": {"color": actual_income_color, "line": {"width": 1, "color": "#111111"}},
+            "offsetgroup": "income",
             "hovertemplate": "<b>%{y}</b><br>Actual Income: R%{x:,.2f}<extra></extra>"
-        },
-        {
-            "type": "bar",
-            "name": "Allocated Budget (Income)",
-            "orientation": "h",
-            "y": labels,
-            "x": budget_income,
-            "marker": {"color": budget_income_color},
-            "hovertemplate": "<b>%{y}</b><br>Budget (Income): R%{x:,.2f}<extra></extra>"
-        },
-        {
-            "type": "bar",
-            "name": "Variance (Budget − Actual)",
-            "orientation": "h",
-            "y": labels,
-            "x": variance_vals,
-            "marker": {"color": variance_colors},
-            "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
         }
     ]
 
+    # variance trace (kept last)
+    traces.append({
+        "type": "bar",
+        "name": "Variance (Budget − Actual)",
+        "orientation": "h",
+        "y": labels,
+        "x": variance_vals,
+        "marker": {"color": variance_colors, "line": {"width": 1, "color": "#111111"}},
+        "offsetgroup": "variance",
+        "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
+    })
+
     layout = {
         "height": height,
+        # grouped mode with small gaps; increased bottom margin already set
         "barmode": "group",
-        # increase bottom margin to avoid overlap of x-axis ticks with legend
+        "bargap": 0.18,
+        "bargroupgap": 0.08,
         "margin": {"l": 220, "r": 40, "t": 40, "b": 110},
         "showlegend": True,
         "legend": {
