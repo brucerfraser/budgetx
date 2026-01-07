@@ -486,7 +486,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
     "plot_bgcolor": "rgba(0,0,0,0)",
     "legend": {"bgcolor": "rgba(255,255,255,0.95)"},
     "title": {
-      "text": f"Spend by Category<br><span style='font-size:12px;color:#666'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
+      "text": f"Spend by Category<br><span style='font-size:12px;color:#ffffff'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
       "x": 0.5,
       "xanchor": "center",
       "yanchor": "top",
@@ -652,8 +652,10 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
     budget_spend_plot = [-abs(v) for v in budget_spend]
     budget_spend_hover = [abs(v) for v in budget_spend]
 
-    # build traces with explicit colours and offsetgroups so bars don't visually merge
-    traces = [
+    # Split into two side-by-side panels:
+    # - left panel (domain 0..0.48): spend budgets & actuals (plotted negative values so bars go left)
+    # - right panel (domain 0.52..1): income budgets & actuals + variance (bars go right)
+    left_traces = [
         {
             "type": "bar",
             "name": "Allocated Budget (Spend)",
@@ -663,6 +665,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "customdata": budget_spend_hover,
             "marker": {"color": budget_spend_color, "line": {"width": 1, "color": "#111111"}},
             "offsetgroup": "spend_bud",
+            "xaxis": "x",  # left x-axis
             "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{customdata:,.2f}<extra></extra>"
         },
         {
@@ -674,12 +677,12 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "customdata": actuals_spend_hover,
             "marker": {"color": actual_spend_color, "line": {"width": 1, "color": "#111111"}},
             "offsetgroup": "spend_act",
+            "xaxis": "x",
             "hovertemplate": "<b>%{y}</b><br>Actual Spend: R%{customdata:,.2f}<extra></extra>"
         }
     ]
 
-    # income traces (positive -> right)
-    traces += [
+    right_traces = [
         {
             "type": "bar",
             "name": "Allocated Budget (Income)",
@@ -688,6 +691,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "x": budget_income,
             "marker": {"color": budget_income_color, "line": {"width": 1, "color": "#111111"}},
             "offsetgroup": "income_bud",
+            "xaxis": "x2",
             "hovertemplate": "<b>%{y}</b><br>Budget (Income): R%{x:,.2f}<extra></extra>"
         },
         {
@@ -698,40 +702,43 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "x": actuals_income,
             "marker": {"color": actual_income_color, "line": {"width": 1, "color": "#111111"}},
             "offsetgroup": "income_act",
+            "xaxis": "x2",
             "hovertemplate": "<b>%{y}</b><br>Actual Income: R%{x:,.2f}<extra></extra>"
+        },
+        {
+            "type": "bar",
+            "name": "Variance (Budget − Actual)",
+            "orientation": "h",
+            "y": labels,
+            "x": variance_vals,
+            "marker": {"color": variance_colors, "line": {"width": 1, "color": "#111111"}},
+            "offsetgroup": "variance",
+            "xaxis": "x2",
+            "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
         }
     ]
 
-    # variance trace (kept last)
-    traces.append({
-        "type": "bar",
-        "name": "Variance (Budget − Actual)",
-        "orientation": "h",
-        "y": labels,
-        "x": variance_vals,
-        "marker": {"color": variance_colors, "line": {"width": 1, "color": "#111111"}},
-        "offsetgroup": "variance",
-        "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
-    })
+    traces = left_traces + right_traces
 
     layout = {
         "height": height,
-        # grouped mode with small gaps; increase bottom margin so legend sits below plot area
         "barmode": "group",
-        "bargap": 0.18,
-        "bargroupgap": 0.08,
+        "bargap": 0.12,
+        "bargroupgap": 0.05,
         # raise plot area by increasing bottom margin and slightly reducing top
-        "margin": {"l": 220, "r": 40, "t": 20, "b": 160},
+        "margin": {"l": 240, "r": 40, "t": 20, "b": 180},
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.36,
+            "y": -0.42,
             "xanchor": "center",
             "x": 0.5,
             "font": {"color": "#ffffff", "size": 12}
         },
+        # left x-axis (spend) — domain left half
         "xaxis": {
+            "domain": [0.0, 0.48],
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
@@ -739,11 +746,24 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "fixedrange": True,
             "tickfont": {"color": "#ffffff", "size": 11}
         },
+        # right x-axis (income & variance) — domain right half
+        "xaxis2": {
+            "domain": [0.52, 1.0],
+            "anchor": "y",
+            "title": "",
+            "tickprefix": "R",
+            "tickformat": ",.0f",
+            "showgrid": True,
+            "fixedrange": True,
+            "tickfont": {"color": "#ffffff", "size": 11}
+        },
+        # single shared y-axis (categories) between both panels
         "yaxis": {
             "automargin": True,
             "categoryorder": "array",
             "categoryarray": labels,
-            "tickfont": {"color": "#ffffff", "size": 12}
+            "tickfont": {"color": "#ffffff", "size": 12},
+            "domain": [0, 1]
         },
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
@@ -756,4 +776,5 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
     }
 
     return _make_plot(traces, layout, height=height, interactive=False)
+``` 
 
