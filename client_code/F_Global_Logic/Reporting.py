@@ -743,6 +743,33 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
 
     traces = left_traces + right_traces
 
+    # calculate explicit numeric ranges to avoid Plotly autoscaling mixing domains
+    # left (spend) values are negative (bars to the left)
+    left_vals = [v for v in (budget_spend_plot + actuals_spend_plot) if v is not None]
+    if left_vals:
+        left_min = min(left_vals)
+        # leave small headroom
+        left_range = [left_min * 1.12, 0]
+    else:
+        left_range = [-1, 0]
+
+    # right (income) values are positive
+    right_vals = [v for v in (budget_income + actuals_income) if v is not None]
+    if right_vals:
+        right_max = max(right_vals)
+        right_range = [0, max(1, right_max * 1.12)]
+    else:
+        right_range = [0, 1]
+
+    # variance: symmetric about zero for clear interpretation
+    if variance_vals:
+        vmin = min(variance_vals)
+        vmax = max(variance_vals)
+        m = max(abs(vmin), abs(vmax), 1)
+        center_range = [-m * 1.12, m * 1.12]
+    else:
+        center_range = [-1, 1]
+
     layout = {
         "height": height,
         "barmode": "group",
@@ -763,6 +790,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
         "xaxis": {
             "type": "linear",
             "domain": [0.0, 0.40],
+            "range": left_range,
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
@@ -775,6 +803,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "type": "linear",
             "domain": [0.42, 0.58],
             "anchor": "y",
+            "range": center_range,
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
@@ -791,6 +820,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "type": "linear",
             "domain": [0.60, 1.0],
             "anchor": "y",
+            "range": right_range,
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
