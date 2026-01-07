@@ -47,7 +47,9 @@ def all_categories():
     display = MAIN_CATS[row['belongs_to']][0] + " - " + row['name']
     CATEGORIES[row['sub_category_id']] = {'display':display,'colour':MAIN_CATS[row['belongs_to']][1],'belongs_to':row['belongs_to']}
   # one special last line for transfers
-  CATEGORIES['ec8e0085-8408-43a2-953f-ebba24549d96'] = {'display':'Transfer','colour':MAIN_CATS['ec8e0085-8408-43a2-953f-ebba24549d96'][1]}
+  CATEGORIES['ec8e0085-8408-43a2-953f-ebba24549d96'] = {'display':'Transfer',
+                                                        'colour':MAIN_CATS['ec8e0085-8408-43a2-953f-ebba24549d96'][1],
+                                                        'belongs_to':'ec8e0085-8408-43a2-953f-ebba24549d96'}
     
 
 def new_id_needed():

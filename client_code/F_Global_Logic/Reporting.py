@@ -420,6 +420,8 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
     cat_id = cats[t.get("category")]['belongs_to']
     if not cat_id:
       continue
+    if cat_id == "ec8e0085-8408-43a2-953f-ebba24549d96":
+      continue  # skip transfers
 
     amt = t.get("amount")
     if amt is None:
