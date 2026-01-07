@@ -239,6 +239,9 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
     ]
     institution_colors = {f"Institution {i+1}": [f"{base_colors[i]}{hex(j)[2:]}" for j in range(5)] for i in range(20)}
 
+    # Add a default color palette for "Other"
+    institution_colors["Other"] = ["#808080", "#A9A9A9", "#C0C0C0", "#D3D3D3", "#E0E0E0"]  # Shades of gray
+
     # Function to infer institution from account name
     def infer_institution(acc_name):
         keywords = {
