@@ -776,5 +776,5 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
     }
 
     return _make_plot(traces, layout, height=height, interactive=False)
-``` 
+
 
