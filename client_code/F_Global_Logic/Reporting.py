@@ -652,9 +652,10 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
     budget_spend_plot = [-abs(v) for v in budget_spend]
     budget_spend_hover = [abs(v) for v in budget_spend]
 
-    # Split into two side-by-side panels:
-    # - left panel (domain 0..0.48): spend budgets & actuals (plotted negative values so bars go left)
-    # - right panel (domain 0.52..1): income budgets & actuals + variance (bars go right)
+    # Split into three side-by-side panels:
+    # - left panel (domain 0..0.40): spend budgets & actuals (plotted negative values so bars go left)
+    # - center panel (domain 0.42..0.58): variance (bars around zero)
+    # - right panel (domain 0.60..1): income budgets & actuals (bars go right)
     left_traces = [
         {
             "type": "bar",
@@ -713,7 +714,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "x": variance_vals,
             "marker": {"color": variance_colors, "line": {"width": 1, "color": "#111111"}},
             "offsetgroup": "variance",
-            "xaxis": "x2",
+            "xaxis": "x3",   # moved variance to center axis
             "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
         }
     ]
@@ -736,9 +737,9 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "x": 0.5,
             "font": {"color": "#ffffff", "size": 12}
         },
-        # left x-axis (spend) — domain left half
+        # left x-axis (spend) — domain left third
         "xaxis": {
-            "domain": [0.0, 0.48],
+            "domain": [0.0, 0.40],
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
@@ -746,9 +747,23 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "fixedrange": True,
             "tickfont": {"color": "#ffffff", "size": 11}
         },
-        # right x-axis (income & variance) — domain right half
+        # center x-axis (variance) — narrow middle column around zero
+        "xaxis3": {
+            "domain": [0.42, 0.58],
+            "anchor": "y",
+            "title": "",
+            "tickprefix": "R",
+            "tickformat": ",.0f",
+            "showgrid": True,
+            "fixedrange": True,
+            "tickfont": {"color": "#ffffff", "size": 11},
+            "zeroline": True,
+            "zerolinewidth": 1,
+            "zerolinecolor": "#888888"
+        },
+        # right x-axis (income) — domain right third
         "xaxis2": {
-            "domain": [0.52, 1.0],
+            "domain": [0.60, 1.0],
             "anchor": "y",
             "title": "",
             "tickprefix": "R",
@@ -757,7 +772,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "fixedrange": True,
             "tickfont": {"color": "#ffffff", "size": 11}
         },
-        # single shared y-axis (categories) between both panels
+        # single shared y-axis (categories) between all panels
         "yaxis": {
             "automargin": True,
             "categoryorder": "array",
