@@ -262,7 +262,7 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
             # Assign a new color palette to the institution
             color_index = len(institution_colors) % len(base_colors)
             base_color = base_colors[color_index]
-            institution_colors[institution] = [f"{base_color}{hex(i)[2:]}" for i in range(5)]
+            institution_colors[institution] = [base_color]  # Use base color directly
         return institution_colors[institution]
 
     # Track color usage per institution
@@ -308,9 +308,15 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     layout = {
         "height": height,
-        "margin": {"l": 10, "r": 10, "t": 20, "b": 10},
+        "margin": {"l": 10, "r": 10, "t": 40, "b": 40},  # Adjust margins for better label visibility
         "showlegend": True,
-        "legend": {"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "left", "x": 0},
+        "legend": {
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": -0.3,  # Position legend below the plot
+            "xanchor": "center",
+            "x": 0.5
+        },
         "xaxis": {"showgrid": False, "fixedrange": True},
         "yaxis": {
             "showgrid": True,
