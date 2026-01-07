@@ -490,7 +490,7 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
       "x": 0.5,
       "xanchor": "center",
       "yanchor": "top",
-      "font": {"size": 14, "color": "#222222"}
+      "font": {"size": 14, "color": "#ffffff"}
     }
   }
 
@@ -662,7 +662,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "x": budget_spend_plot,
             "customdata": budget_spend_hover,
             "marker": {"color": budget_spend_color, "line": {"width": 1, "color": "#111111"}},
-            "offsetgroup": "spend",
+            "offsetgroup": "spend_bud",
             "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{customdata:,.2f}<extra></extra>"
         },
         {
@@ -673,7 +673,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "x": actuals_spend_plot,
             "customdata": actuals_spend_hover,
             "marker": {"color": actual_spend_color, "line": {"width": 1, "color": "#111111"}},
-            "offsetgroup": "spend",
+            "offsetgroup": "spend_act",
             "hovertemplate": "<b>%{y}</b><br>Actual Spend: R%{customdata:,.2f}<extra></extra>"
         }
     ]
@@ -687,7 +687,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "y": labels,
             "x": budget_income,
             "marker": {"color": budget_income_color, "line": {"width": 1, "color": "#111111"}},
-            "offsetgroup": "income",
+            "offsetgroup": "income_bud",
             "hovertemplate": "<b>%{y}</b><br>Budget (Income): R%{x:,.2f}<extra></extra>"
         },
         {
@@ -697,7 +697,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "y": labels,
             "x": actuals_income,
             "marker": {"color": actual_income_color, "line": {"width": 1, "color": "#111111"}},
-            "offsetgroup": "income",
+            "offsetgroup": "income_act",
             "hovertemplate": "<b>%{y}</b><br>Actual Income: R%{x:,.2f}<extra></extra>"
         }
     ]
@@ -716,16 +716,17 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
 
     layout = {
         "height": height,
-        # grouped mode with small gaps; increased bottom margin already set
+        # grouped mode with small gaps; increase bottom margin so legend sits below plot area
         "barmode": "group",
         "bargap": 0.18,
         "bargroupgap": 0.08,
-        "margin": {"l": 220, "r": 40, "t": 40, "b": 110},
+        # raise plot area by increasing bottom margin and slightly reducing top
+        "margin": {"l": 220, "r": 40, "t": 20, "b": 160},
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.18,
+            "y": -0.36,
             "xanchor": "center",
             "x": 0.5,
             "font": {"color": "#ffffff", "size": 12}
