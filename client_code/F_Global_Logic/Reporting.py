@@ -216,11 +216,11 @@ def _balance_series_for_account(start: date, end: date,
 
 def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot:
     """
-    Multi-line balances by account over time, grouped by institution, recon-aware.
+    Multi-line balances by account over time, grouped by inferred institution, recon-aware.
     Returns an Anvil Plot component.
     """
-    accounts = getattr(Global, "ACCOUNTS", []) or []  # [(name, acc_id, institution), ...]
-    acc_name_by_id = {acc_id: (name, institution) for (name, acc_id, institution) in accounts}
+    accounts = getattr(Global, "ACCOUNTS_WHOLE", []) or []  # [{"acc_name": ..., "acc_id": ...}, ...]
+    acc_name_by_id = {acc["acc_id"]: acc["acc_name"] for acc in accounts}
 
     deltas_by_acc, min_d = _build_txn_deltas_by_acc()
     recon = _recon_by_acc()
@@ -230,18 +230,35 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     traces = []
 
-    # Define color palettes for institutions
-    institution_colors = {
-        "Investec": ["#FFA500", "#FFB347", "#FFD580"],  # Shades of orange
-        "FNB": ["#007BFF", "#3399FF", "#66B2FF"],       # Shades of blue
-        "Standard Bank": ["#228B22", "#32CD32", "#7CFC00"],  # Shades of green
-        "Other": ["#808080", "#A9A9A9", "#C0C0C0"]      # Shades of gray
-    }
+    # Define a scalable color palette (20 base colors, each with 5 variations)
+    base_colors = [
+        "#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF",  # Red, Green, Blue, Pink, Purple
+        "#FFC300", "#FF5733", "#DAF7A6", "#581845", "#C70039",  # Yellow, Orange, Light Green, Dark Purple, Crimson
+        "#900C3F", "#FF5733", "#33FFBD", "#FF33F6", "#33D4FF",  # Maroon, Coral, Teal, Magenta, Cyan
+        "#8D33FF", "#FF8D33", "#33FF8D", "#8DFF33", "#338DFF"   # Violet, Amber, Lime, Chartreuse, Azure
+    ]
+    institution_colors = {f"Institution {i+1}": [f"{base_colors[i]}{hex(j)[2:]}" for j in range(5)] for i in range(20)}
+
+    # Function to infer institution from account name
+    def infer_institution(acc_name):
+        keywords = {
+            "Investec": "Investec",
+            "FNB": "FNB",
+            "Standard": "Standard Bank",
+            "Capitec": "Capitec",
+            "Nedbank": "Nedbank",
+            "ABSA": "ABSA",
+            "Discovery": "Discovery Bank"
+        }
+        for keyword, institution in keywords.items():
+            if keyword.lower() in acc_name.lower():
+                return institution
+        return "Other"
 
     # Track color usage per institution
     institution_color_index = {key: 0 for key in institution_colors}
 
-    for acc_id, (acc_name, institution) in sorted(acc_name_by_id.items(), key=lambda kv: kv[1][0].lower()):
+    for acc_id, acc_name in sorted(acc_name_by_id.items(), key=lambda kv: kv[1].lower()):
         deltas = deltas_by_acc.get(acc_id, {})
         recon_tuple = recon.get(acc_id)
 
@@ -257,6 +274,9 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
             recon_tuple=recon_tuple
         )
         y = [v / 100.0 for v in y_cents]
+
+        # Infer institution from account name
+        institution = infer_institution(acc_name)
 
         # Determine the color for the account based on its institution
         institution_palette = institution_colors.get(institution, institution_colors["Other"])
