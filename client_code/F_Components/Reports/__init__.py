@@ -98,6 +98,7 @@ class Reports(ReportsTemplate):
     # For now: just update label. Button triggers render.
     # If you want live-update later: call self._render_selected_visual()
 
+  @handle('drop_down_1','change')
   def drop_down_1_change(self, **event_args):
     # optional: keep UI ready; still render only on button click
     self.button_1_click()
