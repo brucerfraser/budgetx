@@ -263,12 +263,26 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     # Function to get or create a color palette for an institution
     def get_institution_palette(institution):
+        # helper: hex -> (r,g,b)
+        def _hex_to_rgb(h):
+            h = h.lstrip('#')
+            return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+
+        # helper: (r,g,b) -> hex
+        def _rgb_to_hex(rgb):
+            return "#{:02x}{:02x}{:02x}".format(*[max(0, min(255, int(x))) for x in rgb])
+
+        # blend rgb towards white by factor (0 -> original, 1 -> white)
+        def _blend_with_white(rgb, factor):
+            return tuple(round(c + (255 - c) * factor) for c in rgb)
+
         if institution not in institution_colors:
             color_index = len(institution_colors) % len(base_colors)
             base_color = base_colors[color_index]
-            # create 5 tint/shade variations by adding alpha in rgba fill use and slightly altering hex for line colors
-            # keep line colors as solid hex, fill colors will use rgba with alpha later
-            palette = [base_color for _ in range(5)]
+            base_rgb = _hex_to_rgb(base_color)
+            # create 5 distinguishable variations by blending with white at increasing factors
+            factors = [0.0, 0.25, 0.45, 0.65, 0.85]
+            palette = [_rgb_to_hex(_blend_with_white(base_rgb, f)) for f in factors]
             institution_colors[institution] = palette
         return institution_colors[institution]
 
@@ -356,15 +370,17 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     layout = {
         "height": height,
-        # nudge the plotting area to the right so the left y-axis labels have more room
-        "margin": {"l": 72, "r": 10, "t": 40, "b": 60},
+        # give more room at the bottom for the legend so it no longer crowds the y-axis tick labels
+        "margin": {"l": 72, "r": 10, "t": 40, "b": 110},
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.26,
+            "y": -0.36,               # push legend further below plot area
             "xanchor": "center",
-            "x": 0.5
+            "x": 0.5,
+            "font": {"size": 11},     # slightly smaller legend font to reduce crowding
+            "traceorder": "normal"
         },
         "xaxis": {"showgrid": False, "fixedrange": True},
         "yaxis": {
