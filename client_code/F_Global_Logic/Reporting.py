@@ -464,8 +464,25 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
 
   layout = {
     "height": height,
-    "margin": {"l": 10, "r": 10, "t": 20, "b": 10},
-    "showlegend": True
+    # give room on the right for a date-range annotation
+    "margin": {"l": 10, "r": 150, "t": 20, "b": 10},
+    "showlegend": True,
+    "annotations": [
+      {
+        "text": f"Range:<br>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}",
+        "xref": "paper",
+        "yref": "paper",
+        "x": 1.02,            # slightly outside the plotting area to the right
+        "y": 0.5,
+        "showarrow": False,
+        "align": "left",
+        "font": {"size": 12, "color": "#222222"},
+        "bordercolor": "#dddddd",
+        "borderwidth": 1,
+        "bgcolor": "rgba(255,255,255,0.9)",
+        "opacity": 0.95
+      }
+    ]
   }
 
   return _make_plot(traces, layout, height=height, interactive=False)
