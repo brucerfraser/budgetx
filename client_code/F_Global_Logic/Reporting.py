@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from anvil import Plot
 import plotly.graph_objects as go  # OK to keep, but we won't use Figure/add_trace
 
-from . import Global
+from . import Global,BUDGET
 
 
 # ============================================================
@@ -501,14 +501,14 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
 def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot:
     """
     Horizontal grouped bar chart: Allocated Budget vs Actual Spending by main-category.
-    Data construction (budgets) is left minimal — actuals derived from transactions (as in category_pie_plot).
-    You will refine the budget numbers later; function currently uses 0 for budgets if none found.
+    Budgets come from BUDGET.all_budgets (list of dicts with keys: belongs_to (sub-cat id),
+    period (date, usually first of month), budget_amount (int cents)). We sum budgets for
+    periods that fall within the selected date range and roll sub-cat budgets up to main-cat.
     """
     txns = getattr(Global, "TRANSACTIONS", []) or []
     cats = getattr(Global, "CATEGORIES", {}) or {}
     main_cats = getattr(Global, "MAIN_CATS", {}) or {}
-    # optional budgets dict (keyed by main-category id) may be added to Global later
-    budgets = getattr(Global, "BUDGETS", {}) or {}
+    all_budgets = getattr(BUDGET, "all_budgets", []) or []
 
     # build actual spend per main category (same convention as category_pie_plot)
     totals_cents = {}
@@ -519,12 +519,12 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
 
         cat_key = t.get("category")
         if not cat_key or cat_key not in cats:
-            cat_id = "__uncat__"
+            main_id = "__uncat__"
         else:
-            cat_id = cats.get(cat_key, {}).get("belongs_to") or "__uncat__"
+            main_id = cats.get(cat_key, {}).get("belongs_to") or "__uncat__"
 
         # skip transfers (existing behaviour)
-        if cat_id == "ec8e0085-8408-43a2-953f-ebba24549d96":
+        if main_id == "ec8e0085-8408-43a2-953f-ebba24549d96":
             continue
 
         amt = t.get("amount")
@@ -534,38 +534,52 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
         if amt_c >= 0:
             continue  # only spend
 
-        default_main = ["Uncategorised", "#CCCCCC", "#000000"]
-        cat_name = (main_cats.get(cat_id) or default_main)[0]
-        totals_cents[cat_name] = totals_cents.get(cat_name, 0) + abs(amt_c)
+        totals_cents[main_id] = totals_cents.get(main_id, 0) + abs(amt_c)
 
-    # order categories same as pie (largest first)
+    # Build budgets aggregated to main-category for the selected months
+    budgets_by_main = {}
+    # normalise start/end to first-of-month for comparison
+    start_month = _first_of_month(start)
+    end_month = _first_of_month(end)
+    for b in all_budgets:
+        period = b.get("period")
+        if not isinstance(period, date):
+            continue
+        period_month = _first_of_month(period)
+        if period_month < start_month or period_month > end_month:
+            continue
+        sub_cat = b.get("belongs_to")
+        # map sub-cat -> main-cat id
+        main_id = (cats.get(sub_cat) or {}).get("belongs_to") or "__uncat__"
+        budgets_by_main[main_id] = budgets_by_main.get(main_id, 0) + int(b.get("budget_amount", 0))
+
+    # merge names: create list of categories ordered same as pie (by actuals desc)
     items = sorted(totals_cents.items(), key=lambda kv: kv[1], reverse=True)
-    labels = [k for k, _ in items]
-    actuals = [v / 100.0 for _, v in items]
-
-    # build budgets array: try to resolve from Global.BUDGETS (optional), otherwise zeros
-    # budgets expected as {main_cat_name: cents} or {main_cat_id: cents} depending on future implementation
+    # include any budget-only main categories that had no actuals
+    for mid in budgets_by_main:
+        if mid not in dict(items):
+            items.append((mid, 0))
+    # convert ids to display names
+    labels = []
+    actuals = []
     budget_vals = []
-    for name in labels:
-        b = 0
-        # try name-keyed budgets (non-breaking for now)
-        if isinstance(budgets, dict):
-            b_cents = budgets.get(name)
-            if b_cents is None:
-                # attempt to find by main_cats mapping (if budgets store by id)
-                for mid, info in main_cats.items():
-                    if info and info[0] == name and mid in budgets:
-                        b_cents = budgets.get(mid)
-                        break
-            if b_cents is not None:
-                b = int(b_cents) / 100.0
-        budget_vals.append(b)
+    default_main = ["Uncategorised", "#CCCCCC", "#000000"]
+    for mid, actual_cents in items:
+        name = (main_cats.get(mid) or default_main)[0]
+        labels.append(name)
+        actuals.append(actual_cents / 100.0)
+        budget_cents = budgets_by_main.get(mid, 0)
+        budget_vals.append(budget_cents / 100.0)
+
+    # compute variance = budget - actual (positive means under budget)
+    variance_vals = [round(b - a, 2) for b, a in zip(budget_vals, actuals)]
+    variance_colors = [("#2ecc71" if v >= 0 else "#e53935") for v in variance_vals]  # green if under, red if over
 
     # Colors (keep consistent with other charts)
     actual_color = "#2b8cff"    # blue
     budget_color = "#FF8D33"    # orange
 
-    # traces: grouped horizontal bars
+    # traces: grouped horizontal bars (Actual, Budget, Variance)
     traces = [
         {
             "type": "bar",
@@ -584,30 +598,48 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             "x": budget_vals,
             "marker": {"color": budget_color},
             "hovertemplate": "<b>%{y}</b><br>Budget: R%{x:,.2f}<extra></extra>"
+        },
+        {
+            "type": "bar",
+            "name": "Variance (Budget − Actual)",
+            "orientation": "h",
+            "y": labels,
+            "x": variance_vals,
+            "marker": {"color": variance_colors},
+            "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
         }
     ]
 
     layout = {
         "height": height,
         "barmode": "group",
-        "margin": {"l": 220, "r": 40, "t": 40, "b": 60},  # large left margin for long category labels
+        "margin": {"l": 220, "r": 40, "t": 40, "b": 80},  # bottom increased for legend + readability
         "showlegend": True,
-        "legend": {"orientation": "h", "yanchor": "bottom", "y": -0.18, "xanchor": "center", "x": 0.5},
+        "legend": {
+            "orientation": "h",
+            "yanchor": "bottom",
+            "y": -0.18,
+            "xanchor": "center",
+            "x": 0.5,
+            "font": {"color": "#ffffff", "size": 12, "family": "Arial Black"}  # white + bold
+        },
         "xaxis": {
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
             "showgrid": True,
-            "fixedrange": True
+            "fixedrange": True,
+            "tickfont": {"color": "#ffffff", "size": 11, "family": "Arial Black"}
         },
         "yaxis": {
             "automargin": True,
             "categoryorder": "array",
-            "categoryarray": labels
+            "categoryarray": labels,
+            "tickfont": {"color": "#ffffff", "size": 12, "family": "Arial Black"}  # white + bold for left labels
         },
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
-        "title": {"text": "Budget vs Actual Analysis", "x": 0.5}
+        "title": {"text": "Budget vs Actual Analysis", "x": 0.5, "font": {"color": "#ffffff", "family": "Arial Black"}}
     }
 
     return _make_plot(traces, layout, height=height, interactive=False)
