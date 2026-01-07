@@ -370,25 +370,34 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     layout = {
         "height": height,
-        # give more room at the bottom for the legend so it no longer crowds the y-axis tick labels
         "margin": {"l": 72, "r": 10, "t": 40, "b": 110},
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.36,               # push legend further below plot area
+            "y": -0.36,
             "xanchor": "center",
             "x": 0.5,
-            "font": {"size": 11},     # slightly smaller legend font to reduce crowding
+            "font": {"color": "#ffffff", "size": 11},
             "traceorder": "normal"
         },
-        "xaxis": {"showgrid": False, "fixedrange": True},
+        # transparent background to match pie/variance charts
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "xaxis": {
+            "showgrid": False,
+            "fixedrange": True,
+            "tickfont": {"color": "#ffffff", "size": 11},
+            "titlefont": {"color": "#ffffff"}
+        },
         "yaxis": {
             "showgrid": True,
             "fixedrange": True,
             "tickprefix": "R",
             "tickformat": ",.0f",
-            "automargin": True
+            "automargin": True,
+            "tickfont": {"color": "#ffffff", "size": 11},
+            "titlefont": {"color": "#ffffff"}
         }
     }
 
@@ -464,31 +473,18 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
 
   layout = {
     "height": height,
-    # reduced right margin and moved annotation slightly into the chart area
-    "margin": {"l": 10, "r": 80, "t": 20, "b": 40},
+    "margin": {"l": 10, "r": 80, "t": 40, "b": 40},
     "showlegend": True,
-    # make chart background transparent; keep legend box opaque so it remains readable
     "paper_bgcolor": "rgba(0,0,0,0)",
     "plot_bgcolor": "rgba(0,0,0,0)",
     "legend": {"bgcolor": "rgba(255,255,255,0.95)"},
-    "annotations": [
-      {
-        "text": f"Range:<br>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}",
-        "xref": "paper",
-        "yref": "paper",
-        "x": 0.98,            # moved a bit left from the extreme right into the chart
-        "y": 0.02,            # bottom-right (paper coords)
-        "xanchor": "right",
-        "yanchor": "bottom",
-        "showarrow": False,
-        "align": "right",
-        "font": {"size": 12, "color": "#222222"},
-        "bordercolor": "#dddddd",
-        "borderwidth": 1,
-        "bgcolor": "rgba(255,255,255,0.95)",
-        "opacity": 0.98
-      }
-    ]
+    "title": {
+      "text": f"Spend by Category<br><span style='font-size:12px;color:#666'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
+      "x": 0.5,
+      "xanchor": "center",
+      "yanchor": "top",
+      "font": {"size": 14, "color": "#222222"}
+    }
   }
 
   return _make_plot(traces, layout, height=height, interactive=False)
@@ -500,18 +496,21 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
 
 def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot:
     """
-    Horizontal grouped bar chart: Allocated Budget vs Actual Spending by main-category.
-    Budgets come from BUDGET.all_budgets (list of dicts with keys: belongs_to (sub-cat id),
-    period (date, usually first of month), budget_amount (int cents)). We sum budgets for
-    periods that fall within the selected date range and roll sub-cat budgets up to main-cat.
+    Horizontal grouped bar chart showing Budget vs Actual and Variance per main-category.
+    - Budgets come from BUDGET.all_budgets (list of dicts with keys: belongs_to (sub-cat id),
+      period (date), budget_amount (int cents)). We sum budgets for months in the selected range.
+    - Actuals: incomes (amt>0) and spends (amt<0) are aggregated separately.
+    - Variance = budget - actual (positive -> under budget => green; negative -> over budget => red)
     """
     txns = getattr(Global, "TRANSACTIONS", []) or []
     cats = getattr(Global, "CATEGORIES", {}) or {}
     main_cats = getattr(Global, "MAIN_CATS", {}) or {}
     all_budgets = getattr(BUDGET, "all_budgets", []) or []
 
-    # build actual spend per main category (same convention as category_pie_plot)
-    totals_cents = {}
+    # aggregate actuals separately for spends and incomes (cents)
+    spends_by_main = {}
+    incomes_by_main = {}
+
     for t in txns:
         d = t.get("date")
         if not (isinstance(d, date) and start <= d <= end):
@@ -523,7 +522,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
         else:
             main_id = cats.get(cat_key, {}).get("belongs_to") or "__uncat__"
 
-        # skip transfers (existing behaviour)
+        # skip transfers
         if main_id == "ec8e0085-8408-43a2-953f-ebba24549d96":
             continue
 
@@ -531,14 +530,14 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
         if amt is None:
             continue
         amt_c = int(amt)
-        if amt_c >= 0:
-            continue  # only spend
 
-        totals_cents[main_id] = totals_cents.get(main_id, 0) + abs(amt_c)
+        if amt_c < 0:
+            spends_by_main[main_id] = spends_by_main.get(main_id, 0) + abs(amt_c)
+        elif amt_c > 0:
+            incomes_by_main[main_id] = incomes_by_main.get(main_id, 0) + amt_c
 
-    # Build budgets aggregated to main-category for the selected months
+    # aggregate budgets by main-category id (cents) for periods inside selected months
     budgets_by_main = {}
-    # normalise start/end to first-of-month for comparison
     start_month = _first_of_month(start)
     end_month = _first_of_month(end)
     for b in all_budgets:
@@ -549,55 +548,121 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
         if period_month < start_month or period_month > end_month:
             continue
         sub_cat = b.get("belongs_to")
-        # map sub-cat -> main-cat id
         main_id = (cats.get(sub_cat) or {}).get("belongs_to") or "__uncat__"
         budgets_by_main[main_id] = budgets_by_main.get(main_id, 0) + int(b.get("budget_amount", 0))
 
-    # merge names: create list of categories ordered same as pie (by actuals desc)
-    items = sorted(totals_cents.items(), key=lambda kv: kv[1], reverse=True)
-    # include any budget-only main categories that had no actuals
-    for mid in budgets_by_main:
-        if mid not in dict(items):
-            items.append((mid, 0))
-    # convert ids to display names
+    # build master list of main_ids to display (include budget-only and income)
+    main_ids = set(spends_by_main) | set(incomes_by_main) | set(budgets_by_main) | set(main_cats.keys())
+    # sort by total activity (spend + income) descending
+    def _activity_value(mid):
+        return (spends_by_main.get(mid, 0) + incomes_by_main.get(mid, 0))
+    ordered = sorted(list(main_ids), key=_activity_value, reverse=True)
+
+    # ensure Income appears at top if present
+    income_mid = None
+    for mid, info in main_cats.items():
+        if info and info[0].strip().lower() == "income":
+            income_mid = mid
+            break
+    if income_mid and income_mid in ordered:
+        ordered.remove(income_mid)
+        ordered.insert(0, income_mid)
+
+    # build plotting arrays (values in R)
     labels = []
-    actuals = []
-    budget_vals = []
+    actuals_spend = []
+    budget_spend = []
+    actuals_income = []
+    budget_income = []
+    variance_vals = []
+
     default_main = ["Uncategorised", "#CCCCCC", "#000000"]
-    for mid, actual_cents in items:
+
+    for mid in ordered:
         name = (main_cats.get(mid) or default_main)[0]
         labels.append(name)
-        actuals.append(actual_cents / 100.0)
-        budget_cents = budgets_by_main.get(mid, 0)
-        budget_vals.append(budget_cents / 100.0)
 
-    # compute variance = budget - actual (positive means under budget)
-    variance_vals = [round(b - a, 2) for b, a in zip(budget_vals, actuals)]
-    variance_colors = [("#2ecc71" if v >= 0 else "#e53935") for v in variance_vals]  # green if under, red if over
+        sp_c = spends_by_main.get(mid, 0)  # cents
+        in_c = incomes_by_main.get(mid, 0)  # cents
+        bud_c = budgets_by_main.get(mid, 0)  # cents
 
-    # Colors (keep consistent with other charts)
-    actual_color = "#2b8cff"    # blue
-    budget_color = "#FF8D33"    # orange
+        # classify budgets: if main category is Income, treat budgets as income budgets
+        is_income_category = (name.strip().lower() == "income")
 
-    # traces: grouped horizontal bars (Actual, Budget, Variance)
+        if is_income_category:
+            b_income = bud_c / 100.0
+            b_spend = 0.0
+            a_income = in_c / 100.0
+            a_spend = 0.0
+            # variance = budget_income - actual_income
+            var = round(b_income - a_income, 2)
+        else:
+            b_income = 0.0
+            b_spend = bud_c / 100.0
+            a_income = 0.0
+            a_spend = sp_c / 100.0
+            # variance = budget_spend - actual_spend
+            var = round(b_spend - a_spend, 2)
+
+        actuals_spend.append(a_spend)
+        budget_spend.append(b_spend)
+        actuals_income.append(a_income)
+        budget_income.append(b_income)
+        variance_vals.append(var)
+
+    # Colors as requested:
+    # - budget spending: blue
+    # - actual spending: orange
+    # - budget income: purple
+    # - actual income: green
+    # - variance: green if positive, red if negative
+    budget_spend_color = "#2b8cff"   # blue
+    actual_spend_color = "#FF8D33"   # orange
+    budget_income_color = "#8A2BE2"  # purple
+    actual_income_color = "#2ecc71"  # green
+
+    variance_colors = [("#2ecc71" if v >= 0 else "#e53935") for v in variance_vals]
+
+    # For spends we plot actuals to the left (negative x) so direction is obvious.
+    actuals_spend_plot = [-v for v in actuals_spend]
+
     traces = [
         {
             "type": "bar",
             "name": "Actual Spending",
             "orientation": "h",
             "y": labels,
-            "x": actuals,
-            "marker": {"color": actual_color},
-            "hovertemplate": "<b>%{y}</b><br>Actual: R%{x:,.2f}<extra></extra>"
+            "x": actuals_spend_plot,
+            "customdata": actuals_spend,  # positive values for hover
+            "marker": {"color": actual_spend_color},
+            "hovertemplate": "<b>%{y}</b><br>Actual Spend: R%{customdata:,.2f}<extra></extra>"
         },
         {
             "type": "bar",
-            "name": "Allocated Budget",
+            "name": "Allocated Budget (Spend)",
             "orientation": "h",
             "y": labels,
-            "x": budget_vals,
-            "marker": {"color": budget_color},
-            "hovertemplate": "<b>%{y}</b><br>Budget: R%{x:,.2f}<extra></extra>"
+            "x": budget_spend,
+            "marker": {"color": budget_spend_color},
+            "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{x:,.2f}<extra></extra>"
+        },
+        {
+            "type": "bar",
+            "name": "Actual Income",
+            "orientation": "h",
+            "y": labels,
+            "x": actuals_income,
+            "marker": {"color": actual_income_color},
+            "hovertemplate": "<b>%{y}</b><br>Actual Income: R%{x:,.2f}<extra></extra>"
+        },
+        {
+            "type": "bar",
+            "name": "Allocated Budget (Income)",
+            "orientation": "h",
+            "y": labels,
+            "x": budget_income,
+            "marker": {"color": budget_income_color},
+            "hovertemplate": "<b>%{y}</b><br>Budget (Income): R%{x:,.2f}<extra></extra>"
         },
         {
             "type": "bar",
@@ -613,7 +678,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
     layout = {
         "height": height,
         "barmode": "group",
-        "margin": {"l": 220, "r": 40, "t": 40, "b": 80},  # bottom increased for legend + readability
+        "margin": {"l": 220, "r": 40, "t": 40, "b": 80},
         "showlegend": True,
         "legend": {
             "orientation": "h",
@@ -621,7 +686,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             "y": -0.18,
             "xanchor": "center",
             "x": 0.5,
-            "font": {"color": "#ffffff", "size": 12, "family": "Arial Black"}  # white + bold
+            "font": {"color": "#ffffff", "size": 12}
         },
         "xaxis": {
             "title": "",
@@ -629,17 +694,17 @@ def category_variance_plot(start: date, end: date, *, height: int = 360) -> Plot
             "tickformat": ",.0f",
             "showgrid": True,
             "fixedrange": True,
-            "tickfont": {"color": "#ffffff", "size": 11, "family": "Arial Black"}
+            "tickfont": {"color": "#ffffff", "size": 11}
         },
         "yaxis": {
             "automargin": True,
             "categoryorder": "array",
             "categoryarray": labels,
-            "tickfont": {"color": "#ffffff", "size": 12, "family": "Arial Black"}  # white + bold for left labels
+            "tickfont": {"color": "#ffffff", "size": 12}
         },
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
-        "title": {"text": "Budget vs Actual Analysis", "x": 0.5, "font": {"color": "#ffffff", "family": "Arial Black"}}
+        "title": {"text": "Budget vs Actual Analysis", "x": 0.5, "font": {"color": "#ffffff", "size": 14}}
     }
 
     return _make_plot(traces, layout, height=height, interactive=False)
