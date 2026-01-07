@@ -1,12 +1,7 @@
 components:
-- layout_properties: {full_width_row: true, grid_position: 'RNHPAK,JATNNI'}
-  name: plot_1
-  properties:
-    height: '250'
-    interactive: false
-    margin: [0, null, 0, null]
-    spacing_above: none
-    spacing_below: none
-  type: Plot
+- layout_properties: {full_width_row: true, grid_position: 'QKQIWF,BIDTPD'}
+  name: column_panel_1
+  properties: {}
+  type: ColumnPanel
 container: {type: ColumnPanel}
 is_package: true

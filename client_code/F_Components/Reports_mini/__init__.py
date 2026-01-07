@@ -23,17 +23,13 @@ class Reports_mini(Reports_miniTemplate):
     self.init_components(**properties)
     self.mobile = Responsive.is_mobile()
     self.full_screen = full_screen
-    if full_screen:
-      self.plot_1.height = 600
-      self.plot_1.interactive = True
-    elif self.mobile:
-      self.plot_1.height = 450
-      self.plot_1.interactive = True
-
+    if self.mobile:
+      # self.plot_1.height = 450
+      # self.plot_1.interactive = True
+      pass
     start,end = Reporting.slider_date_range(0)
 
     # Pull compact Accounts Overview from Reporting module (dashboard mode)
     plot = Reporting.accounts_overview_plot(start, end, height=220, dashboard=True)
-    self.plot_1.plot = plot
-    self.plot_1.full_width = True
+    self.column_panel_1.add_component(plot)
     
