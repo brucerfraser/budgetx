@@ -214,7 +214,7 @@ def _balance_series_for_account(start: date, end: date,
 # PUBLIC: Accounts Overview (default)
 # ============================================================
 
-def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot:
+def accounts_overview_plot(start: date, end: date, *, height: int = 320, dashboard: bool = False) -> Plot:
     """
     Multi-line balances by account over time, grouped by inferred institution, recon-aware.
     Returns an Anvil Plot component.
@@ -368,6 +368,7 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
     # place total traces before account traces so they sit in the background
     traces = total_traces + traces
 
+    # base layout (full reports)
     layout = {
         "height": height,
         # increase bottom margin so x-axis ticks do not overlap the legend
@@ -389,7 +390,9 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
             "showgrid": False,
             "fixedrange": True,
             "tickfont": {"color": "#ffffff", "size": 11},
-            "titlefont": {"color": "#ffffff"}
+            "titlefont": {"color": "#ffffff"},
+            "tickformat": ",.0f",
+            "tickprefix": ""
         },
         "yaxis": {
             "showgrid": True,
@@ -407,6 +410,22 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
             "font": {"color": "#ffffff", "size": 14}
         }
     }
+
+    # dashboard mode: compact sizing and abbreviated axis ticks (use SI suffixes)
+    if dashboard:
+        # smaller overall footprint
+        layout["height"] = max(160, int(height * 0.6))
+        layout["margin"] = {"l": 56, "r": 8, "t": 20, "b": 90}
+        # smaller legend
+        layout["legend"].update({"y": -0.28, "font": {"color": "#ffffff", "size": 9}})
+        # abbreviate x-axis numbers (SI) so 1,000,000 -> 1M (plotly SI formatting)
+        # use tickformat '.2s' to get compact SI formatting; keep currency prefix 'R'
+        layout["xaxis"]["tickformat"] = ".2s"
+        layout["xaxis"]["tickprefix"] = "R"
+        layout["xaxis"]["tickfont"] = {"color": "#ffffff", "size": 9}
+        layout["yaxis"]["tickfont"] = {"color": "#ffffff", "size": 10}
+        # reduce title size
+        layout["title"]["font"]["size"] = 12
 
     return _make_plot(traces, layout, height=height, interactive=False)
 
