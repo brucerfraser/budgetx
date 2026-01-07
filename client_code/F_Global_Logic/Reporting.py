@@ -171,6 +171,11 @@ def _recon_by_acc():
 
   return recon
 
+def _daterange(self, start_d: date, end_d: date):
+  cur = start_d
+  while cur <= end_d:
+    yield cur
+    cur += timedelta(days=1)
 
 def _balance_series_for_account(start: date, end: date,
                                 deltas_by_day: dict,
@@ -337,3 +342,4 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
   }
 
   return _make_plot(traces, layout, height=height, interactive=False)
+
