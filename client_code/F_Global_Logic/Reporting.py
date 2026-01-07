@@ -226,7 +226,8 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320, dashboa
     recon = _recon_by_acc()
 
     days = list(_daterange(start, end))
-    x = [d.isoformat() for d in days]
+    # keep x as real date objects so Plotly treats axis as dates (not categories/strings)
+    x = days
 
     traces = []
 
@@ -328,7 +329,7 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320, dashboa
             "x": x,
             "y": y,
             "line": {"width": 2, "color": color},
-            "hovertemplate": "<b>%{fullData.name}</b><br>%{x}<br>Balance: R%{y:,.2f}<extra></extra>"
+            "hovertemplate": "<b>%{fullData.name}</b><br>%{x|%d %b %Y}<br>Balance: R%{y:,.2f}<extra></extra>"
         })
 
     # add total area traces (drawn first so they appear behind account lines)
@@ -348,7 +349,7 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320, dashboa
         "line": {"width": 0, "color": "rgba(76,175,80,0.0)"},
         "fill": "tozeroy",
         "fillcolor": "rgba(76,175,80,0.18)",  # green with light alpha
-        "hovertemplate": "<b>Total</b><br>%{x}<br>R%{y:,.2f}<extra></extra>",
+        "hovertemplate": "<b>Total</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
         "showlegend": False
     })
     # negative fill
@@ -361,7 +362,7 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320, dashboa
         "line": {"width": 0, "color": "rgba(229,57,53,0.0)"},
         "fill": "tozeroy",
         "fillcolor": "rgba(229,57,53,0.18)",  # red with light alpha
-        "hovertemplate": "<b>Total</b><br>%{x}<br>R%{y:,.2f}<extra></extra>",
+        "hovertemplate": "<b>Total</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
         "showlegend": False
     })
 
@@ -416,15 +417,17 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320, dashboa
         # smaller overall footprint
         layout["height"] = max(160, int(height * 0.6))
         layout["margin"] = {"l": 56, "r": 8, "t": 20, "b": 90}
-        # smaller legend
-        layout["legend"].update({"y": -0.28, "font": {"color": "#ffffff", "size": 9}})
-        # abbreviate x-axis numbers (SI) so 1,000,000 -> 1M (plotly SI formatting)
-        # use tickformat '.2s' to get compact SI formatting; keep currency prefix 'R'
-        layout["xaxis"]["tickformat"] = ".2s"
-        layout["xaxis"]["tickprefix"] = "R"
+        # dashboard removes legend and uses compact number formatting on the y-axis
+        layout.pop("legend", None)
+        layout["showlegend"] = False
+        # x-axis should be dates (short format)
+        layout["xaxis"]["tickformat"] = "%d %b"
         layout["xaxis"]["tickfont"] = {"color": "#ffffff", "size": 9}
+        # abbreviate y-axis numbers (SI) so 1,000,000 -> 1M (plotly SI formatting) with currency prefix
+        layout["yaxis"]["tickformat"] = ".2s"
+        layout["yaxis"]["tickprefix"] = "R"
         layout["yaxis"]["tickfont"] = {"color": "#ffffff", "size": 10}
-        # reduce title size
+        # smaller title for dashboard
         layout["title"]["font"]["size"] = 12
 
     return _make_plot(traces, layout, height=height, interactive=False)
