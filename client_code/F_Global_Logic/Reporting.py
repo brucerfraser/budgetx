@@ -748,8 +748,8 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
         "barmode": "group",
         "bargap": 0.12,
         "bargroupgap": 0.05,
-        # raise plot area by increasing bottom margin and slightly reducing top
-        "margin": {"l": 240, "r": 40, "t": 20, "b": 180},
+        # separate title and plot: larger top margin so title doesn't overlap
+        "margin": {"l": 240, "r": 40, "t": 80, "b": 180},
         "showlegend": True,
         "legend": {
             "orientation": "h",
@@ -761,6 +761,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
         },
         # left x-axis (spend) — domain left third
         "xaxis": {
+            "type": "linear",
             "domain": [0.0, 0.40],
             "title": "",
             "tickprefix": "R",
@@ -771,6 +772,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
         },
         # center x-axis (variance) — narrow middle column around zero
         "xaxis3": {
+            "type": "linear",
             "domain": [0.42, 0.58],
             "anchor": "y",
             "title": "",
@@ -781,10 +783,12 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "tickfont": {"color": "#ffffff", "size": 11},
             "zeroline": True,
             "zerolinewidth": 1,
-            "zerolinecolor": "#888888"
+            "zerolinecolor": "#888888",
+            "rangemode": "normal"
         },
         # right x-axis (income) — domain right third
         "xaxis2": {
+            "type": "linear",
             "domain": [0.60, 1.0],
             "anchor": "y",
             "title": "",
@@ -792,7 +796,8 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "tickformat": ",.0f",
             "showgrid": True,
             "fixedrange": True,
-            "tickfont": {"color": "#ffffff", "size": 11}
+            "tickfont": {"color": "#ffffff", "size": 11},
+            "rangemode": "normal"
         },
         # single shared y-axis (categories) between all panels
         "yaxis": {
@@ -804,10 +809,13 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
         },
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
+        # title separated from plot area (y slightly higher)
         "title": {
             "text": f"Budget vs Actual Analysis<br><span style='font-size:12px;color:#dddddd'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
             "x": 0.5,
             "xanchor": "center",
+            "y": 0.98,
+            "yanchor": "top",
             "font": {"color": "#ffffff", "size": 14}
         }
     }
