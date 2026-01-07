@@ -425,9 +425,14 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
     if not (isinstance(d, date) and start <= d <= end):
       continue
 
-    cat_id = cats[t.get("category")]['belongs_to']
-    if not cat_id:
-      continue
+    # robust category handling: transactions may have None or unknown category keys
+    cat_key = t.get("category")
+    if not cat_key or cat_key not in cats:
+      cat_id = "__uncat__"
+    else:
+      cat_id = cats.get(cat_key, {}).get("belongs_to") or "__uncat__"
+
+    # skip transfer main-category id (existing behaviour)
     if cat_id == "ec8e0085-8408-43a2-953f-ebba24549d96":
       continue  # skip transfers
 
@@ -439,7 +444,9 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
     if amt_c >= 0:
       continue  # only spend
 
-    cat_name = main_cats.get(cat_id, "None")[0]
+    # resolve display name for the main category, provide generic Uncategorised fallback
+    default_main = ["Uncategorised", "#CCCCCC", "#000000"]
+    cat_name = (main_cats.get(cat_id) or default_main)[0]
     totals_cents[cat_name] = totals_cents.get(cat_name, 0) + abs(amt_c)
 
   items = sorted(totals_cents.items(), key=lambda kv: kv[1], reverse=True)
