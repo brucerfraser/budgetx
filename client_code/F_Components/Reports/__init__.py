@@ -71,11 +71,11 @@ class Reports(ReportsTemplate):
     selected = self.drop_down_1.selected_value
 
     if selected == "Accounts Overview":
-      plot = Reporting.accounts_overview_plot(start, end, height=320)
+      plot = Reporting.accounts_overview_plot(start, end, height=600)
       self._render_plot_component(plot)
 
     elif selected == "Category Pie":
-      plot = Reporting.category_pie_plot(start, end, height=320)
+      plot = Reporting.category_pie_plot(start, end, height=600)
       self._render_plot_component(plot)
 
     else:
