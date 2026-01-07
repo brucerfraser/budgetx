@@ -356,12 +356,13 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     layout = {
         "height": height,
-        "margin": {"l": 50, "r": 10, "t": 40, "b": 60},  # bring left axis in, increase bottom for legend
+        # nudge the plotting area to the right so the left y-axis labels have more room
+        "margin": {"l": 72, "r": 10, "t": 40, "b": 60},
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.28,  # Position legend below the plot
+            "y": -0.26,
             "xanchor": "center",
             "x": 0.5
         },
@@ -370,7 +371,8 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
             "showgrid": True,
             "fixedrange": True,
             "tickprefix": "R",
-            "tickformat": ","
+            "tickformat": ",.0f",
+            "automargin": True
         }
     }
 
