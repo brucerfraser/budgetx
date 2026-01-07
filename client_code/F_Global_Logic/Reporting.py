@@ -411,7 +411,15 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
   main_cats = getattr(Global, "MAIN_CATS", {}) or {}
 
   totals_cents = {}  # {cat_name: cents}
-
+  for t in txns:
+     print(t)
+     break
+  for c,v in cats.items():
+     print(c,v)
+     break
+  for mc,v in main_cats.items():
+     print(mc,v)
+     break
   for t in txns:
     d = t.get("date")
     if not (isinstance(d, date) and start <= d <= end):
