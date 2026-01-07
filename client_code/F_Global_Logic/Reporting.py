@@ -370,12 +370,13 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
 
     layout = {
         "height": height,
-        "margin": {"l": 72, "r": 10, "t": 40, "b": 110},
+        # increase bottom margin so x-axis ticks do not overlap the legend
+        "margin": {"l": 72, "r": 10, "t": 40, "b": 160},
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.36,
+            "y": -0.40,
             "xanchor": "center",
             "x": 0.5,
             "font": {"color": "#ffffff", "size": 11},
@@ -398,6 +399,12 @@ def accounts_overview_plot(start: date, end: date, *, height: int = 320) -> Plot
             "automargin": True,
             "tickfont": {"color": "#ffffff", "size": 11},
             "titlefont": {"color": "#ffffff"}
+        },
+        "title": {
+            "text": f"<b>Accounts Overview</b><br><span style='font-size:12px;color:#dddddd'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
+            "x": 0.5,
+            "xanchor": "center",
+            "font": {"color": "#ffffff", "size": 14}
         }
     }
 
