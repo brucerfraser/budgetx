@@ -525,11 +525,9 @@ def category_pie_plot(start: date, end: date, *, height: int = 320) -> Plot:
 
 def category_variance_plot(start: date, end: date, *, height: int = 360, income: bool = False) -> Plot:
     """
-    Horizontal grouped bar chart showing Budget vs Actual and Variance per main-category.
-    - Budgets come from BUDGET.all_budgets (list of dicts with keys: belongs_to (sub-cat id),
-      period (date), budget_amount (int cents)). We sum budgets for months in the selected range.
-    - Actuals: incomes (amt>0) and spends (amt<0) are aggregated separately.
-    - Variance = budget - actual (positive -> under budget => green; negative -> over budget => red)
+    Two-panel horizontal chart:
+    - Left panel: Variance bars centered at 0 (green = under budget; red = over budget)
+    - Right panel: Positive magnitude bars for Budget vs Actual amounts (spend shown as positive)
     """
     txns = getattr(Global, "TRANSACTIONS", []) or []
     cats = getattr(Global, "CATEGORIES", {}) or {}
@@ -584,7 +582,7 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
     # build master list of main_ids to display (include budget-only and income)
     main_ids = set(spends_by_main) | set(incomes_by_main) | set(budgets_by_main) | set(main_cats.keys())
 
-    # If caller requests to exclude income rows, drop the Income main_id early
+    # Optionally exclude Income category entirely
     if not income:
         for mid, info in main_cats.items():
             if info and info[0].strip().lower() == "income":
@@ -593,10 +591,10 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
 
     # sort by total activity (spend + income) descending
     def _activity_value(mid):
-        return (spends_by_main.get(mid, 0) + incomes_by_main.get(mid, 0))
+        return (abs(spends_by_main.get(mid, 0)) + abs(incomes_by_main.get(mid, 0)))
     ordered = sorted(list(main_ids), key=_activity_value, reverse=True)
 
-    # ensure Income appears at top if present and we're including income
+    # if including income, ensure Income appears first
     if income:
         income_mid = None
         for mid, info in main_cats.items():
@@ -607,12 +605,12 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             ordered.remove(income_mid)
             ordered.insert(0, income_mid)
 
-    # build plotting arrays (values in R)
+    # build plotting arrays (values in R, positive magnitudes for right panel)
     labels = []
-    actuals_spend = []
-    budget_spend = []
-    actuals_income = []
-    budget_income = []
+    actuals_spend_abs = []
+    budget_spend_abs = []
+    actuals_income_abs = []
+    budget_income_abs = []
     variance_vals = []
 
     default_main = ["Uncategorised", "#CCCCCC", "#000000"]
@@ -621,189 +619,148 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
         name = (main_cats.get(mid) or default_main)[0]
         labels.append(name)
 
-        sp_c = spends_by_main.get(mid, 0)  # cents (negative or 0)
-        in_c = incomes_by_main.get(mid, 0)  # cents (positive or 0)
-        bud_c = budgets_by_main.get(mid, 0)  # cents (may be negative for spend budgets or positive for income)
-
-        # classify budgets: if main category is Income, treat budgets as income budgets
+        sp_c = spends_by_main.get(mid, 0)      # cents (negative or 0)
+        in_c = incomes_by_main.get(mid, 0)     # cents (positive or 0)
+        bud_c = budgets_by_main.get(mid, 0)    # cents (may be negative for spend budgets or positive for income)
         is_income_category = (name.strip().lower() == "income")
 
         if is_income_category:
-            # budgets/incomes are positive numbers for income
             b_income = (bud_c or 0) / 100.0
             a_income = (in_c or 0) / 100.0
-            # variance = actual - budget (negative => shortfall)
+            # variance (income) = actual - budget (negative => shortfall)
             var = round(a_income - b_income, 2)
-            # spending fields zeroed
-            b_spend = 0.0
-            a_spend = 0.0
+            # store positive magnitudes for right panel
+            budget_income_abs.append(abs(b_income))
+            actuals_income_abs.append(abs(a_income))
+            budget_spend_abs.append(0.0)
+            actuals_spend_abs.append(0.0)
         else:
-            # spend budgets may be stored negative; normalise to signed spend values
-            b_spend = (bud_c or 0) / 100.0
-            a_spend = (sp_c or 0) / 100.0  # sp_c is negative total of txn amounts
-            # variance = actual - budget (negative => over budget)
-            var = round(a_spend - b_spend, 2)
-            b_income = 0.0
-            a_income = 0.0
+            # spend budgets may be stored negative; use positive magnitudes for right panel
+            b_spend = abs((bud_c or 0) / 100.0)
+            a_spend = abs((sp_c or 0) / 100.0)
+            # variance (spend) = budget - actual (negative => over budget)
+            # To match left panel colouring: green if under (positive), red if over (negative)
+            var = round((b_spend) - (a_spend), 2)
+            budget_spend_abs.append(b_spend)
+            actuals_spend_abs.append(a_spend)
+            budget_income_abs.append(0.0)
+            actuals_income_abs.append(0.0)
 
-        # store values for plotting/hover
-        actuals_spend.append(a_spend)            # negative for plotting left
-        budget_spend.append(b_spend)            # may be negative for spend budgets
-        actuals_income.append(a_income)         # positive
-        budget_income.append(b_income)          # positive
         variance_vals.append(var)
 
-    # Colors as requested:
-    # - budget spending: blue
-    # - actual spending: orange
-    # - budget income: purple
-    # - actual income: green
-    # - variance: green if positive, red if negative
+    # Colors:
     budget_spend_color = "#2b8cff"   # blue
     actual_spend_color = "#FF8D33"   # orange
     budget_income_color = "#8A2BE2"  # purple
     actual_income_color = "#2ecc71"  # green
-
-    # negative variance => red (over/short), positive => green
     variance_colors = [("#2ecc71" if v > 0 else "#e53935") for v in variance_vals]
 
-    # prepare plotting values: ensure spend budgets and actuals are negative for left-side plotting,
-    # while hover/customdata carries positive magnitudes for human-friendly display.
-    actuals_spend_plot = [-abs(v) for v in actuals_spend]
-    actuals_spend_hover = [abs(v) for v in actuals_spend]
-    budget_spend_plot = [-abs(v) for v in budget_spend]
-    budget_spend_hover = [abs(v) for v in budget_spend]
+    # Traces:
+    # Left panel: variance only (centered at 0)
+    variance_traces = [{
+        "type": "bar",
+        "name": "Variance (Under/Over)",
+        "orientation": "h",
+        "y": labels,
+        "x": variance_vals,
+        "marker": {"color": variance_colors, "line": {"width": 1, "color": "#111111"}},
+        "xaxis": "x",
+        "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
+    }]
 
-    # Split into three side-by-side panels:
-    # - left panel (domain 0..0.40): spend budgets & actuals (plotted negative values so bars go left)
-    # - center panel (domain 0.42..0.58): variance (bars around zero)
-    # - right panel (domain 0.60..1): income budgets & actuals (bars go right)
-    left_traces = [
+    # Right panel: budget vs actual (positive magnitudes)
+    right_traces = [
         {
             "type": "bar",
             "name": "Allocated Budget (Spend)",
             "orientation": "h",
             "y": labels,
-            "x": budget_spend_plot,
-            "customdata": budget_spend_hover,
+            "x": budget_spend_abs,
             "marker": {"color": budget_spend_color, "line": {"width": 1, "color": "#111111"}},
             "offsetgroup": "spend_bud",
-            "xaxis": "x",  # left x-axis
-            "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{customdata:,.2f}<extra></extra>"
+            "xaxis": "x2",
+            "hovertemplate": "<b>%{y}</b><br>Budget (Spend): R%{x:,.2f}<extra></extra>"
         },
         {
             "type": "bar",
             "name": "Actual Spending",
             "orientation": "h",
             "y": labels,
-            "x": actuals_spend_plot,
-            "customdata": actuals_spend_hover,
+            "x": actuals_spend_abs,
             "marker": {"color": actual_spend_color, "line": {"width": 1, "color": "#111111"}},
             "offsetgroup": "spend_act",
-            "xaxis": "x",
-            "hovertemplate": "<b>%{y}</b><br>Actual Spend: R%{customdata:,.2f}<extra></extra>"
+            "xaxis": "x2",
+            "hovertemplate": "<b>%{y}</b><br>Actual Spend: R%{x:,.2f}<extra></extra>"
         }
     ]
 
-    right_traces = [
-        {
-            "type": "bar",
-            "name": "Allocated Budget (Income)",
-            "orientation": "h",
-            "y": labels,
-            "x": budget_income,
-            "marker": {"color": budget_income_color, "line": {"width": 1, "color": "#111111"}},
-            "offsetgroup": "income_bud",
-            "xaxis": "x2",
-            "hovertemplate": "<b>%{y}</b><br>Budget (Income): R%{x:,.2f}<extra></extra>"
-        },
-        {
-            "type": "bar",
-            "name": "Actual Income",
-            "orientation": "h",
-            "y": labels,
-            "x": actuals_income,
-            "marker": {"color": actual_income_color, "line": {"width": 1, "color": "#111111"}},
-            "offsetgroup": "income_act",
-            "xaxis": "x2",
-            "hovertemplate": "<b>%{y}</b><br>Actual Income: R%{x:,.2f}<extra></extra>"
-        },
-        {
-            "type": "bar",
-            "name": "Variance (Budget − Actual)",
-            "orientation": "h",
-            "y": labels,
-            "x": variance_vals,
-            "marker": {"color": variance_colors, "line": {"width": 1, "color": "#111111"}},
-            "offsetgroup": "variance",
-            "xaxis": "x3",   # moved variance to center axis
-            "hovertemplate": "<b>%{y}</b><br>Variance: R%{x:,.2f}<extra></extra>"
-        }
-    ]
+    if income:
+        right_traces += [
+            {
+                "type": "bar",
+                "name": "Allocated Budget (Income)",
+                "orientation": "h",
+                "y": labels,
+                "x": budget_income_abs,
+                "marker": {"color": budget_income_color, "line": {"width": 1, "color": "#111111"}},
+                "offsetgroup": "income_bud",
+                "xaxis": "x2",
+                "hovertemplate": "<b>%{y}</b><br>Budget (Income): R%{x:,.2f}<extra></extra>"
+            },
+            {
+                "type": "bar",
+                "name": "Actual Income",
+                "orientation": "h",
+                "y": labels,
+                "x": actuals_income_abs,
+                "marker": {"color": actual_income_color, "line": {"width": 1, "color": "#111111"}},
+                "offsetgroup": "income_act",
+                "xaxis": "x2",
+                "hovertemplate": "<b>%{y}</b><br>Actual Income: R%{x:,.2f}<extra></extra>"
+            }
+        ]
 
-    traces = left_traces + right_traces
+    traces = variance_traces + right_traces
 
-    # calculate explicit numeric ranges to avoid Plotly autoscaling mixing domains
-    # left (spend) values are negative (bars to the left)
-    left_vals = [v for v in (budget_spend_plot + actuals_spend_plot) if v is not None]
-    if left_vals:
-        left_min = min(left_vals)
-        # leave small headroom
-        left_range = [left_min * 1.12, 0]
-    else:
-        left_range = [-1, 0]
-
-    # right (income) values are positive
-    right_vals = [v for v in (budget_income + actuals_income) if v is not None]
-    if right_vals:
-        right_max = max(right_vals)
-        right_range = [0, max(1, right_max * 1.12)]
-    else:
-        right_range = [0, 1]
-
-    # variance: symmetric about zero for clear interpretation
+    # Axis ranges
+    # variance symmetric around zero
     if variance_vals:
         vmin = min(variance_vals)
         vmax = max(variance_vals)
         m = max(abs(vmin), abs(vmax), 1)
-        center_range = [-m * 1.12, m * 1.12]
+        variance_range = [-m * 1.10, m * 1.10]
     else:
-        center_range = [-1, 1]
+        variance_range = [-1, 1]
 
+    # right axis max from whichever series are present
+    right_vals = budget_spend_abs + actuals_spend_abs
+    if income:
+        right_vals += budget_income_abs + actuals_income_abs
+    right_max = max(right_vals) if right_vals else 1
+    right_range = [0, max(1, right_max * 1.10)]
+
+    # Layout to match screenshot style
     layout = {
         "height": height,
         "barmode": "group",
-        "bargap": 0.12,
-        "bargroupgap": 0.05,
-        # separate title and plot: larger top margin so title doesn't overlap
-        "margin": {"l": 240, "r": 40, "t": 80, "b": 180},
+        "bargap": 0.18,
+        "bargroupgap": 0.10,
+        # separate title from plot
+        "margin": {"l": 220, "r": 40, "t": 72, "b": 120},
         "showlegend": True,
         "legend": {
             "orientation": "h",
             "yanchor": "bottom",
-            "y": -0.42,
+            "y": -0.32,
             "xanchor": "center",
             "x": 0.5,
             "font": {"color": "#ffffff", "size": 12}
         },
-        # left x-axis (spend) — domain left third
+        # left axis: variance
         "xaxis": {
             "type": "linear",
-            "domain": [0.0, 0.40],
-            "range": left_range,
-            "title": "",
-            "tickprefix": "R",
-            "tickformat": ",.0f",
-            "showgrid": True,
-            "fixedrange": True,
-            "tickfont": {"color": "#ffffff", "size": 11}
-        },
-        # center x-axis (variance) — narrow middle column around zero
-        "xaxis3": {
-            "type": "linear",
-            "domain": [0.42, 0.58],
-            "anchor": "y",
-            "range": center_range,
+            "domain": [0.0, 0.46],
+            "range": variance_range,
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
@@ -811,25 +768,22 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
             "fixedrange": True,
             "tickfont": {"color": "#ffffff", "size": 11},
             "zeroline": True,
-            "zerolinewidth": 1,
             "zerolinecolor": "#888888",
-            "rangemode": "normal"
+            "zerolinewidth": 1
         },
-        # right x-axis (income) — domain right third
+        # right axis: positive magnitudes
         "xaxis2": {
             "type": "linear",
-            "domain": [0.60, 1.0],
-            "anchor": "y",
+            "domain": [0.54, 1.0],
             "range": right_range,
             "title": "",
             "tickprefix": "R",
             "tickformat": ",.0f",
             "showgrid": True,
             "fixedrange": True,
-            "tickfont": {"color": "#ffffff", "size": 11},
-            "rangemode": "normal"
+            "tickfont": {"color": "#ffffff", "size": 11}
         },
-        # single shared y-axis (categories) between all panels
+        # shared y categories
         "yaxis": {
             "automargin": True,
             "categoryorder": "array",
@@ -839,7 +793,6 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
         },
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
-        # title separated from plot area (y slightly higher)
         "title": {
             "text": f"Budget vs Actual Analysis<br><span style='font-size:12px;color:#dddddd'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
             "x": 0.5,
