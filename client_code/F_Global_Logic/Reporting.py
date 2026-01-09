@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from operator import itemgetter
 
 from anvil import Plot
 import plotly.graph_objects as go  # OK to keep, but we won't use Figure/add_trace
@@ -810,6 +811,26 @@ def category_variance_plot(start: date, end: date, *, height: int = 360, income:
 # PUBLIC: Burn Rate Plot
 # ============================================================
 
+def _row_get(obj, key, default=None):
+    # dict
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    # Anvil row (attribute access)
+    try:
+        return getattr(obj, key)
+    except Exception:
+        pass
+    # tuple/list support: allow common field positions: (date, amount, category)
+    if isinstance(obj, (tuple, list)):
+        index_map = {"date": 0, "amount": 1, "category": 2}
+        idx = index_map.get(key)
+        if idx is not None and idx < len(obj):
+            return obj[idx]
+    return default
+
+def _is_date_in_range(d, start, end):
+    return isinstance(d, date) and start <= d <= end
+
 def burnrate_plot(start: date, end: date, *, height: int = 420) -> Plot:
     """
     Burn Rate graph for Anvil:
@@ -823,9 +844,26 @@ def burnrate_plot(start: date, end: date, *, height: int = 420) -> Plot:
     # 1) Collect transactions and accounts from Global
     txns = getattr(Global, "TRANSACTIONS", []) or []
     accounts = getattr(Global, "ACCOUNTS", []) or []
-    # Optional helpers from app (if available)
     cats = getattr(Global, "CATEGORIES", {}) or {}
     main_cats = getattr(Global, "MAIN_CATS", {}) or {}
+
+    # detect transfer main category id if available
+    transfer_mid = None
+    for mid, info in (main_cats or {}).items():
+        name = str(info[0] if isinstance(info, (list, tuple)) else info).strip().lower()
+        if name in ("transfers", "transfer"):
+            transfer_mid = mid
+            break
+
+    def txn_main_id(tx):
+        cat_key = _row_get(tx, "category")
+        cat_info = cats.get(cat_key) or {}
+        if isinstance(cat_info, dict):
+            return cat_info.get("belongs_to")
+        # cat_info might be tuple/list: (name, belongs_to, ...)
+        if isinstance(cat_info, (tuple, list)) and len(cat_info) >= 2:
+            return cat_info[1]
+        return None
 
     # Date span and aggregation mode
     days = list(_daterange(start, end))
