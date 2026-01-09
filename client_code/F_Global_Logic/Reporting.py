@@ -833,39 +833,15 @@ def _is_date_in_range(d, start, end):
 
 def burnrate_plot(start: date, end: date, *, height: int = 420) -> Plot:
     """
-    Burn Rate graph for Anvil:
-    - Bars: daily inflow (green pastel) and outflow (orange pastel)
-    - Line: total accounts balance (green above zero, red below zero)
-    - Single left axis for all monetary values
-    Data pulled from app ledgers for integrity:
-    - Accounts daily balances computed from transactions.
-    - Income/Expense grouped by day/week/month depending on range.
+    Burn Rate graph using the same recon-aware account balance logic as Accounts Overview:
+    - Bars: inflow (pastel green) and outflow (pastel orange), aggregated daily/weekly/monthly.
+    - Line: total accounts balance (recon-aware), green above zero, red below zero.
+    - Single left axis for all monetary values.
     """
-    # 1) Collect transactions and accounts from Global
-    txns = getattr(Global, "TRANSACTIONS", []) or []
-    accounts = getattr(Global, "ACCOUNTS", []) or []
-    cats = getattr(Global, "CATEGORIES", {}) or {}
-    main_cats = getattr(Global, "MAIN_CATS", {}) or {}
+    # recon-aware per-account balances (end-of-day), same helpers as Accounts Overview
+    deltas_by_acc, min_d = _build_txn_deltas_by_acc()
+    recon = _recon_by_acc()
 
-    # detect transfer main category id if available
-    transfer_mid = None
-    for mid, info in (main_cats or {}).items():
-        name = str(info[0] if isinstance(info, (list, tuple)) else info).strip().lower()
-        if name in ("transfers", "transfer"):
-            transfer_mid = mid
-            break
-
-    def txn_main_id(tx):
-        cat_key = _row_get(tx, "category")
-        cat_info = cats.get(cat_key) or {}
-        if isinstance(cat_info, dict):
-            return cat_info.get("belongs_to")
-        # cat_info might be tuple/list: (name, belongs_to, ...)
-        if isinstance(cat_info, (tuple, list)) and len(cat_info) >= 2:
-            return cat_info[1]
-        return None
-
-    # Date span and aggregation mode
     days = list(_daterange(start, end))
     span_days = (end - start).days + 1
     if span_days <= 60:
@@ -875,82 +851,79 @@ def burnrate_plot(start: date, end: date, *, height: int = 420) -> Plot:
     else:
         agg_mode = "monthly"
 
-    # 2) Build daily net flows (income positive, expense negative) from transactions
-    # Exclude transfers (if app has a dedicated main category for transfers)
-    transfer_mid = None
-    for mid, info in (main_cats or {}).items():
-        if isinstance(info, (list, tuple)) and str(info[0]).strip().lower() in ("transfers", "transfer"):
-            transfer_mid = mid
-            break
+    # Build total balance series across all accounts using recon-aware logic
+    # Sum per-account EOD balances for each day
+    total_bal_cents_by_day = {d: 0 for d in days}
+    accounts = getattr(Global, "ACCOUNTS_WHOLE", []) or []  # [{"acc_id": ..., "acc_name": ...}, ...]
+    acc_ids = [a.get("acc_id") for a in accounts if a.get("acc_id")]
 
-    def txn_main_id(t):
-        cat_key = t.get("category")
-        return (cats.get(cat_key) or {}).get("belongs_to")
+    for acc_id in acc_ids:
+        deltas = deltas_by_acc.get(acc_id, {})
+        recon_tuple = recon.get(acc_id)  # (recon_date, recon_amount_cents) or None
+        # If no activity and no recon, skip
+        if not deltas and recon_tuple is None:
+            continue
 
-    # per-day cents
+        y_cents = _balance_series_for_account(
+            start=start,
+            end=end,
+            deltas_by_day=deltas,
+            min_data_date=min_d if isinstance(min_d, date) else start,
+            recon_tuple=recon_tuple
+        )
+        # add to total
+        for i, d in enumerate(days):
+            total_bal_cents_by_day[d] += y_cents[i]
+
+    # Build daily net flows (income positive, expense negative) from transactions; skip transfers
+    txns = getattr(Global, "TRANSACTIONS", []) or []
+    cats = getattr(Global, "CATEGORIES", {}) or {}
+    main_cats = getattr(Global, "MAIN_CATS", {}) or {}
+
+    # detect transfer main category id (matches pie/variance behaviour)
+    transfer_mid = "ec8e0085-8408-43a2-953f-ebba24549d96"
+    # fallback detection if ID differs
+    if transfer_mid not in (main_cats or {}):
+        for mid, info in (main_cats or {}).items():
+            if info and str(info[0]).strip().lower() in ("transfers", "transfer"):
+                transfer_mid = mid
+                break
+
     daily_inc_c = {d: 0 for d in days}
     daily_exp_c = {d: 0 for d in days}
     for t in txns:
         d = t.get("date")
         if not (isinstance(d, date) and start <= d <= end):
             continue
-        # Skip transfers
-        if transfer_mid and txn_main_id(t) == transfer_mid:
+        cat_key = t.get("category")
+        if cat_key and cat_key in cats:
+            main_id = (cats.get(cat_key) or {}).get("belongs_to")
+            if main_id == transfer_mid:
+                continue  # skip transfers
+
+        amt = t.get("amount")
+        if amt is None:
             continue
-        amt_c = int(t.get("amount") or 0)
+        amt_c = int(amt)
         if amt_c > 0:
             daily_inc_c[d] = daily_inc_c.get(d, 0) + amt_c
         elif amt_c < 0:
             daily_exp_c[d] = daily_exp_c.get(d, 0) + amt_c  # negative
 
-    # 3) Build daily total balance from accounts (if balances not stored, approximate via net flows)
-    # Try account balances series if available
-    have_account_series = False
-    daily_total_bal_c = {d: 0 for d in days}
-    if accounts:
-        # If accounts carry balance history, sum per day
-        # Expected structure: account["balances_cents"] aligned with days, else fallback
-        for acc in accounts:
-            acc_days = acc.get("days")
-            acc_series = acc.get("balances_cents")
-            if isinstance(acc_days, list) and isinstance(acc_series, list) and len(acc_days) == len(acc_series):
-                have_account_series = True
-                for d, bal in zip(acc_days, acc_series):
-                    if isinstance(d, date) and start <= d <= end:
-                        daily_total_bal_c[d] = daily_total_bal_c.get(d, 0) + int(bal)
-        # If no per-day balances, fall back to cumulative net flows
-    if not have_account_series:
-        # Use cumulative of (income + expense) starting at 0
-        running = 0
-        for d in days:
-            running += daily_inc_c.get(d, 0) + daily_exp_c.get(d, 0)
-            daily_total_bal_c[d] = running
-
-    # 4) Aggregate per chosen granularity
-    x_points = []
-    income_r = []
-    expense_r = []
-    burnline_r = []
+    # Aggregate by granularity
+    x_points, income_r, expense_r, burnline_r = [], [], [], []
 
     if agg_mode == "daily":
-        running = 0
         for d in days:
-            inc_c = daily_inc_c.get(d, 0)
-            exp_c = daily_exp_c.get(d, 0)
-            running = daily_total_bal_c.get(d, running)
             x_points.append(d)
-            income_r.append(abs(inc_c) / 100.0)
-            expense_r.append(abs(exp_c) / 100.0)
-            burnline_r.append(running / 100.0)
-        tickformat = "%d %b"
-        tickvals = None
-        ticktext = None
-        tickmode = "auto"
+            income_r.append(abs(daily_inc_c.get(d, 0)) / 100.0)
+            expense_r.append(abs(daily_exp_c.get(d, 0)) / 100.0)
+            burnline_r.append(total_bal_cents_by_day.get(d, 0) / 100.0)
+        tickformat, tickvals, ticktext, tickmode = "%d %b", None, None, "auto"
 
     elif agg_mode == "weekly":
         from collections import defaultdict
         buckets = defaultdict(lambda: {"inc": 0, "exp": 0, "last_day": None})
-        # Sum by ISO week; line uses last day’s balance
         for d in days:
             iso = d.isocalendar()
             key = (iso.year, iso.week)
@@ -958,20 +931,15 @@ def burnrate_plot(start: date, end: date, *, height: int = 420) -> Plot:
             b["inc"] += daily_inc_c.get(d, 0)
             b["exp"] += daily_exp_c.get(d, 0)
             b["last_day"] = d
-        keys = sorted(buckets.keys())
-        for k in keys:
-            b = buckets[k]
+        for _, b in sorted(buckets.items()):
             x_points.append(b["last_day"])
             income_r.append(abs(b["inc"]) / 100.0)
             expense_r.append(abs(b["exp"]) / 100.0)
-            burnline_r.append(daily_total_bal_c.get(b["last_day"], 0) / 100.0)
-
-        # ticks every ~3 weeks with custom labels "wk48 16 Nov"
+            burnline_r.append(total_bal_cents_by_day.get(b["last_day"], 0) / 100.0)
         step = max(1, len(x_points) // 8)
         tickvals = [x_points[i] for i in range(0, len(x_points), step)]
         ticktext = [f"wk{tv.isocalendar().week} {tv.strftime('%d %b')}" for tv in tickvals]
-        tickformat = None
-        tickmode = "array"
+        tickformat, tickmode = None, "array"
 
     else:  # monthly
         from collections import defaultdict
@@ -982,61 +950,53 @@ def burnrate_plot(start: date, end: date, *, height: int = 420) -> Plot:
                 return date(d.year, 12, 31)
             first_next = date(d.year, d.month + 1, 1)
             return first_next - timedelta(days=1)
-
         for d in days:
             key = month_key(d)
             b = buckets[key]
             b["inc"] += daily_inc_c.get(d, 0)
             b["exp"] += daily_exp_c.get(d, 0)
             b["month_end"] = month_end(d)
-
-        keys = sorted(buckets.keys())
-        for k in keys:
-            b = buckets[k]
+        for _, b in sorted(buckets.items()):
             m_end = b["month_end"]
             x_points.append(m_end)
             income_r.append(abs(b["inc"]) / 100.0)
             expense_r.append(abs(b["exp"]) / 100.0)
-            burnline_r.append(daily_total_bal_c.get(m_end, 0) / 100.0)
-
+            burnline_r.append(total_bal_cents_by_day.get(m_end, 0) / 100.0)
         tickformat = "%b %Y"
         tickvals = [x_points[i] for i in range(0, len(x_points), max(1, len(x_points) // 6))]
-        ticktext = None
-        tickmode = "auto"
+        ticktext, tickmode = None, "auto"
 
-    # 5) Build traces with app style
+    # Traces (style guide)
     traces = [
-        go.Bar(
-            name="Expenses",
-            x=x_points, y=expense_r,
-            marker=dict(color="#FFB97A", line=dict(width=0)),
-            hovertemplate="<b>Expense</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
-        ),
-        go.Bar(
-            name="Income",
-            x=x_points, y=income_r,
-            marker=dict(color="#9BE7A1", line=dict(width=0)),
-            hovertemplate="<b>Income</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
-        ),
-        go.Scatter(
-            name="Total Balance (≥ 0)",
-            x=x_points, y=[v if v >= 0 else None for v in burnline_r],
-            mode="lines",
-            line=dict(color="#2ecc71", width=2),
-            hovertemplate="<b>Total Balance</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
-            showlegend=True
-        ),
-        go.Scatter(
-            name="Total Balance (< 0)",
-            x=x_points, y=[v if v < 0 else None for v in burnline_r],
-            mode="lines",
-            line=dict(color="#e53935", width=2),
-            hovertemplate="<b>Total Balance</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
-            showlegend=True
-        )
+        {"type": "bar",
+         "name": "Expenses",
+         "x": x_points, "y": expense_r,
+         "marker": {"color": "#FFB97A", "line": {"width": 0}},
+         "hovertemplate": "<b>Expense</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>"},
+        {"type": "bar",
+         "name": "Income",
+         "x": x_points, "y": income_r,
+         "marker": {"color": "#9BE7A1", "line": {"width": 0}},
+         "hovertemplate": "<b>Income</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>"},
+        {"type": "scatter",
+         "mode": "lines",
+         "name": "Total Balance (≥ 0)",
+         "x": x_points,
+         "y": [v if v >= 0 else None for v in burnline_r],
+         "line": {"color": "#2ecc71", "width": 2},
+         "hovertemplate": "<b>Total Balance</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
+         "showlegend": True},
+        {"type": "scatter",
+         "mode": "lines",
+         "name": "Total Balance (< 0)",
+         "x": x_points,
+         "y": [v if v < 0 else None for v in burnline_r],
+         "line": {"color": "#e53935", "width": 2},
+         "hovertemplate": "<b>Total Balance</b><br>%{x|%d %b %Y}<br>R%{y:,.2f}<extra></extra>",
+         "showlegend": True}
     ]
 
-    # 6) Unified left axis range
+    # Unified left axis range
     y_min = min(0, min(burnline_r) if burnline_r else 0)
     y_max = max(
         (max(expense_r) if expense_r else 0),
@@ -1046,40 +1006,40 @@ def burnrate_plot(start: date, end: date, *, height: int = 420) -> Plot:
     pad = max(1.0, (y_max - y_min) * 0.12)
     unified_range = [y_min - pad, y_max + pad]
 
-    layout = dict(
-        height=height,
-        margin=dict(l=70, r=70, t=64, b=80),
-        showlegend=True,
-        legend=dict(
-            orientation="h", yanchor="bottom", y=-0.28,
-            xanchor="center", x=0.5,
-            font=dict(color="#ffffff", size=11)
-        ),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        barmode="group",
-        xaxis=dict(
-            type="date",
-            showgrid=True, gridcolor="#334", fixedrange=True,
-            tickfont=dict(color="#ffffff", size=11),
-            tickformat=tickformat,
-            tickvals=tickvals,
-            ticktext=ticktext,
-            tickmode=tickmode
-        ),
-        yaxis=dict(
-            title=dict(text="R (Daily Flow and Total Balance)", font=dict(color="#ffffff", size=12)),
-            showgrid=True, gridcolor="#334", fixedrange=True,
-            tickprefix="R", tickformat=",.0f",
-            range=unified_range,
-            tickfont=dict(color="#ffffff", size=11)
-        ),
-        title=dict(
-            text=f"Burn Rate: Daily Flow vs Total Balance<br><span style='font-size:12px;color:#dddddd'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
-            x=0.5, xanchor="center", y=0.98, yanchor="top",
-            font=dict(color="#ffffff", size=14)
-        )
-    )
+    layout = {
+        "height": height,
+        "margin": {"l": 70, "r": 70, "t": 64, "b": 80},
+        "showlegend": True,
+        "legend": {
+            "orientation": "h", "yanchor": "bottom", "y": -0.28,
+            "xanchor": "center", "x": 0.5,
+            "font": {"color": "#ffffff", "size": 11}
+        },
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "barmode": "group",
+        "xaxis": {
+            "type": "date",
+            "showgrid": True, "gridcolor": "#334", "fixedrange": True,
+            "tickfont": {"color": "#ffffff", "size": 11},
+            "tickformat": tickformat,
+            "tickvals": tickvals,
+            "ticktext": ticktext,
+            "tickmode": tickmode
+        },
+        "yaxis": {
+            "title": {"text": "R (Daily Flow and Total Balance)", "font": {"color": "#ffffff", "size": 12}},
+            "showgrid": True, "gridcolor": "#334", "fixedrange": True,
+            "tickprefix": "R", "tickformat": ",.0f",
+            "range": unified_range,
+            "tickfont": {"color": "#ffffff", "size": 11}
+        },
+        "title": {
+            "text": f"Burn Rate: Daily Flow vs Total Balance<br><span style='font-size:12px;color:#dddddd'>{start.strftime('%d %b %Y')} → {end.strftime('%d %b %Y')}</span>",
+            "x": 0.5, "xanchor": "center", "y": 0.98, "yanchor": "top",
+            "font": {"color": "#ffffff", "size": 14}
+        }
+    }
 
     return _make_plot(traces, layout, height=height, interactive=False)
 
