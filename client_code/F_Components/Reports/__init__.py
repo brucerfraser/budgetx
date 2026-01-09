@@ -20,6 +20,7 @@ class Reports(ReportsTemplate):
       "Category Pie",
       "Category Variance",
       "Category Variance + Income",
+      "Burn Rate"
     ]
     self.drop_down_1.items = self._visuals
 
@@ -86,6 +87,10 @@ class Reports(ReportsTemplate):
 
     elif selected == "Category Variance + Income":
       plot = Reporting.category_variance_plot(start, end, height=500,income=True)
+      self._render_plot_component(plot)
+
+    elif selected == "Burn Rate":
+      plot = Reporting.burnrate_plot(start, end, height=500)
       self._render_plot_component(plot)
 
     else:
