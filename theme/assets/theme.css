@@ -362,6 +362,33 @@ input[disabled] ~ span {
   color: #5e3a3d;
 }
 
+.anvil-role-button-orange {
+  /* Layout: Perfectly Centered */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px; 
+
+  /* Shaping */
+  padding: 1px 1px;       /* Minimal padding */
+  border-radius: 6px;      /* Slightly rounded corners */
+  border: none;
+  cursor: pointer;
+
+  /* Typography */
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+
+  /* The 0.3s Transition */
+  transition: all 0.3s ease;
+  transform: scale(1);
+
+  /* Colours */
+  background-color: #F7B980;
+  color: #FF986A;
+}
+
 .anvil-role-fixed-repeating-panel {
   border-bottom: 1px solid grey
   height: 300px; !important /* Set your desired fixed height */

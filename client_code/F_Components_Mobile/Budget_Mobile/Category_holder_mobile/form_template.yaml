@@ -1,110 +1,56 @@
 components:
 - components:
+  - data_bindings:
+    - {code: 'self.item[''name'']', property: text, writeback: false}
+    event_bindings: {}
+    layout_properties: {grid_position: 'NUCKTN,TTSADO'}
+    name: name_label
+    properties:
+      align: center
+      font_size: 16
+      role: title
+      spacing:
+        margin: [0, null, null, null]
+        padding: [3, null, null, null]
+    type: Label
   - components:
-    - components:
-      - components:
-        - data_bindings:
-          - {code: 'self.item[''name'']', property: text, writeback: false}
-          event_bindings: {}
-          layout_properties: {grid_position: 'NUCKTN,TTSADO'}
-          name: name_label
-          properties:
-            font_size: 16
-            spacing:
-              margin: [0, null, null, null]
-              padding: [3, null, null, null]
-          type: Label
-        - layout_properties: {grid_position: 'NUCKTN,UOKNXE'}
-          name: budget
-          properties:
-            font_size: 16
-            role: title
-            spacing:
-              margin: [0, null, null, null]
-              padding: [3, null, null, null]
-          type: Label
-        - layout_properties: {grid_position: 'NUCKTN,PHTFOM'}
-          name: actual
-          properties:
-            font_size: 16
-            role: title
-            spacing:
-              margin: [0, null, null, null]
-              padding: [3, null, null, null]
-          type: Label
-        - layout_properties: {grid_position: 'NUCKTN,HZUANE'}
-          name: progress_bar_1
-          properties: {}
-          type: form:F_Components.ProgressBar
-        - event_bindings: {click: link_2_click}
-          layout_properties: {grid_position: 'NUCKTN,ZMVXNW'}
-          name: link_2
-          properties:
-            align: center
-            background: theme:Secondary Container
-            bold: true
-            border: solid white 1px
-            font_size: 25
-            icon: fa:plus
-            spacing:
-              margin: [0, null, 0, null]
-            spacing_above: none
-            spacing_below: none
-            text: ''
-          type: Link
-        layout_properties: {grid_position: 'WRMUQV,TBVKVG'}
-        name: column_panel_3
-        properties: {col_widths: '{"TTSADO":12,"UOKNXE":12,"PHTFOM":12,"HZUANE":19,"ZMVXNW":5}', foreground: '', role: txn-card-mobile, wrap_on: never}
-        type: ColumnPanel
-      data_bindings:
-      - {code: 'self.item[''colour_text'']', property: foreground, writeback: false}
-      - {code: 'self.item[''colour_back'']', property: background, writeback: false}
-      event_bindings: {click: link_1_click}
-      layout_properties: {full_width_row: true, grid_position: 'ODFYXP,ETDMYT'}
-      name: link_1
-      properties:
-        background: ''
-        bold: true
-        font_size: 22
-        icon: fa:angle-right
-        icon_align: left_edge
-        spacing:
-          margin: [0, null, 0, null]
-          padding: [null, null, null, 0]
-        spacing_above: none
-        spacing_below: none
-      type: Link
-    layout_properties: {full_width_row: true, grid_position: 'RIMGHL,JRHHQG'}
-    name: column_panel_2
-    properties: {col_widths: '{"ETDMYT":55}'}
-    type: ColumnPanel
-  - components:
-    - layout_properties: {full_width_row: true, grid_position: 'ECVDVW,CUMVJC'}
-      name: label_1
-      properties: {visible: false}
-      type: Label
-    layout_properties: {full_width_row: true, grid_position: 'SRXKND,DYXWSS'}
-    name: column_panel_1
+    - layout_properties: {}
+      name: btw_add_subcat
+      properties: {foreground: green, icon: 'fa:plus', role: button-green, text: Add}
+      type: Button
+    layout_properties: {grid_position: 'NUCKTN,WLMVHU'}
+    name: flow_panel_1
+    properties: {align: center}
+    type: FlowPanel
+  - layout_properties: {grid_position: 'LYSBLU,GZMCNU'}
+    name: budget
+    properties:
+      font_size: 16
+      role: title
+      spacing:
+        margin: [0, null, null, null]
+        padding: [3, null, null, null]
+    type: Label
+  - layout_properties: {grid_position: 'LYSBLU,XJYYCJ'}
+    name: actual
+    properties:
+      font_size: 16
+      role: title
+      spacing:
+        margin: [0, null, null, null]
+        padding: [3, null, null, null]
+    type: Label
+  - layout_properties: {grid_position: 'CTEJRV,QUJGPJ'}
+    name: progress_bar_1
     properties: {}
-    type: ColumnPanel
-  - layout_properties: {grid_position: 'SRXKND,EXQWNK', row_background: ''}
-    name: repeating_panel_1
-    properties: {item_template: F_Components_Mobile.Budget_Mobile.Category_holder_mobile.Sub_category_mobile, spacing_above: none, spacing_below: none, visible: false}
-    type: RepeatingPanel
-  layout_properties: {full_width_row: true, grid_position: 'ZQNKJB,EBGPJJ'}
-  name: card_1
-  properties:
-    col_widths: '{"DYXWSS":5,"EXQWNK":55}'
-    role: card
-    spacing:
-      margin: [0, null, 0, null]
-      padding: [0, null, 0, null]
-    spacing_above: none
-    spacing_below: none
+    type: form:F_Components.ProgressBar
+  layout_properties: {grid_position: 'RTSKMG,AETVIZ'}
+  name: cp_budget_cat
+  properties: {background: '', col_widths: '{"TTSADO":35,"WLMVHU":22}', foreground: '', role: txn-card-mobile, wrap_on: never}
   type: ColumnPanel
 container:
   event_bindings: {show: form_show}
-  properties: {role: null}
+  properties: {role: txn-card-mobile}
   type: ColumnPanel
 custom_component: true
 is_package: true

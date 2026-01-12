@@ -209,11 +209,12 @@ class Frame(FrameTemplate):
           {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
         ]
         lbl = {'text':'Dashboard: Fraser Budget','role':'title','icon':'','future':'','colour':''}
-      elif self.content_panel.get_components()[0].which_form == 'budget':
+      elif self.content_panel.get_components()[0].which_form == 'budget_m':
         b_list = [
           {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
         ]
         lbl = {'text':'Budget: Fraser Budget','role':'title','icon':'','future':'','colour':''}
+      
       self.bottom_bar.update_buttons(b_list)
       self.top_bar.update_label(lbl)
 

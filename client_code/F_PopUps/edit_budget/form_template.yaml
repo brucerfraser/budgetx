@@ -1,0 +1,194 @@
+components:
+- components:
+  - layout_properties: {grid_position: 'IAFYVU,CBWLIP'}
+    name: label_2
+    properties: {align: center, role: title}
+    type: Label
+  - event_bindings: {click: close_cat_click}
+    layout_properties: {grid_position: 'IAFYVU,TBPIJQ'}
+    name: close_cat
+    properties:
+      border: solid grey 1px
+      spacing:
+        margin: [0, null, 0, null]
+        padding: [0, 0, 0, 0]
+      text: X
+      visible: false
+    type: Button
+  - components:
+    - layout_properties: {grid_position: 'LQGXFM,TGNKYG'}
+      name: label_3
+      properties: {text: 'Notes:'}
+      type: Label
+    - event_bindings: {lost_focus: update_notes}
+      layout_properties: {grid_position: 'LQGXFM,QICDMB'}
+      name: notes
+      properties: {height: 74, text: Type notes here}
+      type: TextArea
+    layout_properties: {grid_position: 'OERUHS,UHDXZV'}
+    name: column_panel_2
+    properties: {col_widths: '{"TGNKYG":15,"QICDMB":45}', visible: false}
+    type: ColumnPanel
+  layout_properties: {grid_position: 'HKBTYO,RBKMFN'}
+  name: category_view
+  properties: {col_widths: '{"CBWLIP":50,"TBPIJQ":10}', role: card}
+  type: ColumnPanel
+- components:
+  - components:
+    - layout_properties: {grid_position: 'PVYRJZ,REBSEK'}
+      name: label_4
+      properties:
+        bold: true
+        font_size: 17
+        role: null
+        spacing:
+          margin: [0, null, 0, null]
+          padding: [0, null, 0, null]
+        text: Edit
+        underline: true
+      type: Label
+    - event_bindings: {change: edit_switch_change}
+      layout_properties: {grid_position: 'PVYRJZ,BFPIFZ'}
+      name: edit_switch
+      properties:
+        align: right
+        checked: false
+        spacing:
+          margin: [0, null, 0, null]
+          padding: [3, null, 0, null]
+        text_pre: ''
+      type: form:dep_6plivhjd0selve:Switch
+    layout_properties: {grid_position: 'ZFRJDP,GGUMLS'}
+    name: column_panel_5
+    properties:
+      col_widths: '{"REBSEK":30,"BFPIFZ":30}'
+      spacing:
+        margin: [0, null, 0, null]
+      spacing_below: none
+    type: ColumnPanel
+  - components:
+    - layout_properties: {grid_position: 'FQUFCR,UDHLTY KVZXDL,DSPNYG'}
+      name: spacer_1
+      properties: {height: 9}
+      type: Spacer
+    - event_bindings: {change: live_name_update, lost_focus: name_change, pressed_enter: name_change}
+      layout_properties: {grid_position: 'FQUFCR,UDHLTY FFMAHY,BMELZT'}
+      name: edit_name
+      properties: {}
+      type: TextBox
+    - event_bindings: {click: change_order}
+      layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ SUNOXC,LISCFO'}
+      name: button_1
+      properties:
+        border: solid grey 1px
+        icon: fa:angle-up
+        icon_align: top
+        spacing:
+          margin: [0, null, 0, null]
+          padding: [0, 0, 0, 0]
+        spacing_above: none
+        spacing_below: none
+        text: ''
+      type: Button
+    - event_bindings: {click: change_order}
+      layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,IPLXIJ MRAPWQ,ZTGSZA'}
+      name: button_1_copy
+      properties:
+        border: solid grey 1px
+        icon: fa:angle-down
+        icon_align: top
+        spacing:
+          margin: [0, null, 0, null]
+          padding: [0, 0, 0, 0]
+        spacing_above: none
+        spacing_below: none
+        text: ''
+      type: Button
+    - layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,YQQMWO JGTUMN,YVBYHI'}
+      name: spacer_2
+      properties: {height: 3}
+      type: Spacer
+    - event_bindings: {click: archive_click}
+      layout_properties: {grid_position: 'FQUFCR,CTNBEW OPJZIH,YQQMWO UNSWJD,JFZZJM'}
+      name: archive
+      properties:
+        border: solid grey 1px
+        foreground: theme:Error
+        icon: fa:trash
+        icon_align: top
+        spacing:
+          margin: [0, null, 0, null]
+          padding: [0, 0, 0, 0]
+        text: ''
+      type: Button
+    - components:
+      - layout_properties: {grid_position: 'DZXRHC,NGUVUG VNUQKW,OSDRVF'}
+        name: label_11
+        properties: {align: center, text: Text colour}
+        type: Label
+      - components:
+        - event_bindings: {change: a_colour_change}
+          layout_properties: {}
+          name: text_colour
+          properties: {}
+          type: form:F_PopUps.colorpicker
+        layout_properties: {grid_position: 'DZXRHC,NGUVUG SGDTZP,NKCSYN'}
+        name: flow_panel_2
+        properties: {align: center}
+        type: FlowPanel
+      - layout_properties: {grid_position: 'DZXRHC,KTPLSG TBZWWO,XUTLSJ'}
+        name: label_12
+        properties: {align: center, text: Back Colour}
+        type: Label
+      - components:
+        - event_bindings: {change: a_colour_change}
+          layout_properties: {}
+          name: bg_colour
+          properties:
+            align: []
+          type: form:F_PopUps.colorpicker
+        layout_properties: {grid_position: 'DZXRHC,KTPLSG WMPRWC,WREZSX'}
+        name: flow_panel_1
+        properties:
+          align: center
+          spacing:
+            margin: [null, null, 0, null]
+        type: FlowPanel
+      layout_properties: {grid_position: 'ILPFNS,ZDABOE'}
+      name: colours
+      properties: {visible: false}
+      type: ColumnPanel
+    - layout_properties: {grid_position: 'FPQZWN,NUCMGJ'}
+      name: label_5
+      properties: {text: Roll-Over}
+      type: Label
+    - components:
+      - event_bindings: {change: roll_over_change}
+        layout_properties: {grid_position: 'EMCBFL,VSOHMK'}
+        name: roll_over
+        properties: {align: right}
+        type: form:dep_6plivhjd0selve:Switch
+      layout_properties: {grid_position: 'FPQZWN,VJGWGQ'}
+      name: column_panel_6
+      properties: {}
+      type: ColumnPanel
+    - event_bindings: {change: drop_down_1_change}
+      layout_properties: {grid_position: 'TKIICM,NNDDOM'}
+      name: drop_down_1
+      properties: {visible: false}
+      type: DropDown
+    layout_properties: {grid_position: 'PEHDHT,VIVBTJ'}
+    name: edit_details
+    properties:
+      col_spacing: tiny
+      col_widths: '{"UDHLTY":45,"CTNBEW":15}'
+      spacing:
+        margin: [0, null, 0, null]
+      visible: false
+    type: ColumnPanel
+  layout_properties: {grid_position: 'VTJSKD,AJPLBZ'}
+  name: edit_card
+  properties: {role: card, visible: false}
+  type: ColumnPanel
+container: {type: ColumnPanel}
+is_package: true

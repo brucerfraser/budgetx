@@ -20,8 +20,7 @@ class Budget_Mobile(Budget_MobileTemplate):
     self.category_right = ""
     self.period_right = None
     self.cat_sub_cat = None
-    self.which_form = "budget"
-    self.drop_down_1.selected_value = None
+    self.which_form = "budget_m"
     """
     METHOD SERVER
     """
@@ -61,8 +60,15 @@ class Budget_Mobile(Budget_MobileTemplate):
     self.expense_categories.items = cats
     self.update_numbers()
 
+  @handle("", "show")
   def form_show(self, **event_args):
-    self.load_me(False)
+    # self.load_me(False)
+    for i in range (0,3):
+      for l in range (0,12):
+        self.grid_panel_1.add_component(Label(text=str(l)),col_xs=l,width_xs=1,row=str(l))
+
+  def header_numbers(self,**event_args):
+    pass
 
   def smart_cat_update(self, **event_args):
     Global.Transactions_Form.smart_cat_update()
@@ -71,7 +77,6 @@ class Budget_Mobile(Budget_MobileTemplate):
     # this happens after date selection changes at top
     # get date
     fd, ld = BUDGET.date_me(dash)
-    self.month_label.text = fd.strftime("%B %Y")
 
     # go through cats and update any open sub_cats
     self.update_numbers()
@@ -443,40 +448,45 @@ class Budget_Mobile(Budget_MobileTemplate):
     self.label_uncat.foreground = (
       "theme:Amount Negative" if un_cat > 0 else "theme:Primary"
     )
-    self.fix_it.foreground = "theme:Amount Negative" if un_cat > 0 else "theme:Primary"
+    self.fix_it.foreground = "theme:Amount Negative" if un_cat > 0 else "green"
     self.fix_it.text = "FIX IT!" if un_cat > 0 else "YOU ROCK!"
+    self.fix_it.role = "button-orange" if un_cat > 0 else "button-green"
     self.fix_it.enabled = True if un_cat > 0 else False
 
   def update_rh_header(self, i_a, i_b, e_a, e_b, **event_args):
+    self.grid_panel_1.clear()
+    #DATA
     e_v = e_a - (e_b / 100)
     i_v = i_a - (i_b / 100)
-    self.budget_in.text = (
+    budget_in = (
       "(R{b:,.2f})".format(b=-i_b / 100) if i_b < 0 else "R{b:,.2f}".format(b=i_b / 100)
     )
-    self.variance_in.text = (
+    variance_in = (
       "(R{b:,.2f})".format(b=-i_v) if i_v < 0 else "R{b:,.2f}".format(b=i_v)
     )
-    self.actual_in.text = (
+    actual_in = (
       "(R{b:,.2f})".format(b=-i_a) if i_a < 0 else "R{b:,.2f}".format(b=i_a)
     )
-    self.variance_in.foreground = (
+    variance_in_foreground = (
       "theme:Amount Negative" if i_v < 0 else "theme:Primary"
     )
 
-    self.budget_out.text = (
+    budget_out = (
       "(R{b:,.2f})".format(b=-e_b / 100) if e_b < 0 else "R{b:,.2f}".format(b=e_b / 100)
     )
-    self.variance_out.text = (
+    variance_out = (
       "(R{b:,.2f})".format(b=-e_v) if e_v < 0 else "R{b:,.2f}".format(b=e_v)
     )
-    self.actual_out.text = (
+    actual_out = (
       "(R{b:,.2f})".format(b=-e_a) if e_a < 0 else "R{b:,.2f}".format(b=e_a)
     )
-    self.budget_out.foreground = "theme:Amount Negative" if e_b < 0 else "theme:Primary"
-    self.variance_out.foreground = (
+    budget_out_foreground = "theme:Amount Negative" if e_b < 0 else "theme:Primary"
+    variance_out_foreground = (
       "theme:Amount Negative" if e_v < 0 else "theme:Primary"
     )
-    self.actual_out.foreground = "theme:Amount Negative" if e_a < 0 else "theme:Primary"
+    actual_out_foreground = "theme:Amount Negative" if e_a < 0 else "theme:Primary"
+    # DATA WRITE header
+    self.grid_panel_1.add_component(Label(text=))
 
   def update_number_writer(self, b, a, comp, **event_args):
     """

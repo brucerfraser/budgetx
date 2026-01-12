@@ -330,3 +330,4 @@ roles:
 - {name: limited-container-mobile-transaction}
 - {name: limited-container-mobile-dashboard}
 - {name: top-bar-mobile}
+- {name: button-orange}

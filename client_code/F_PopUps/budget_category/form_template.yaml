@@ -1,0 +1,7 @@
+components:
+- layout_properties: {grid_position: 'RQEQUB,DRQCVK'}
+  name: repeating_panel_1
+  properties: {item_template: F_Components_Mobile.Budget_Mobile.Category_holder_mobile.Sub_category_mobile, spacing_above: none, spacing_below: none, visible: false}
+  type: RepeatingPanel
+container: {type: ColumnPanel}
+is_package: true
