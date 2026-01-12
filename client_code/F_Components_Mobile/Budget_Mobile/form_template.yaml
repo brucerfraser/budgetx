@@ -14,74 +14,6 @@ components:
               margin: [0, null, 0, null]
             spacing_above: none
           type: GridPanel
-        - components:
-          - components:
-            - layout_properties: {grid_position: 'BACAWQ,MQFHOA'}
-              name: label_6
-              properties: {foreground: 'theme:Primary', role: null, text: Income}
-              type: Label
-            - layout_properties: {grid_position: 'FPWIOE,GKXYPD'}
-              name: budget_in
-              properties: {foreground: 'theme:Primary'}
-              type: Label
-            - layout_properties: {grid_position: 'TTQZCW,VUBAJS'}
-              name: variance_in
-              properties: {foreground: 'theme:Primary'}
-              type: Label
-            - layout_properties: {grid_position: 'HIMBEV,HYYFMI'}
-              name: actual_in
-              properties: {foreground: 'theme:Primary'}
-              type: Label
-            layout_properties: {grid_position: 'HJBDNT,WLJAUG'}
-            name: column_panel_7
-            properties: {}
-            type: ColumnPanel
-          - components:
-            - layout_properties: {grid_position: 'VDPOYE,KLDCBE'}
-              name: label_8
-              properties: {}
-              type: Label
-            - layout_properties: {grid_position: 'NDZIIQ,ICNZVY'}
-              name: label_9
-              properties: {align: center, text: B}
-              type: Label
-            - layout_properties: {grid_position: 'XVHHFJ,TWIOVX'}
-              name: label_9_copy
-              properties: {align: center, text: V}
-              type: Label
-            - layout_properties: {grid_position: 'YDSVFU,FZNJQP'}
-              name: label_9_copy_2
-              properties: {align: center, text: A}
-              type: Label
-            layout_properties: {grid_position: 'HJBDNT,SQIRAC'}
-            name: column_panel_9
-            properties: {}
-            type: ColumnPanel
-          - components:
-            - layout_properties: {grid_position: 'IZMBXN,CCJWAN'}
-              name: label_7
-              properties: {foreground: 'theme:Amount Negative', text: Expenses}
-              type: Label
-            - layout_properties: {grid_position: 'BVLDJI,TLOCBS'}
-              name: budget_out
-              properties: {foreground: 'theme:Primary'}
-              type: Label
-            - layout_properties: {grid_position: 'VQOTWI,XIQFBH'}
-              name: variance_out
-              properties: {foreground: 'theme:Primary', text: ''}
-              type: Label
-            - layout_properties: {grid_position: 'VJLHHH,BTMDYN'}
-              name: actual_out
-              properties: {foreground: 'theme:Primary', text: ''}
-              type: Label
-            layout_properties: {grid_position: 'HJBDNT,JGJIWA'}
-            name: column_panel_8
-            properties: {}
-            type: ColumnPanel
-          layout_properties: {grid_position: 'RCTKQK,YJWTKA'}
-          name: top_line
-          properties: {border: solid grey 1px, col_widths: '{"WLJAUG":27,"SQIRAC":8,"JGJIWA":25}', role: card, wrap_on: never}
-          type: ColumnPanel
         layout_properties: {grid_position: 'ABRJPF,EHDCBW'}
         name: card_month_picker
         properties:
@@ -107,7 +39,7 @@ components:
             - event_bindings: {click: fix_it_click}
               layout_properties: {}
               name: fix_it
-              properties: {foreground: '#E37434', icon: 'fa:pencil', role: button-orange, text: fix!}
+              properties: {foreground: '#E37434', icon: down, role: button-orange, text: fix!}
               type: Button
             layout_properties: {grid_position: 'XLLPLM,KLHSQB'}
             name: flow_panel_2

@@ -63,9 +63,7 @@ class Budget_Mobile(Budget_MobileTemplate):
   @handle("", "show")
   def form_show(self, **event_args):
     # self.load_me(False)
-    for i in range (0,3):
-      for l in range (0,12):
-        self.grid_panel_1.add_component(Label(text=str(l)),col_xs=l,width_xs=1,row=str(l))
+    pass
 
   def header_numbers(self,**event_args):
     pass
@@ -379,7 +377,7 @@ class Budget_Mobile(Budget_MobileTemplate):
       "roll_over_date"
     ] = r_o_d
 
-  def update_numbers(self, **event_args):
+  def update_numbers(self,expand=True, **event_args):
     """
     Called when needed - budget updated etc
     1. Goes through each cat holder and works out:
@@ -431,7 +429,7 @@ class Budget_Mobile(Budget_MobileTemplate):
       expense_actual += a
       expense_budget += b
       self.update_number_writer(b / 100, a, cat)
-    self.update_rh_header(income_actual, income_budget, expense_actual, expense_budget)
+    self.update_rh_header(income_actual, income_budget, expense_actual, expense_budget, expand)
     self.update_cat_warning()
 
   def update_cat_warning(self, **event_args):
@@ -453,7 +451,7 @@ class Budget_Mobile(Budget_MobileTemplate):
     self.fix_it.role = "button-orange" if un_cat > 0 else "button-green"
     self.fix_it.enabled = True if un_cat > 0 else False
 
-  def update_rh_header(self, i_a, i_b, e_a, e_b, **event_args):
+  def update_rh_header(self, i_a, i_b, e_a, e_b, expand=True, **event_args):
     self.grid_panel_1.clear()
     #DATA
     e_v = e_a - (e_b / 100)
@@ -486,7 +484,53 @@ class Budget_Mobile(Budget_MobileTemplate):
     )
     actual_out_foreground = "theme:Amount Negative" if e_a < 0 else "theme:Primary"
     # DATA WRITE header
-    self.grid_panel_1.add_component(Label(text=))
+    i = 'fa:chevron-down' if expand else 'fa:chevron-up'
+    b=Button(role='button-blue',
+             foreground='blue',
+             icon=i,
+            text='')
+    b.set_event_handler('click',self.change_grid)
+    self.grid_panel_1.add_component(Label(text="Income",foreground="theme:Primary"),
+                                   col_xs=1,width_xs=4,row="Header")
+    self.grid_panel_1.add_component(b,
+                                   col_xs=5,width_xs=2,row="Header")
+    self.grid_panel_1.add_component(Label(text="Expenses",foreground="theme:Negative Amount"),
+                                    col_xs=7,width_xs=5,row="Header")
+    if expand:
+      self.grid_panel_1.add_component(Label(text=budget_in),
+                                      col_xs=1,width_xs=4,row="Budget")
+      self.grid_panel_1.add_component(Label(text="Budget"),
+                                      col_xs=5,width_xs=2,row="Budget")
+      self.grid_panel_1.add_component(Label(text=budget_out),
+                                      col_xs=7,width_xs=5,row="Budget")
+      self.grid_panel_1.add_component(Label(text=variance_in,
+                                            foreground=variance_in_foreground),
+                                      col_xs=1,width_xs=4,row="Variance")
+      self.grid_panel_1.add_component(Label(text="Variance"),
+                                      col_xs=5,width_xs=2,row="Variance")
+      self.grid_panel_1.add_component(Label(text=variance_out,
+                                          foreground=variance_out_foreground),
+                                      col_xs=7,width_xs=5,row="Variance")
+      self.grid_panel_1.add_component(Label(text=actual_in),
+                                      col_xs=1,width_xs=4,row="Actuals")
+      self.grid_panel_1.add_component(Label(text="Actual"),
+                                      col_xs=5,width_xs=2,row="Actuals")
+      self.grid_panel_1.add_component(Label(text=actual_out,
+                                            foreground=actual_out_foreground),
+                                      col_xs=7,width_xs=5,row="Actuals")
+    
+    for th in self.grid_panel_1.get_components():
+      th.spacing_above="none"
+      th.spacing_below="none"
+      th.font_size = 18
+
+  def change_grid(self,**event_args):
+    if event_args['sender'].icon == 'fa:chevron-down':
+      event_args['sender'].icon = 'fa:chevron-up'
+      self.update_numbers(False)
+    else:
+      event_args['sender'].icon = 'fa:chevron-down'
+      self.update_numbers(True)
 
   def update_number_writer(self, b, a, comp, **event_args):
     """
