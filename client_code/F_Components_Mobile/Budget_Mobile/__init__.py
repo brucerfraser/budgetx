@@ -10,6 +10,7 @@ import calendar
 from datetime import date, datetime, timedelta
 from ...F_Global_Logic import Global
 from ...F_Global_Logic import BUDGET
+import anvil.js
 
 
 class Budget_Mobile(Budget_MobileTemplate):
@@ -37,7 +38,8 @@ class Budget_Mobile(Budget_MobileTemplate):
       for inc in app_tables.categories.search(name="Income"):
         inc_d = dict(inc)
       print("Budget form: Income backup table search use because of \n", e)
-    self.card_2.add_component(Category_holder_mobile(item=inc_d))
+    self.income_cat_holder = Category_holder_mobile(item=inc_d)
+    self.card_2.add_component(self.income_cat_holder)
     try:
       cats = sorted(
         [
@@ -63,10 +65,42 @@ class Budget_Mobile(Budget_MobileTemplate):
   @handle("", "show")
   def form_show(self, **event_args):
     # self.load_me(False)
-    pass
+    anvil.js.window.document.documentElement.style.setProperty(
+      "--mobile-headerbudget", "540px"
+    )
 
   def header_numbers(self,**event_args):
     pass
+
+  # ------------------------------
+  # Mobile category "open" animation
+  # ------------------------------
+  def animate_open_category(self, category_id, **event_args):
+    """Fade non-selected categories, slide the category list up over the header,
+    then hide header components. After the animation you can inject/expand
+    sub-categories under the selected item.
+
+    Called from the Category_holder_mobile item on single-tap.
+    """
+    self.grid_panel_1.visible = False
+    self.card_exp_header.visible = False
+    self.income_cat_holder.remove_from_parent()
+    self.expense_categories.items = []
+    # The anim hides everything. No worries, we just add the correct category again, even if it's income
+    cats = [c for c in BUDGET.all_cats if c["category_id"] == category_id]
+    self.expense_categories.items = cats
+    self.update_numbers()
+    # Optional: automatically open the tapped category's sub-cats
+    for cat in self.expense_categories.get_components():
+      cat.opened = True
+      from ...F_PopUps.budget_category import budget_category
+      cat.add_component(budget_category(cat_id=category_id))
+    anvil.js.window.document.documentElement.style.setProperty(
+      "--mobile-headerbudget", "195px"
+    )
+
+      
+
 
   def smart_cat_update(self, **event_args):
     Global.Transactions_Form.smart_cat_update()
@@ -387,27 +421,29 @@ class Budget_Mobile(Budget_MobileTemplate):
       d. Updates category prog bar
     """
     fd, ld = BUDGET.date_me(False)
+    
     cat = self.card_2.get_components()[-1]
-    a, b = 0, 0
-    income_budget, income_actual = 0, 0
-    for sub_cat in [
-      s for s in BUDGET.all_sub_cats if s["belongs_to"] == cat.item["category_id"]
-    ]:
-      a += BUDGET.get_actual(id=sub_cat["sub_category_id"])
-      try:
-        b += [
-          budget
-          for budget in BUDGET.all_budgets
-          if budget["period"] == fd
-          and budget["belongs_to"] == sub_cat["sub_category_id"]
-        ][0]["budget_amount"]
-        # roll-over function. Nah - not sure what to do with roll_over on income
-      except:
-        b += 0
-    income_actual += a
-    income_budget += b
-
-    self.update_number_writer(b / 100, a, cat)
+    if isinstance(cat, Category_holder_mobile):
+      a, b = 0, 0
+      income_budget, income_actual = 0, 0
+      for sub_cat in [
+        s for s in BUDGET.all_sub_cats if s["belongs_to"] == cat.item["category_id"]
+      ]:
+        a += BUDGET.get_actual(id=sub_cat["sub_category_id"])
+        try:
+          b += [
+            budget
+            for budget in BUDGET.all_budgets
+            if budget["period"] == fd
+            and budget["belongs_to"] == sub_cat["sub_category_id"]
+          ][0]["budget_amount"]
+          # roll-over function. Nah - not sure what to do with roll_over on income
+        except:
+          b += 0
+      income_actual += a
+      income_budget += b
+  
+      self.update_number_writer(b / 100, a, cat)
 
     expense_budget, expense_actual = 0, 0
     for cat in self.expense_categories.get_components():
@@ -429,8 +465,9 @@ class Budget_Mobile(Budget_MobileTemplate):
       expense_actual += a
       expense_budget += b
       self.update_number_writer(b / 100, a, cat)
-    self.update_rh_header(income_actual, income_budget, expense_actual, expense_budget, expand)
-    self.update_cat_warning()
+    if isinstance(self.card_2.get_components()[-1], Category_holder_mobile):
+      self.update_rh_header(income_actual, income_budget, expense_actual, expense_budget, expand)
+      self.update_cat_warning()
 
   def update_cat_warning(self, **event_args):
     fd, ld = BUDGET.date_me(False)
@@ -528,9 +565,15 @@ class Budget_Mobile(Budget_MobileTemplate):
     if event_args['sender'].icon == 'fa:chevron-down':
       event_args['sender'].icon = 'fa:chevron-up'
       self.update_numbers(False)
+      anvil.js.window.document.documentElement.style.setProperty(
+        "--mobile-headerbudget", "330px"
+      )
     else:
       event_args['sender'].icon = 'fa:chevron-down'
       self.update_numbers(True)
+      anvil.js.window.document.documentElement.style.setProperty(
+        "--mobile-headerbudget", "540px"
+      )
 
   def update_number_writer(self, b, a, comp, **event_args):
     """

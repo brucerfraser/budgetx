@@ -7,12 +7,14 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 from datetime import date
 from ....F_Global_Logic import BUDGET
+import anvil.js
 
 
 class Category_holder_mobile(Category_holder_mobileTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
+    self.opened = False
 
   @handle('btw_add_subcat','click')
   def link_2_click(self, **event_args):
@@ -97,21 +99,24 @@ class Category_holder_mobile(Category_holder_mobileTemplate):
     # Make all other sub_cats clickable again (links vis, edit invis)
     budg.reset_sub_categories("")
 
-  def calculate_me(self, info, **event_args):
-    pass
+  def calculate_me(self, **event_args):
+    print(self.opened)
 
   def form_show(self, **event_args):
     for obj in [self.name_label, self.budget, self.actual]:
       obj.foreground = self.item["colour_text"]
       self.cp_budget_cat.background = self.item["colour_back"]
+    self.name_label.role = 'title'
+    anvil.js.get_dom_node(self).classList.add("bx-cat-row")
     self.start_listening()
+    
 
   def start_listening(self, **event_args):
     # Attach only once per form instance
     if getattr(self, "_press_handlers_attached", False):
       return
     self._press_handlers_attached = True
-
+    # anvil.js.get_dom_node(self).classList.add("cat-row")
     def attach():
       el = anvil.js.get_dom_node(self)
 
@@ -157,7 +162,13 @@ class Category_holder_mobile(Category_holder_mobileTemplate):
 
       def do_single_tap():
         # Your existing single-tap behavior (toggle selection)
-        Notification("Single Tap").show()
+        if self.opened:
+          # reload entire budget page
+          get_open_form().budget_page_link_click()
+        else:
+          budg = get_open_form().content_panel.get_components()[0]
+          budg.animate_open_category(category_id=self.item["category_id"])
+        
 
       def do_double_tap():
         # Double-tap behavior (open/edit) — replace later with your popup

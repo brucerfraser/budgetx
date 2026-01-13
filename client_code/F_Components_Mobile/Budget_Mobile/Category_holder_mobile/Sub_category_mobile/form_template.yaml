@@ -1,98 +1,53 @@
 components:
 - components:
   - components:
-    - components:
-      - data_bindings:
-        - {code: 'self.item[''name'']', property: text, writeback: false}
-        layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,EUDPDW'}
-        name: sub_cat_name
-        properties:
-          spacing:
-            margin: [6, null, 0, null]
-            padding: [0, null, 0, null]
-          spacing_above: small
-          spacing_below: none
-        type: Label
-      - layout_properties: {grid_position: 'OXJHKJ,XEJEMU'}
-        name: budget
-        properties:
-          align: center
-          spacing:
-            margin: [6, null, 0, null]
-            padding: [0, null, 0, null]
-          spacing_below: none
-        type: Label
-      - event_bindings: {click: actual_click}
-        layout_properties: {grid_position: 'OXJHKJ,JVLNUI'}
-        name: actual
-        properties:
-          align: center
-          spacing:
-            margin: [0, null, 0, null]
-          spacing_above: none
-          spacing_below: none
-        type: Link
-      - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
-        name: progress_bar_1
-        properties: {max_value: 100, min_value: -100, value: 0}
-        type: form:F_Components.ProgressBar
-      layout_properties: {full_width_row: true, grid_position: 'EDIEGX,DEDJPQ'}
-      name: current_column_panel
-      properties: {background: ''}
-      type: ColumnPanel
-    event_bindings: {click: link_1_click}
-    layout_properties: {full_width_row: true, grid_position: 'UBUHDT,WJBCDD'}
-    name: link_1
-    properties:
-      spacing:
-        margin: [0, null, 0, null]
-      spacing_above: none
-      spacing_below: none
-    type: Link
-  - components:
     - data_bindings:
       - {code: 'self.item[''name'']', property: text, writeback: false}
-      layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,JPKVTJ'}
-      name: sub_cat_name_edit
-      properties: {}
-      type: Label
-    - event_bindings: {change: budget_edit_change, lost_focus: budget_edit_lost_focus, pressed_enter: budget_edit_lost_focus}
-      layout_properties: {grid_position: 'OXJHKJ,UTOQIZ'}
-      name: budget_edit
+      layout_properties: {full_width_row: true, grid_position: 'OXJHKJ,EUDPDW'}
+      name: sub_cat_name
       properties:
-        align: center
-        margin: [0, null, 0, null]
-        spacing_above: none
+        role: title
+        spacing:
+          margin: [6, null, 0, null]
+          padding: [0, null, 0, null]
+        spacing_above: small
         spacing_below: none
-        type: number
-      type: TextBox
-    - layout_properties: {grid_position: 'OXJHKJ,JVLNUI'}
-      name: actual_edit
+      type: Label
+    - layout_properties: {grid_position: 'OXJHKJ,MAQXHL'}
+      name: progress_bar_1
+      properties: {max_value: 100, min_value: -100, value: 0}
+      type: form:F_Components.ProgressBar
+    layout_properties: {full_width_row: true, grid_position: 'YSYCOD,NUCNIA'}
+    name: current_column_panel
+    properties: {background: '', col_widths: '{"EUDPDW":20,"MAQXHL":40}', wrap_on: never}
+    type: ColumnPanel
+  - components:
+    - layout_properties: {grid_position: 'FZSYMD,QZJYWX'}
+      name: budget
       properties:
         align: center
         spacing:
-          margin: [0, null, 0, null]
-        spacing_above: none
+          margin: [6, null, 0, null]
+          padding: [0, null, 0, null]
         spacing_below: none
-      type: Link
-    - layout_properties: {grid_position: 'OXJHKJ,MAQXHL RAUWQV,PUKKTW'}
-      name: progress_bar_1_edit
-      properties: {max_value: 100, min_value: -100, value: 23}
-      type: form:F_Components.ProgressBar
-    layout_properties: {full_width_row: true, grid_position: 'NKBVXG,VKGXVW'}
-    name: edit_column_panel
-    properties:
-      background: ''
-      spacing:
-        margin: [0, null, 0, null]
-      spacing_above: none
-      spacing_below: none
-      visible: false
+      type: Label
+    - layout_properties: {grid_position: 'FZSYMD,IHLKGO'}
+      name: actual
+      properties:
+        align: center
+        spacing:
+          margin: [6, null, 0, null]
+          padding: [0, null, 0, null]
+        spacing_below: none
+      type: Label
+    layout_properties: {full_width_row: true, grid_position: 'VQNLBP,TXTJSJ'}
+    name: column_panel_1
+    properties: {wrap_on: never}
     type: ColumnPanel
   layout_properties: {full_width_row: true, grid_position: 'BJLQUD,INSXGY'}
   name: card_1
   properties:
-    role: card
+    role: txn-card-mobile
     spacing:
       margin: [0, null, 0, null]
       padding: [0, null, 0, null]

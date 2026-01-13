@@ -67,7 +67,6 @@ a:active:not(disabled), a:focus:not(disabled){
 
 
 
-
 /* Text boxes and areas */
 
 .anvil-text-box, .anvil-text-area, .form-control {
@@ -278,6 +277,7 @@ input[disabled] ~ span {
   --mobile-gap: 10px;
   --mobile-headertransaction: 250px; /*extra heading stuff at top of transactions page */
   --mobile-headerdashboard: 80px; /*extra heading stuff at top of dashboard page */
+  --mobile-headerbudget: 540px; /*extra heading stuff at top of budget page */
 }
 
 
@@ -514,6 +514,15 @@ input[disabled] ~ span {
   border-bottom: 1px solid white;
 }
 
+.anvil-role-limited-container-mobile-budget {
+  height: calc(100vh - var(--mobile-headerbudget) - var(--mobile-bottombar) - (3 * var(--mobile-gap)));
+  /* height: calc(100vh - 82px); /* 72px bar + 10px breathing room */
+  background: %color:Surface Variant%;
+  padding: 8px 12px;
+  overflow-y: auto;
+  border-bottom: 1px solid white;
+}
+
 .anvil-role-limited-container-mobile-dashboard {
   height: calc(100vh - var(--mobile-headerdashboard) - var(--mobile-bottombar) - (3 * var(--mobile-gap)));
   /* height: calc(100vh - 82px); /* 72px bar + 10px breathing room */
@@ -523,10 +532,7 @@ input[disabled] ~ span {
   border-bottom: 1px solid white;
 }
 
-/* .anvil-role-top-bar-mobile {
-  
-  padding: 1px 1px 1px 1px;
-} */
+
 
 .mobile-topbar-row{
   display:flex;
@@ -636,7 +642,8 @@ html.kbd-lock, body.kbd-lock {
 
 /* Make your inner scrolling container do the scrolling (apply to your fixed holder page role) */
 .anvil-role-limited-container-mobile-transaction,
-.anvil-role-limited-container-mobile-dashboard {
+.anvil-role-limited-container-mobile-dashboard,
+.anvil-role-limited-container-mobile-budget {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
@@ -668,6 +675,8 @@ html.kbd-lock, body.kbd-lock {
     font-size: 16px !important;
   }
 }
+
+
 
 /* Modals */
 

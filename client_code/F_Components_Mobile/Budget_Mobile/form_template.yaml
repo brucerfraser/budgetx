@@ -72,6 +72,7 @@ components:
         layout_properties: {grid_position: 'OUVEOM,GHWXTE'}
         name: card_exp_header
         properties:
+          border: solid grey 1px
           col_widths: '{"AOEFPP":40,"WMEBCH":20}'
           role: card
           spacing:
@@ -84,7 +85,7 @@ components:
         type: RepeatingPanel
       layout_properties: {full_width_row: true, grid_position: 'YKXTUA,CGOXGK'}
       name: card_expenses
-      properties: {role: fixed-holder-page}
+      properties: {role: limited-container-mobile-budget}
       type: ColumnPanel
     layout_properties: {full_width_row: true, grid_position: 'FAHOZH,KSCTCA'}
     name: column_panel_4
