@@ -22,15 +22,20 @@ components:
     properties: {background: '', col_widths: '{"EUDPDW":20,"MAQXHL":40}', wrap_on: never}
     type: ColumnPanel
   - components:
-    - layout_properties: {grid_position: 'FZSYMD,QZJYWX'}
-      name: budget
-      properties:
-        align: center
-        spacing:
-          margin: [6, null, 0, null]
-          padding: [0, null, 0, null]
-        spacing_below: none
-      type: Label
+    - components:
+      - layout_properties: {}
+        name: budget
+        properties:
+          align: center
+          spacing:
+            margin: [6, null, 0, null]
+            padding: [0, null, 0, null]
+          spacing_below: none
+        type: Label
+      layout_properties: {grid_position: 'FZSYMD,GVLTFM'}
+      name: flow_panel_1
+      properties: {align: center}
+      type: FlowPanel
     - layout_properties: {grid_position: 'FZSYMD,IHLKGO'}
       name: actual
       properties:

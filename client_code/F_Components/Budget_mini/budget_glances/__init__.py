@@ -14,9 +14,11 @@ class budget_glances(budget_glancesTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-
+    self.a = 0
+    self.b = 0
     # Any code you write here will run before the form opens.
 
+  @handle("", "show")
   def form_show(self, **event_args):
     self.a = 0
     self.b = 0
@@ -33,21 +35,21 @@ class budget_glances(budget_glancesTemplate):
 
   def update_the_show(self,**event_args):
     #we have to do roll-over calc here, because a budget update is cool but must update roll-over
-    try:
-      if self.b != BUDGET.roll_over_calc(id=self.item['sub_category_id']):
-        self.budget.underline = True
-      else:
-        self.budget.underline = False
-    except:
-      print("Glances line 43:",self.item,'\n',self.b)
+    # try:
+    #   if self.b != BUDGET.roll_over_calc(id=self.item['sub_category_id']):
+    #     self.budget.underline = True
+    #   else:
+    #     self.budget.underline = False
+    # except:
+    #   print("Glances line 43:",self.item,'\n',self.b)
     bar_b = BUDGET.roll_over_calc(id=self.item['sub_category_id'])
-    self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
-    self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
-    self.budget_edit.text = float(self.b/100)
-    a_t = "(R {actual:.2f})".format(actual=-self.a) if self.a < 0 else "R {actual:.2f}".format(actual=self.a)
-    self.actual.text,self.actual_edit.text = a_t,a_t
-    self.actual.foreground = 'theme:Amount Negative' if self.a < 0 else ''
-    self.actual_edit.foreground = 'theme:Amount Negative' if self.a < 0 else ''
+    # self.budget.text = "({b:.2f})".format(b=-self.b/100) if self.b < 0 else "{b:.2f}".format(b=self.b/100)
+    # self.budget.foreground = 'theme:Amount Negative' if self.b < 0 else ''
+    # self.budget_edit.text = float(self.b/100)
+    # a_t = "(R {actual:.2f})".format(actual=-self.a) if self.a < 0 else "R {actual:.2f}".format(actual=self.a)
+    # self.actual.text,self.actual_edit.text = a_t,a_t
+    # self.actual.foreground = 'theme:Amount Negative' if self.a < 0 else ''
+    # self.actual_edit.foreground = 'theme:Amount Negative' if self.a < 0 else ''
     self.update_bars(bar_b/100,self.a)
 
   def update_bars(self,b,a,**event_args):
@@ -55,11 +57,8 @@ class budget_glances(budget_glancesTemplate):
     maxi,min,v = 0,0,0
     if BUDGET.is_income(self.item['belongs_to']):
       self.progress_bar_1.min_value = 0
-      self.progress_bar_1_edit.min_value = 0
       self.progress_bar_1.max_value = max(b,a)
-      self.progress_bar_1_edit.max_value = max(b,a)
       self.progress_bar_1.value = a
-      self.progress_bar_1_edit.value = a
     else:
       # if still have budget, set a standard zero point at 25% of the bar.
       # if budget exceeded, set equal min point to max, zero halfway
@@ -84,7 +83,7 @@ class budget_glances(budget_glancesTemplate):
         maxi = 10.0
         min = -10.0
         v = 0.0
-      self.progress_bar_1.min_value,self.progress_bar_1_edit.min_value = min,min
-      self.progress_bar_1.max_value,self.progress_bar_1_edit._max_value = maxi,maxi
-      self.progress_bar_1.value,self.progress_bar_1_edit.value = v,v
+      self.progress_bar_1.min_value = min
+      self.progress_bar_1.max_value = maxi
+      self.progress_bar_1.value = v
       self.progress_bar_1.refresh_data_bindings()

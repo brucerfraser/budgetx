@@ -30,6 +30,7 @@ components:
     wrap_on: never
   type: ColumnPanel
 container:
+  event_bindings: {}
   properties:
     spacing:
       margin: [0, null, 0, null]

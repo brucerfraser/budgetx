@@ -118,7 +118,7 @@ class Category_holder_mobile(Category_holder_mobileTemplate):
     self._press_handlers_attached = True
     # anvil.js.get_dom_node(self).classList.add("cat-row")
     def attach():
-      el = anvil.js.get_dom_node(self)
+      el = anvil.js.get_dom_node(self.cp_budget_cat)
 
       # --- Gesture state ---
       self._press_timer = None
