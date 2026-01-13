@@ -566,7 +566,7 @@ class Budget_Mobile(Budget_MobileTemplate):
       event_args['sender'].icon = 'fa:chevron-up'
       self.update_numbers(False)
       anvil.js.window.document.documentElement.style.setProperty(
-        "--mobile-headerbudget", "330px"
+        "--mobile-headerbudget", "395px"
       )
     else:
       event_args['sender'].icon = 'fa:chevron-down'
