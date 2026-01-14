@@ -22,11 +22,6 @@ class Budget_Mobile(Budget_MobileTemplate):
     self.period_right = None
     self.cat_sub_cat = None
     self.which_form = "budget_m"
-    """
-    METHOD SERVER
-    """
-    # self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
-
     inc_d = {}
     cats = []
     """
@@ -37,7 +32,7 @@ class Budget_Mobile(Budget_MobileTemplate):
     except Exception as e:
       for inc in app_tables.categories.search(name="Income"):
         inc_d = dict(inc)
-      print("Budget form: Income backup table search use because of \n", e)
+      print("Budget form mobile line 35: Income backup table search use because of \n", e)
     self.income_cat_holder = Category_holder_mobile(item=inc_d)
     self.card_2.add_component(self.income_cat_holder)
     try:
@@ -55,7 +50,7 @@ class Budget_Mobile(Budget_MobileTemplate):
         cat_d = dict(cat)
         if cat_d["name"] != "Income" and cat_d["order"] != -1:
           cats.append(cat_d)
-      print("Budget form: Expesnse backup table search use because of \n", e)
+      print("Budget form mobile line 53: Expesnse backup table search use because of \n", e)
     """
     END local load methods
     """
@@ -90,7 +85,7 @@ class Budget_Mobile(Budget_MobileTemplate):
     cats = [c for c in BUDGET.all_cats if c["category_id"] == category_id]
     self.expense_categories.items = cats
     self.update_numbers()
-    # Optional: automatically open the tapped category's sub-cats
+    # automatically open the tapped category's sub-cats
     for cat in self.expense_categories.get_components():
       cat.opened = True
       from ...F_PopUps.budget_category import budget_category
@@ -98,9 +93,6 @@ class Budget_Mobile(Budget_MobileTemplate):
     anvil.js.window.document.documentElement.style.setProperty(
       "--mobile-headerbudget", "195px"
     )
-
-      
-
 
   def smart_cat_update(self, **event_args):
     Global.Transactions_Form.smart_cat_update()

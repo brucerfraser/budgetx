@@ -128,6 +128,9 @@ def neg_pos(amount,b_to):
   return amount
 
 def update_a_budget(amount,period,id):
+  """
+  Changing this to update centrally, both to local and server DB
+  """
   global all_budgets
   try:
     i = all_budgets.index([b for b in all_budgets if b['period'] == period and b['belongs_to'] == id][0])
