@@ -149,18 +149,7 @@ class Sub_category_mobile(Sub_category_mobileTemplate):
     if self.txt_edit_budget:
       self.budget_edit_finish()
     else:
-      # self.b = 0
-      # period = date(Global.PERIOD[1], Global.PERIOD[0], 1)
-      # # get budget
-      # try:
-      #   self.b = [
-      #     b
-      #     for b in BUDGET.all_budgets
-      #     if b["belongs_to"] == self.item["sub_category_id"] and b["period"] == period
-      #   ][0]["budget_amount"]
-      # except Exception as e:
-      #   print("no budget amount set", e)
-      t = self.b if self.b else None
+      t = self.b/100 if self.b else None
       self.txt_edit_budget = TextBox(placeholder="Enter budget",
                                      text=t,type='number')
       self.txt_edit_budget.set_event_handler('change',self.budget_edit_change)
@@ -171,24 +160,29 @@ class Sub_category_mobile(Sub_category_mobileTemplate):
       self.txt_edit_budget.select()
     
   
-  def budget_edit_update(self,close=False, **event_args):
+  def budget_edit_update(self, **event_args):
     self.a = BUDGET.get_actual(self.item["sub_category_id"])
-    self.b = self.txt_edit_budget.text
+    self.b = self.txt_edit_budget.text * 100
     if BUDGET.is_income(self.item["belongs_to"]):
       if self.b < 0:
         self.b = self.b * -1
     else:
       if self.b > 0:
         self.b = self.b * -1
+    self.budget.text = (
+      "({b:.2f})".format(b=-self.b / 100)
+      if self.b < 0
+      else "{b:.2f}".format(b=self.b / 100)
+    )
     self.update_bars(self.b, self.a)
-    if close:
-      self.txt_edit_budget.remove_from_parent()
 
   def budget_edit_change(self,**event_args):
     self.budget_edit_update()
 
   def budget_edit_finish(self,**event_args):
-    self.budget_edit_update(True)
+    self.budget_edit_update()
+    self.txt_edit_budget.remove_from_parent()
+    self.budget.visible = True
     self.txt_edit_budget = None
 
 
@@ -263,7 +257,7 @@ class Sub_category_mobile(Sub_category_mobileTemplate):
       def do_single_tap():
         # Your existing single-tap behavior (toggle selection)
         if not self.txt_edit_budget:
-          self.budget_edit_start() 
+          self.budget_edit_start()
         
         
 
