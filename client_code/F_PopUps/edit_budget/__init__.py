@@ -51,5 +51,8 @@ class edit_budget(edit_budgetTemplate):
     self.edit_details.visible,self.edit_switch.checked,self.drop_down_1.visible = False,False,False
     self.drop_down_1.selected_value = None
     self.close_cat.visible = True
+
+  def clear_edit(self,**event_args):
+    self.edit_card.visible, self.category_view.visible = False,False
     
 

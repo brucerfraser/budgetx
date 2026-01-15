@@ -60,18 +60,20 @@ class Category_holder(Category_holderTemplate):
       odd = not odd
     
   def link_1_click(self, **event_args):
+    budg_edit = anvil.get_open_form().content_panel.get_components()[0].edit_budget
     if self.link_1.icon == 'fa:angle-right':
       self.repeating_panel_1.items = sorted([sc for sc in BUDGET.all_sub_cats if sc['belongs_to'] == self.item['category_id'] and sc['order'] >= 0],
                                             key=lambda x: x['order'])
       self.link_1.icon = 'fa:angle-down'
       self.repeating_panel_1.visible = True
+      today = date.today()
+      period = date(today.year, today.month, 1)
+      
     else:
       self.link_1.icon = 'fa:angle-right'
       self.repeating_panel_1.visible = False
-
-    # Send detail to RH Panel
-    frame = anvil.get_open_form()
-    budg = frame.content_panel.get_components()[0]
+      
+    
     today = date.today()
     period = date(today.year, today.month, 1)
     budg.edit_budget.load_for_edit(self.item['category_id'],period,True)
