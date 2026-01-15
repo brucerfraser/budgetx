@@ -172,7 +172,7 @@ components:
           - event_bindings: {lost_focus: update_notes}
             layout_properties: {grid_position: 'LQGXFM,QICDMB'}
             name: notes
-            properties: {height: 74, text: Type notes here}
+            properties: {background: 'theme:On Background', foreground: black, height: 74, text: Type notes here}
             type: TextArea
           layout_properties: {grid_position: 'OERUHS,UHDXZV'}
           name: column_panel_2
