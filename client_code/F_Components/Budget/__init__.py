@@ -115,30 +115,7 @@ class Budget(BudgetTemplate):
                                    period=self.period_right,budget_amount=0,
                                   notes=self.notes.text)
 
-  def edit_switch_change(self, **event_args):
-    if self.edit_switch.checked:
-      if self.cat_sub_cat:
-        self.roll_over.enabled = True
-        self.drop_down_1.items = self.date_picker_bruce_1.drop_down_1.items
-        self.roll_over.checked = [s for s in BUDGET.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over']
-        # self.roll_over.checked = app_tables.sub_categories.get(sub_category_id=self.category_right)['roll_over']
-        if self.roll_over.checked:
-          r_o_d = [s for s in BUDGET.all_sub_cats if s['sub_category_id'] == self.category_right][0]['roll_over_date']
-          if r_o_d:
-            m = r_o_d.month
-            y = r_o_d.year
-            self.drop_down_1.selected_value = (m,y)
-          self.drop_down_1.visible = True
-        self.colours.visible = False
-      else:
-        self.roll_over.enabled,self.roll_over.checked = False,False
-        self.bg_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category_right][0]['colour_back'])
-        self.text_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category_right][0]['colour_text'])
-        self.colours.visible = True
-      self.edit_details.visible = True
-      self.edit_name.select()
-    else:
-      self.edit_details.visible = False
+  
 
   def change_order(self, **event_args):
     up = None

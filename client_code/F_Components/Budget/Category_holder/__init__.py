@@ -61,6 +61,7 @@ class Category_holder(Category_holderTemplate):
     
   def link_1_click(self, **event_args):
     budg_edit = anvil.get_open_form().content_panel.get_components()[0].edit_budget
+    budg = anvil.get_open_form().content_panel.get_components()[0]
     if self.link_1.icon == 'fa:angle-right':
       self.repeating_panel_1.items = sorted([sc for sc in BUDGET.all_sub_cats if sc['belongs_to'] == self.item['category_id'] and sc['order'] >= 0],
                                             key=lambda x: x['order'])
@@ -68,17 +69,13 @@ class Category_holder(Category_holderTemplate):
       self.repeating_panel_1.visible = True
       today = date.today()
       period = date(today.year, today.month, 1)
-      
+      budg_edit.load_for_edit(self.item['category_id'],period,True)
+      budg.reset_sub_categories("") #empty sub-category because a catgeory has been clicked, not a sub-cat
     else:
       self.link_1.icon = 'fa:angle-right'
       self.repeating_panel_1.visible = False
-      
+      budg_edit.clear_edit()
     
-    today = date.today()
-    period = date(today.year, today.month, 1)
-    budg.edit_budget.load_for_edit(self.item['category_id'],period,True)
-    # Make all other sub_cats clickable again (links vis, edit invis)
-    budg.reset_sub_categories("") #empty sub-category because a catgeory has been clicked, not a sub-cat
 
   def calculate_me(self,info,**event_args):
     pass
