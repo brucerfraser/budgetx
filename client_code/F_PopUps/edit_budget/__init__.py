@@ -75,8 +75,8 @@ class edit_budget(edit_budgetTemplate):
         self.colours.visible = False
       else:
         self.roll_over.enabled,self.roll_over.checked = False,False
-        self.bg_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category_right][0]['colour_back'])
-        self.text_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category_right][0]['colour_text'])
+        self.bg_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category][0]['colour_back'])
+        self.text_colour.set_color([c for c in BUDGET.all_cats if c['category_id'] == self.category][0]['colour_text'])
         self.colours.visible = True
       self.edit_details.visible = True
       self.edit_name.select()
