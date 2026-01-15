@@ -94,13 +94,8 @@ class Sub_category(Sub_categoryTemplate):
     self.budget_edit.text = BUDGET.neg_pos(self.budget_edit.text,
                                         self.item['belongs_to'])
     self.b = self.budget_edit.text * 100
-    try:
-      app_tables.budgets.get(period=period,
-                              belongs_to=self.item['sub_category_id'])['budget_amount'] = self.b
-    except:
-      app_tables.budgets.add_row(belongs_to=self.item['sub_category_id'],
-                              period=period,budget_amount=self.b)
-    BUDGET.update_a_budget(self.b,period,self.item['sub_category_id'])
+    pack = {'amount':self.b,'period':period,'id':self.item['sub_category_id']}
+    BUDGET.update_budget('amount',pack)
     self.a = BUDGET.get_actual(self.item['sub_category_id'])
     self.update_the_show()
     budg.update_numbers()

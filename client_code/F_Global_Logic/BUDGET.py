@@ -127,16 +127,51 @@ def neg_pos(amount,b_to):
     amount = -1 * amount
   return amount
 
-def update_a_budget(amount,period,id):
+def get_max_order(id='',cat=True):
+  global all_cats, all_sub_cats
+  if cat:
+    #main category order search
+    return max(all_cats, key=lambda x: x["order"])['order'] + 1
+  else:
+    #sub category order search
+    if len([s for s in all_sub_cats if s['belongs_to'] == id]) > 0:
+      return max([s for s in all_sub_cats if s['belongs_to'] == id], 
+                         key=lambda x: x["order"])['order'] + 1
+    else:
+      return 0
+
+def update_budget(steer,package):
   """
-  Changing this to update centrally, both to local and server DB
+  Global update handler, both local and server data
+  __steer___________package__
+  amount            {'amount':0,'period':date_obj,'id':''}
+  add_cat           result (full main cat dict)
   """
-  global all_budgets
-  try:
-    i = all_budgets.index([b for b in all_budgets if b['period'] == period and b['belongs_to'] == id][0])
-    all_budgets[i]['budget_amount'] = amount
-  except:
-    all_budgets.append({'belongs_to':id,
-                               'budget_amount':amount,
-                               'period':period,
-                               'notes':None})
+  global all_budgets,all_cats,all_sub_cats
+  if steer == "amount":
+    # Update an amount for period in the budget
+    if len([b for b in all_budgets if b['period'] == package['period'] and b['belongs_to'] == package['id']]) > 0:
+      [b for b in all_budgets if b['period'] == package['period'] and b['belongs_to'] == package['id']][0]['amount'] = package['amount']
+    else:
+      all_budgets.append({'belongs_to':package['id'],
+                          'budget_amount':package['amount'],
+                          'period':package['period'],
+                          'notes':None})
+    try:
+      app_tables.budgets.get(period=package['period'],
+                             belongs_to=package['id'])['budget_amount'] = package['amount']
+    except:
+      app_tables.budgets.add_row(belongs_to=package['id'],
+                                 period=package['period'],budget_amount=package['amount'])
+  elif steer == 'add_cat':
+    package['order'] = get_max_order()
+    all_cats.append(package)
+    app_tables.categories.add_row(**package)
+  elif steer == 'add_sub_cat':
+    #first find max order
+    package['order'] = get_max_order(id=package['belongs_to'],cat=False)
+    all_sub_cats.append(package)
+    app_tables.sub_categories.add_row(**package)
+    
+  
+  

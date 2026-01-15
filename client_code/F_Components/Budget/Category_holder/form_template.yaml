@@ -49,6 +49,7 @@ components:
         font_size: 22
         icon: fa:angle-right
         icon_align: left_edge
+        role: txn-card-mobile
         spacing:
           margin: [0, null, 0, null]
           padding: [null, null, null, 0]

@@ -114,18 +114,14 @@ class Budget_Mobile(Budget_MobileTemplate):
 
   def add_category_click(self, **event_args):
     from ...F_PopUps.work_a_category import work_a_category
-
     c = work_a_category()
     result = alert(c, title="Add a category", buttons=[], large=True)
     # print(result)
     if result:
       for a in ["roll_over", "roll_over_date"]:
         del result[a]
-      # we need an order first
-      # print("order (budget line 132):",max(BUDGET.all_cats, key=lambda x: x["order"]))
       result["order"] = max(BUDGET.all_cats, key=lambda x: x["order"])["order"] + 1
-      app_tables.categories.add_row(**result)
-      BUDGET.all_cats.append(result)
+      BUDGET.update_budget('add_cat',result)
       self.expense_categories.items = sorted(
         [
           c
@@ -134,9 +130,6 @@ class Budget_Mobile(Budget_MobileTemplate):
         ],
         key=lambda x: x["order"],
       )
-      # for cat in app_tables.categories.search(q.not_(name='Income')):
-      #   cat_d = dict(cat)
-      #   self.card_expenses.add_component(Category_holder(my_identity=cat_d))
 
   def get_me_max_order(self, res, **event_args):
     if (

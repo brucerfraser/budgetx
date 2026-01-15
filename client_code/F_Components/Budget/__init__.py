@@ -22,11 +22,7 @@ class Budget(BudgetTemplate):
     self.cat_sub_cat = None
     self.which_form = 'budget'
     self.drop_down_1.selected_value = None
-    """
-    METHOD SERVER
-    """
-    # self.all_cats, self.all_sub_cats, self.all_budgets = anvil.server.call('load_budget_data')
-    
+  
     inc_d = {}
     cats = []
     """
@@ -85,16 +81,11 @@ class Budget(BudgetTemplate):
     if result:
       for a in ['roll_over','roll_over_date']:
         del result[a]
-      # we need an order first
-      # print("order (budget line 132):",max(BUDGET.all_cats, key=lambda x: x["order"]))
       result['order'] = max(BUDGET.all_cats, key=lambda x: x["order"])['order'] + 1
-      app_tables.categories.add_row(**result)
-      BUDGET.all_cats.append(result)
+      BUDGET.update_budget('add_cat',result)
       self.expense_categories.items = sorted([c for c in BUDGET.all_cats if not c['name'] == "Income" and not c['order'] == -1],
                                              key = lambda x: x['order'])
-      # for cat in app_tables.categories.search(q.not_(name='Income')):
-      #   cat_d = dict(cat)
-      #   self.card_expenses.add_component(Category_holder(my_identity=cat_d))
+      
 
   
     
@@ -361,7 +352,8 @@ class Budget(BudgetTemplate):
     warning = "{n} uncategorised transactions for this month".format(n=un_cat)
     self.label_uncat.text = "All transactions categorised!" if un_cat == 0 else warning
     self.label_uncat.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
-    self.fix_it.foreground = 'theme:Amount Negative' if un_cat > 0 else 'theme:Primary'
+    self.fix_it.foreground = 'red' if un_cat > 0 else 'green'
+    self.fix_it.role = 'button-orange' if un_cat > 0 else 'button-green'
     self.fix_it.text = "FIX IT!" if un_cat > 0 else "YOU ROCK!"
     self.fix_it.enabled = True if un_cat > 0 else False
 
