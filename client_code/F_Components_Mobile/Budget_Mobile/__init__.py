@@ -131,22 +131,7 @@ class Budget_Mobile(Budget_MobileTemplate):
         key=lambda x: x["order"],
       )
 
-  def get_me_max_order(self, res, **event_args):
-    if (
-      len([s for s in BUDGET.all_sub_cats if s["belongs_to"] == res["belongs_to"]]) > 0
-    ):
-      res["order"] = (
-        max(
-          [s for s in BUDGET.all_sub_cats if s["belongs_to"] == res["belongs_to"]],
-          key=lambda x: x["order"],
-        )["order"]
-        + 1
-      )
-    else:
-      res["order"] = 0
-    BUDGET.all_sub_cats.append(res)
-    return res
-
+  
   def load_category_right(self, cat, period, big_cat=False, b_to="", **event_args):
     self.category_right, self.period_right = cat, period
     self.cat_sub_cat = b_to

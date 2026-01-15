@@ -36,12 +36,12 @@ class Category_holder(Category_holderTemplate):
           odd = not odd
 
   def refresh_sub_cats(self, **event_args):
-    frm = get_open_form().content_panel.get_components()[0]
+    frm = get_open_form().content_panel.get_components()[0].edit_budget
     edit, edit_id = False,None
     for sc in self.repeating_panel_1.get_components():
-      edit = True if sc.item['sub_category_id'] == frm.category_right else False
+      edit = True if sc.item['sub_category_id'] == frm.category else False
       if edit:
-        edit_id = frm.category_right
+        edit_id = frm.category
         break
     item_list = []
     for line in BUDGET.all_sub_cats:
@@ -74,9 +74,9 @@ class Category_holder(Category_holderTemplate):
     budg = frame.content_panel.get_components()[0]
     today = date.today()
     period = date(today.year, today.month, 1)
-    budg.load_category_right(self.item['category_id'],period,True)
+    budg.edit_budget.load_for_edit(self.item['category_id'],period,True)
     # Make all other sub_cats clickable again (links vis, edit invis)
-    budg.reset_sub_categories("")
+    budg.reset_sub_categories("") #empty sub-category because a catgeory has been clicked, not a sub-cat
 
   def calculate_me(self,info,**event_args):
     pass

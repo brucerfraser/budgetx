@@ -16,12 +16,11 @@ class Budget(BudgetTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
     self.init_components(**properties)
-    
-    self.category_right = ""
-    self.period_right = None
-    self.cat_sub_cat = None
+
+    from ...F_PopUps.edit_budget import edit_budget
+    self.edit_budget = edit_budget()
     self.which_form = 'budget'
-    self.drop_down_1.selected_value = None
+    self.card_edit_holder.add_component(self.edit_budget)
   
     inc_d = {}
     cats = []
@@ -85,49 +84,8 @@ class Budget(BudgetTemplate):
       BUDGET.update_budget('add_cat',result)
       self.expense_categories.items = sorted([c for c in BUDGET.all_cats if not c['name'] == "Income" and not c['order'] == -1],
                                              key = lambda x: x['order'])
-      
 
   
-    
-  def get_me_max_order(self,res, **event_args):
-    if len([s for s in BUDGET.all_sub_cats if s['belongs_to'] == res['belongs_to']]) > 0:
-      res['order'] = max([s for s in BUDGET.all_sub_cats if s['belongs_to'] == res['belongs_to']], 
-                        key=lambda x: x["order"])['order'] + 1
-    else:
-      res['order'] = 0
-    BUDGET.all_sub_cats.append(res)
-    return res
-
-
-  def load_category_right(self,cat,period,big_cat=False,b_to='', **event_args):
-    self.category_right,self.period_right = cat,period
-    self.cat_sub_cat = b_to
-    if not big_cat:
-      nts = None
-      try:
-        nts = app_tables.budgets.get(period=period,
-                              belongs_to=cat)['notes']
-      except Exception as e:
-        print("error:",e)
-        
-      sc = app_tables.sub_categories.get(sub_category_id=cat)['name']
-      c = app_tables.categories.get(category_id=b_to)['name']
-      self.label_2.text = c + " - " + sc
-      self.notes.text = nts
-      self.column_panel_2.visible = True
-      self.edit_card.visible = True
-      self.edit_name.text = app_tables.sub_categories.get(sub_category_id=self.category_right)['name']
-    else:
-      self.label_2.text = app_tables.categories.get(category_id=self.category_right)['name']
-      self.column_panel_2.visible = False
-      if not self.label_2.text == "Income":
-        self.edit_card.visible = True
-        self.edit_name.text = app_tables.categories.get(category_id=self.category_right)['name']
-      else:
-        self.edit_card.visible = False
-    self.edit_details.visible,self.edit_switch.checked,self.drop_down_1.visible = False,False,False
-    self.drop_down_1.selected_value = None
-    self.close_cat.visible = True
       
 
   def reset_sub_categories(self,cat,**event_args):
