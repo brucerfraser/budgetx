@@ -147,7 +147,7 @@ class Sub_category_mobile(Sub_category_mobileTemplate):
                                      text=t,type='number')
       self.txt_edit_budget.set_event_handler('change',self.budget_edit_change)
       self.txt_edit_budget.set_event_handler('pressed_enter',self.budget_edit_finish)
-      self.txt_edit_budget.set_event_handler('lost_focus',self.budget_edit_finish)
+      # self.txt_edit_budget.set_event_handler('lost_focus',self.budget_edit_finish)
       self.flow_panel_1.add_component(self.txt_edit_budget)
       self.budget.visible = False
       self.txt_edit_budget.select()
