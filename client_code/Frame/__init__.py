@@ -7,6 +7,7 @@ import anvil.tables.query as q
 from anvil.tables import app_tables
 import math
 import anvil.js
+from datetime import datetime
 
 from ..F_PopUps.csv_confirm import csv_confirm
 from ..F_Components.Dashboard_Screen import Dashboard_Screen
@@ -28,9 +29,15 @@ from ..F_Global_Logic import Global,Responsive,Transaction
 class Frame(FrameTemplate):
   def __init__(self, **properties):
     # Set Form properties and Data Bindings.
+    start_time = datetime.now()
+    print(f"line 49: Start of __init__: {start_time.strftime('%H:%M:%S:%f')}")
+    
     self.init_components(**properties)
+    print(f"line 50: Components initialized: {datetime.now().strftime('%H:%M:%S:%f')}")
+
     # Ensure content panel uses the correct scrolling role
     if Responsive.is_mobile():
+      print(f"line 51: Detected mobile: {datetime.now().strftime('%H:%M:%S:%f')}")
       self.content_panel.role = "fixed-holder-page-mobile"
       butt = {'text':'info','icon':'','role':'button-blue','colour':'blue','enabled':True}
       self.bottom_bar = BottomBar([butt])
@@ -40,26 +47,49 @@ class Frame(FrameTemplate):
       # Add to the default slot so it exists on the page (CSS makes it fixed anyway)
       self.add_component(self.bottom_bar, slot="default")
       self.add_component(self.top_bar,slot="topbar")
+      print(f"line 52: Mobile-specific components added: {datetime.now().strftime('%H:%M:%S:%f')}")
       # set up kill keyboard scroll
       self.bind_keyboard_lock(self)
-    
+      print(f"line 53: Keyboard lock bound: {datetime.now().strftime('%H:%M:%S:%f')}")
     else:
       self.content_panel.role = "fixed-holder-page"
-    #Present users with a login form with just one line of code:
+      print(f"line 54: Detected non-mobile: {datetime.now().strftime('%H:%M:%S:%f')}")
+
+    # Present users with a login form with just one line of code:
+    print(f"line 55: Before login call: {datetime.now().strftime('%H:%M:%S:%f')}")
     anvil.users.login_with_form()
-    # Laod app data into Global module
+    print(f"line 56: After login call: {datetime.now().strftime('%H:%M:%S:%f')}")
+
+    # Load app data into Global module
+    print(f"line 57: Before Global.make_date: {datetime.now().strftime('%H:%M:%S:%f')}")
     Global.make_date()
+    print(f"line 58: After Global.make_date: {datetime.now().strftime('%H:%M:%S:%f')}")
+    print(f"line 59: Before Global.all_categories: {datetime.now().strftime('%H:%M:%S:%f')}")
     Global.all_categories()
+    print(f"line 60: After Global.all_categories: {datetime.now().strftime('%H:%M:%S:%f')}")
+    print(f"line 61: Before Global.smarter: {datetime.now().strftime('%H:%M:%S:%f')}")
     Global.smarter()
+    print(f"line 62: After Global.smarter: {datetime.now().strftime('%H:%M:%S:%f')}")
+
     self.content_panel.visible = False
+    print(f"line 63: Content panel hidden: {datetime.now().strftime('%H:%M:%S:%f')}")
     Global.open_transactions_instance(Responsive.is_mobile())
-    # #When the app starts up, the Dashboard form will be added to the page
+    print(f"line 64: Transactions instance opened: {datetime.now().strftime('%H:%M:%S:%f')}")
+
+    # When the app starts up, the Dashboard form will be added to the page
     self.dashboard_page_link_click()
+    print(f"line 65: Dashboard page loaded: {datetime.now().strftime('%H:%M:%S:%f')}")
+
     self.paths = {"transactions":self.transactions_page_link,
                  "budget":self.budget_page_link,
                  "reports":self.reports_page_link}
+    print(f"line 66: Paths initialized: {datetime.now().strftime('%H:%M:%S:%f')}")
+
     self.content_panel.set_event_handler('x-whisper',self.content_listener)
+    print(f"line 67: Content listener set: {datetime.now().strftime('%H:%M:%S:%f')}")
+
     self.content_panel.visible = True
+    print(f"line 68: Content panel made visible: {datetime.now().strftime('%H:%M:%S:%f')}")
     
   def budget_page_link_click(self, **event_args):
     """This method is called when the link is clicked"""
