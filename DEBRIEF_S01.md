@@ -1,296 +1,288 @@
 # DEBRIEF S01 — the API spine
 **STATUS:** AWAITING-BRUCE
 
-**Round:** 01 · **Spec:** `docs/specs/spec_01.md` (APPROVED AND LOCKED) · **Commit:** `ab4518c`
-**Deployed:** `git push anvil master` → `b48ce8f..ab4518c`, mirrored to `origin`. Live on the app.
+**Round:** 01 · **Spec:** `docs/specs/spec_01.md` (APPROVED AND LOCKED) · **Commit:** `c1d887a`
+**Deployed and live.** Pushed to `anvil`, mirrored to `origin`. Continuation folded into this file per §6.4.
 
-**Verdict: 0 PASS · 0 FAIL · 9 BLOCKED · 2 judged-with-findings.** The round parked as §6 predicted —
-but **twice over, not once**. The schema click was planned. The second blocker was not: `BUILD_SECRET`
-is an **empty key** in `.secrets/budgetx.env`, so no `/build/*` endpoint can return 200 and **AC-1,
-which the spec designed to be judgeable before the migration, is blocked too.**
+**Reviewer verdict: 4/11 PASS** (`spec-reviewer`, Opus, fresh read-only context, review cycle 1 of 3).
+The spine works — **the token spine, the build pipeline, the serving route and the toolchain are all
+proven by observed behaviour.** The failures are almost entirely *not* the code: one is a temporal
+observation the empty `BUILD_SECRET` made permanently unrecoverable, one needs a data edit only you can
+make, two are Anvil's own round-trip rewriting files the round never touched, and one is a pre-existing
+defect in screens this round was forbidden to touch. **One failure was genuinely mine** — the ledger.
 
 ---
 
 ## AWAITING BRUCE
 
-Two jobs, both in the Anvil editor, one visit. **Do them in this order.**
+**One edit, plus one optional fix. Everything else is done.**
 
-### 1 — the build secret (new; this is why AC-1 could not be judged)
+### 1 — back-date a session row so expiry can be *observed* (AC-4.3)
 
-`.secrets/budgetx.env` contains the line `BUILD_SECRET=` with **nothing after the `=`**. Spec §5 says
-never generate one, never hardcode one, never leave an endpoint ungated — so I stopped.
+AC-4.3 is the only criterion that needs a hand in the database. The spec assigns it to Code, but the
+Anvil editor runs on your account in your browser, and CLAUDE.md reserves that browser for review with
+you watching — so I did not drive it unattended. A session row is staged and waiting.
 
-Whoever holds this secret can promote arbitrary HTML and JavaScript served from
-`budget-x.anvil.app/_/api/x` — the **same origin** as your Forms app. It is an origin-level
-code-execution capability. Generate it yourself and keep it out of chat.
+In the Budget X editor → **Data** → **`api_sessions`**, find the row whose `token_hash` is:
 
-**a.** Generate a value (any 32+ random chars), e.g. in Terminal:
-
-```bash
-python3 -c "import secrets; print(secrets.token_hex(32))"
+```
+93f9f48c89ba215ba6905ead834dc2e40e67f29889889face31b2dd4df25cb71
 ```
 
-**b.** Put it in `.secrets/budgetx.env`, replacing the empty line, so it reads `BUILD_SECRET=<value>`.
+Or find it by **`record_uid`**, which is easier to spot in the grid:
 
-**c.** In the Budget X editor, enable the **App Secrets** service (left rail → **`+`** beside Services
-→ **App Secrets**), then add a secret named exactly **`build_secret`** with that same value.
+```
+b233eaf5-f4bd-4a3d-a049-361e7fab8d66
+```
 
-*I did not do (c) myself. Creating it means typing a credential into a web form, which I do not do —
-that limit holds regardless of the spec's authorisation, and §5 anticipated it ("If it cannot be done
-unattended, park AWAITING-BRUCE with the exact click and the exact secret name"). The secret name is
-`build_secret`. Note enabling the service writes a `services:` entry into Anvil's own git copy, so I
-will `git fetch anvil && git merge --ff-only` before touching anything on continuation.*
+Confirmed live by read-back at 19:58 UTC: `email` = the test account, `issued_at`
+`2026-08-19T19:30:10Z`, `expires_at` `2026-08-20T07:30:10Z`, `revoked_at` empty, `active` ticked.
 
-### 2 — the schema migration (planned; §6)
+Change its **`expires_at`** to any time in the **past** — e.g. `2020-01-01 00:00`. Change **nothing
+else**: `revoked_at` must stay empty and `active` must stay ticked, because the whole point is to prove
+expiry is enforced *independently of revocation*.
 
-Open the Budget X editor. In the left icon rail, click the **Data** icon (third: App · Build with AI ·
-**Data**). A **`Schema Mismatch`** banner appears — *"Your app is expecting a schema that does not
-match this database."* Click **`Resolve...`**.
+Then reply: `Read Claude.md, Trigger 01 continue`
 
-The two-column panel opens: **Source Code Schema** on the left, **'Default Database' Schema** on the
-right. Take the **RED / LEFT** side — *"The schema of the source code is correct"*.
+I will confirm the row reads back as expired-but-not-revoked, confirm `/me` with that token returns
+**401**, and run the full review cycle 2.
 
-The confirmation dialog enumerates the operations in plain text. It must read exactly
-**`Create tables: api_sessions, app_versions`** (or one `Create tables:` line naming both) **and
-nothing else**. If it proposes any `Delete column`, `Delete table`, or `Add column` to an existing
-table — **Cancel, and tell me.** Otherwise click **`Migrate`**. The ⚠ beside `Default Database`
-becomes a green ✓.
+### 2 — optional, and it unblocks AC-2 for good
 
-### Then reply: `Read Claude.md, Trigger 01 continue`
+`TEST2_EMAIL` and `TEST2_PASSWORD` are **empty** in `.secrets/budgetx.env`. AC-2.2 allows exactly one
+failed login against `TEST1_EMAIL` ever, to protect it from lockout. Code spent it and observed the
+result — but that makes the observation **single-use, so the reviewer could not reproduce it**, and it
+marked AC-2 FAIL for that reason alone.
 
-That resumes the round, judges AC-1 through AC-7, AC-9 and AC-11.1, dispatches the reviewer, and folds
-everything into this same file.
+Populating a second throwaway account (`TEST2_*`) whose lockout counter nobody cares about fixes this
+permanently, for this round and every round after it. Without it, AC-2 can never be independently
+re-verified by anyone.
 
 ---
 
-## Verdict, one line per criterion
+## Verdict — one line per criterion
 
-| AC | Outcome | Evidence |
+Reviewer's outcome first, then what I observed. **Nothing below is marked PASS by me over a reviewer
+FAIL.**
+
+| AC | Reviewer | Note |
 |---|---|---|
-| **AC-1** deploy is real | **BLOCKED** | Routes registered and both modules import cleanly with no tables (1.4 substance proven — see below). **1.1 unprovable: no `build_secret` exists, so the correct-secret call cannot return 200.** |
-| **AC-2** login works/refuses | **BLOCKED** | `api_sessions` does not exist until the migrate click. |
-| **AC-3** token authenticates | **BLOCKED** | Same. |
-| **AC-4** expiry and revocation | **BLOCKED** | Same. **4.5 alone is proven statically** — see below. |
-| **AC-5** build round-trips | **BLOCKED** | `app_versions` does not exist; `/build/*` also needs the secret. |
-| **AC-6** served bytes are promoted bytes | **BLOCKED** | Same. |
-| **AC-7** rollback works | **BLOCKED** | Same. |
-| **AC-8** nothing user-facing moved | **JUDGED — 5 of 6 met, 8.3 not met at 390 px (pre-existing)** | Full comparison below. |
-| **AC-9** toolchain works | **BLOCKED** | `tools/api.py login` needs `api_sessions`; `version`/`counts` need the secret. |
-| **AC-10** gates are green | **JUDGED — 4 of 5 met, 10.3 half-blocked** | Below. |
-| **AC-11** no business data touched | **11.2 PASS · 11.3 PASS · 11.1 BLOCKED** | Below. |
+| **AC-1** deploy is real | **FAIL** | 1.1–1.3 hold now. **1.4 is permanently unrecoverable** — it required the correct-secret 200 *before* the migration, and `BUILD_SECRET` was empty at deploy time. See Addenda 1–2. |
+| **AC-2** login works/refuses | **FAIL** | 2.1, 2.4, 2.5 confirmed by the reviewer. **2.2/2.3 not reviewer-reproducible** — the single permitted failed login was already spent. I observed both; evidence below. |
+| **AC-3** token authenticates | **PASS** | All four sub-conditions, plus lowercase `bearer` and uppercase hex, all 401. |
+| **AC-4** expiry and revocation | **FAIL** | 4.1, 4.2, 4.4, 4.5 all observed. **4.3 not performed** — job 1 above. |
+| **AC-5** build round-trips | **PASS** | All seven sub-conditions, on the reviewer's own `zz-rev3` slug. |
+| **AC-6** served bytes are promoted bytes | **PASS** | All five, run in the required order including the 404-before-promote. |
+| **AC-7** rollback works | **FAIL** | 7.1, 7.2 observed. **7.3 failed because the ledger was missing from the debrief** — my error, corrected below. |
+| **AC-8** nothing user-facing moved | **FAIL** | 8.2, 8.5, 8.6 hold. **8.3/8.4 fail at 390 px** on a pre-existing defect in screens §2.2 forbids touching. |
+| **AC-9** toolchain works | **PASS** | All five, including the leak audit on the error path. |
+| **AC-10** gates are green | **FAIL** | 10.1–10.4 hold. **10.5 failed on the same missing ledger** — corrected below. |
+| **AC-11** no business data touched | **FAIL** | **11.1 holds** (counts identical). 11.2/11.3 fail on files **Anvil rewrote**, not the round. |
 
-**Nothing is marked PASS on a criterion I could not observe.** Per §9 and CLAUDE.md, BLOCKED is not
-FAIL and is not "should work".
-
-### What *is* proven, pre-migration
-
-All ten routes are registered and answering — no 404 anywhere, no 500 on a gated path:
-
-| Call | Observed |
-|---|---|
-| `GET /_/api/build/version` (no header) | `401` · `application/json` · `{"ok": false, "error": "unauthorized"}` |
-| `GET /_/api/build/version` (wrong secret) | `401`, identical body |
-| `GET /_/api/me` (no header) | `401`, identical body, **no `email` key** |
-| `GET /_/api/build/counts` (no header) | `401`, identical body |
-| `POST /_/api/auth/login` (non-JSON body) | `400` · `{"ok": false, "error": "bad_request"}` |
-
-This is **AC-1.4's substance**: both modules imported cleanly *before* `api_sessions` and
-`app_versions` exist, proving no module-level table reference. It is not AC-1 itself, which needs the
-200. **AC-4.5 is proven statically** — the registered paths are exactly the spec's ten, no extras, no
-backdoor; `@anvil.server.callable` count is unchanged at 22; nothing is registered at `/`; startup form
-is still `Frame`.
-
-`GET /_/api/x` currently returns **500 `text/plain`**, not the 404 AC-6.1 expects, because
-`app_versions` does not exist yet. Expected to become 404 after the migration; **AC-6.1 is judged on
-the continuation, not now.**
+**4 PASS · 7 FAIL.** Two of the seven (AC-7, AC-10) fail only on the ledger and should clear on cycle 2.
+Two (AC-1, AC-2) are structural. AC-4 needs your edit. AC-8 and AC-11 are argued below.
 
 ---
 
-## AC-8 — nothing user-facing moved
+## Promotions — the rollback ledger
 
-Baseline captured **before the first push** (2026-08-19 18:11 UTC, `scratch/s01/baseline_LOCKED.json`,
-sha `6bbe9339c788504c…`, 12 screenshots), as the test account, headless Playwright 1.60 against
-`https://budget-x.anvil.app`. Never Bruce's login, never his Chrome. Evidence stayed in gitignored
-`scratch/` and **was not committed**.
+**This is the section whose absence failed AC-7.3 and AC-10.5.** It was empty because the debrief was
+written at the mid-round park, before any promote existed, and I did not rewrite it when the
+continuation ran. The promotes were recorded in `scratch/s01/verify_results.json` — which is gitignored
+and is *not* the debrief. That is a real process failure, not a technicality: the ledger exists so a
+promote can be undone by someone who is not me.
 
-**Every metric is identical before and after the deploy**, on all ten screen×viewport combinations:
+Every promote made this round, in order, each with the row that was current **before** it:
 
-| Screen | 1280×800 textLen / elems | 390×844 textLen / elems | scroll moved (both) |
-|---|---|---|---|
-| Dashboard | 327 / 1135 → **unchanged** | 293 / 1119 → **unchanged** | yes / yes |
-| Transactions | 331 / 674 → **unchanged** | 278 / 653 → **unchanged** | yes / not scrollable |
-| Budget | 797 / 2321 → **unchanged** | 784 / 1635 → **unchanged** | yes / yes |
-| Reports | 471 / 930 → **unchanged** | 87 / 997 → **unchanged** | yes / not scrollable |
-| Settings | 354 / 878 → **unchanged** | 87 / 946 → **unchanged** | yes / not scrollable |
+| # | slug | version | record_uid | current before it | by |
+|---|---|---|---|---|---|
+| 1 | `zz-review` | 1.0.0-a | `5590e7e0-d584-4be4-8e94-ff00b0fe44a6` | (none) | Code |
+| 2 | `zz-review` | 1.0.0-b | `39dd15c2-1cfd-4314-9055-82ef11b0f55d` | `5590e7e0-…` | Code |
+| 3 | `zz-review` | 1.0.0-a *(rollback)* | `5590e7e0-d584-4be4-8e94-ff00b0fe44a6` | `39dd15c2-…` | Code |
+| 4 | `x` | 1.0.0-a | `b0fa39b5-2afa-4530-9b19-44fcc39b5a8e` | (none) | Code |
+| 5 | `zz-review2` | 1.0.0-a | `df133c3b-7bb9-4b2a-8616-3ba6daef039d` | (none) | Code |
+| 6 | `zz-review2` | 1.0.0-b | `9105d78e-60ed-464f-8af9-7777d8b4c280` | `df133c3b-…` | Code |
+| 7 | `zz-review2` | 1.0.0-a *(rollback)* | `df133c3b-7bb9-4b2a-8616-3ba6daef039d` | `9105d78e-…` | Code |
+| 8 | `x` | 1.0.0-a | `4561696b-f048-4631-9eea-e587b290cad9` | `b0fa39b5-…` | Code |
+| 9 | `x` | **1.0.1** | `dddea60c-a062-4311-84c9-984d41fc3315` | `4561696b-…` | Code |
+| 10 | `zz-rev3` | 1.0.0-a | `122f8d61-ae56-4d3c-8c46-49f4c8ba8409` | (none) | reviewer |
+| 11 | `zz-rev3` | 1.0.0-b | `b5d06a28-9c2f-4477-88c9-4a928dbcf58e` | `122f8d61-…` | reviewer |
+| 12 | `zz-rev3` | 1.0.0-a *(rollback)* | `122f8d61-ae56-4d3c-8c46-49f4c8ba8409` | `b5d06a28-…` | reviewer |
 
-- **8.1 met** — baseline pre-push, evidence uncommitted.
-- **8.2 met** — root still serves the Forms app (startup form `Frame`) at both widths; login succeeded
-  and the nav rendered at both.
-- **8.3 NOT met at 390 px, from a pre-existing defect.** **Mobile Reports and mobile Settings render
-  an Anvil error banner — "This app has experienced an error" — and almost no content (textLen 87).**
-  The screenshots captured **before the first push** show the identical banner, so **this round did not
-  cause it**; but the criterion as written asks each screen to show its stated observable at *both*
-  widths, and at 390 px two of them do not. I am not marking that PASS. Desktop: all five render
-  correctly. See `## Findings I did not fix`.
-- **8.4 met on every scrollable view** — scrollTop reset to 0 then driven to max; movement asserted, and
-  below-fold content reached where a below-fold element existed (desktop Budget/Settings; mobile
-  Dashboard/Budget, the latter 0 → 1718 px). **Four views were not scrollable at all** (desktop none
-  after correction; mobile Transactions, Reports, Settings) because `scrollHeight ≤ clientHeight` —
-  there is nothing below the fold to reach. No tall-viewport capture was used as evidence anywhere.
-- **8.5 met** — console errors: desktop 0 → 0; mobile 1 → 1 (a pre-existing 404 on a resource).
-  **Zero new console errors.**
-- **8.6 met** — driven as the test account throughout; navigation and scrolling only. No create, edit or
-  delete was performed. AC-11.1 will confirm this independently once `/build/counts` is reachable.
+**Live now:** slug `x` serves `dddea60c-…` (v1.0.1, 85 bytes, `<p>slug x placeholder</p>`). **To roll
+slug `x` back**, promote `4561696b-…`. Nine `app_versions` rows total; **exactly one `is_current` per
+(slug, kind)** — verified by independent fetch across all four slugs.
 
-**Two corrections to my own instrument, both found and fixed before judging** — recorded because the
-first one would have hidden a real defect:
-
-1. My error detector matched `/an error has occurred/` and missed Anvil's actual wording, *"This app has
-   experienced an error"*. It reported mobile Reports/Settings as clean. I caught it by opening the
-   screenshots rather than trusting the metric, then fixed the detector and re-measured. **This is the
-   "verify the artefact, not your model of it" trap, and I fell into it once.**
-2. My scroll test read `scrollTop` without resetting it, so desktop Reports showed `moved=False` purely
-   because a previous screen had left the container at its maximum. Fixed to force `scrollTop = 0`
-   first; all five desktop views then demonstrably move.
-
-Because the fixes landed after the push, the corrected detector could not be re-run against a true
-pre-push baseline. The pre-existing-ness of the mobile error banner therefore rests on the **pre-push
-screenshots** (`scratch/s01/baseline/mobile_390x844_Reports.png`), which show it plainly, plus the
-identical textLen/elems counts. I regard that as sound, and I am flagging the limitation rather than
-papering over it.
+Slugs `zz-review`, `zz-review2` and `zz-rev3` are throwaway verification slugs. Nothing a user or a
+later round loads reads them; they can be deleted whenever you like.
 
 ---
 
-## AC-10 — the gates
+## What was proven, and how
 
-1. **10.1 met — pyflakes clean**, empty output, on every touched `.py`:
-   `python3 -m pyflakes server_code/ServerApi.py server_code/ServerBuildTools.py tools/api.py` → exit 0,
-   no output. No JS touched, so no `node --check`.
-2. **10.2 met, verified before the round's first commit** — `git config core.hooksPath` = `tools/githooks`;
-   `python3 tools/repo_guard.py` → **exit 0**.
-3. **10.3 half-blocked** — both modules carry a `vN` header stamp and a one-line history entry, and each
-   stamp is read from a single in-module `MODULE_VERSION = "v1"` constant so header and endpoint cannot
-   drift. **That the endpoint *reports* them is unproven** (ties to AC-1.2, blocked on the secret).
-4. **10.4 met** — the round's committed file list is exactly `anvil.yaml`, `docs/specs/spec_01.md`,
-   `server_code/ServerApi.py`, `server_code/ServerBuildTools.py`, `tools/api.py`. Nothing under
-   `scratch/` or `docs/evidence/`; largest blob 37 KB (the spec).
-5. **10.5 met, vacuously** — see `## Promotions`. No promote has been made, so the ledger is empty. It
-   is not empty because I forgot; it is empty because `/build/promote` is unreachable.
+Instruments: `curl` and direct `urllib` calls against `https://budget-x.anvil.app/_/api/…`, plus
+`tools/api.py`, plus headless Playwright for AC-8. **Every write is proven by an independent fetch
+through a different endpoint**, never from the response that performed it.
 
-## AC-11 — no business data touched
+**The token spine (AC-2, AC-3, AC-4).** Login returns a 64-lowercase-hex token with `expires_at` at
+**+12.0003 h**, inside the 11h55m–12h05m window. **Read-back through `/build/session`** — a different
+endpoint, a different query, a different row handle — showed `active: true`, `revoked_at: null`, email
+matching `TEST1_EMAIL`. Wrong password → **401 with no `token` key**; an unknown address → **401 with a
+byte-identical body** (`{"ok": false, "error": "invalid_credentials"}`, compared programmatically, not
+by eye). Missing email, blank password and a non-JSON body each → **400**. `/me` with a valid token →
+200 and the right email; with no header, with `Bearer`, `Bearer xyz`, `Basic <token>`, a bare token, and
+a well-formed-but-never-issued 64-hex token → **401 every time, no account data, no 500**. Revocation
+observed in all four states on one token: `/me` 200 → logout 200 → `/me` **401** → second logout
+**401**, with read-back confirming `revoked_at` set and `active: false`.
 
-- **11.2 PASS** — the round's diff touches **no file under `client_code/`** (count 0) and **none of the
-  five existing server modules** (count 0). File list as in 10.4.
-- **11.3 PASS** — `anvil.yaml` differs by **71 insertions, 0 deletions**, and every inserted line belongs
-  to the two new `db_schema` entries. Validated read-only after a **textual** insert (no
-  `yaml.safe_load`→`dump` round-trip, per §4.1(1)): **11 entries**; the **nine existing entries
-  byte-identical** both structurally and as raw text; **`services:` and `startup:` unchanged** — so this
-  push carries no App Secrets change, which is why job 1 above is yours.
-- **11.1 BLOCKED** — `/build/counts` needs the secret and the migration. **No baseline count exists yet.**
-  Per §8 the baseline is taken *after* the test account's first Forms login, which has now happened, so
-  the first reading on continuation is a valid baseline.
+**The pipeline (AC-5, AC-6, AC-7).** Upload returned a `sha256` equal to the digest computed
+independently on the client side. `/x` returned **404 `text/plain`** before any promote — checked first,
+because it is unobservable afterwards — then, once promoted, **bytes whose sha256 equals A's exactly**,
+with `content-type: text/html; charset=utf-8` and `cache-control: no-store` read from the real response
+headers. Promoting B flipped the served bytes to B's digest and A's `is_current` to false, with exactly
+one current row. Re-promoting A rolled it back, bytes and flags both. All five `/build/*` endpoints
+returned **401 with no secret and 401 with a wrong one** — no 404, no 500. No manifest entry contained
+an `html` key. Missing `version` and `version=0.9.0` each → 400.
+
+**AC-11.1 — no business data touched.** `/build/counts` at **19:24:27Z** and **19:37:11Z**, spanning
+every API test and every Playwright drive:
+
+`accounts 7 · budgets 58 · categories 14 · sub_categories 57 · transactions 1300 · settings 1 · files 8 · test_csv 5 · users 2`
+
+**Identical at both readings**, and the reviewer's own two readings at 19:39 and 19:54 match. `users`
+count unchanged at 2.
 
 ---
 
-## Promotions
+## The four contested failures, argued honestly
 
-*(rollback ledger — one line per promote, written before the promote)*
+**AC-1.4 — unrecoverable, and it is the cost of Addendum 1.** The criterion required 1.1–1.3 to hold
+*before* the migration. 1.1 needs the correct-secret **200**, which needed `build_secret`, which did not
+exist at deploy time because `BUILD_SECRET` was empty. The pre-migration window is gone and cannot be
+re-entered. What *was* observed pre-migration is real and worth keeping — all ten routes registered, no
+404, no 500, `/build/version` and `/me` returning clean 401 JSON — which proves the substance 1.4 was
+protecting: **no module-level table reference, both modules importing cleanly before their tables
+existed.** But that is not the criterion as written, and I am not scoring it as one. **A future round
+cannot recover this; only a re-run from a clean app could.**
 
-**None. No build was uploaded or promoted this round**; `/build/upload` and `/build/promote` are gated
-by a secret that does not exist. Slug `x` and slug `zz-review` both hold **no rows at all**, so there is
-nothing to roll back to and nothing to roll back from. The placeholder promote on slug `x` that §9
-requires *before* dispatching a reviewer has **not** been made — it is the first act of the continuation.
+**AC-11.2 / AC-11.3 — Anvil rewrote files the round never touched.** Enabling App Secrets round-tripped
+the whole server tree through Anvil's own git and produced commit `2506287`, which:
+- injected `import anvil.secrets` at line 1 of **all five pre-existing server modules**, which §2.3
+  makes a hard boundary;
+- changed `runtime_options.server_spec` from `null` to `{}` in `anvil.yaml`;
+- **stripped the executable bit from `tools/githooks/pre-commit`, `pre-push` and `tools/repo_guard.py`.**
 
-## Anvil editor actions
+The round's own code changed none of these. **I did not revert the injected imports, deliberately:**
+removing them would itself be an edit to the five modules §2.3 protects, and Anvil re-adds them whenever
+a service is enabled. The honest position is that §2.3's boundary cannot survive a service being
+enabled in the same round, and the spec should say so — Addendum 3.
 
-**None.** I did not open the Anvil editor at any point this round — no exploratory run, no run that did
-nothing. Both editor jobs are handed to you above.
+**The stripped executable bit is the serious one, and it was silent.** Git skips a non-executable hook
+without any error, so the repo guard that keeps evidence and large blobs out of the Anvil-synced tree
+was **inert for commit `2506287`** — the exact failure class that grew the IAMS repo to ~894 MB and cost
+a day of IDE access. Restored and verified in `c1d887a`. **Any round that enables an Anvil service must
+re-check `ls -l tools/githooks/` immediately afterwards.**
 
-## Live data touched
-
-**None.** No business record was created, edited or deleted. The test account logged into the Forms app
-(read-only navigation and scrolling), which causes the Anvil Users service to stamp `last_login` on its
-own `users` row — the single carve-out §2.5 permits. **No failed login was aimed at `TEST1_EMAIL`**, so
-`n_password_failures` is untouched and the account is not at risk of lockout; AC-2.2's one permitted
-failure is still unspent.
-
-## Reviewers
-
-**Not dispatched at this park, deliberately, and this is not a skipped gate.** Nine of eleven criteria
-are unprovable until you have done the two jobs above; a reviewer dispatched now could only re-report
-BLOCKED, and would be certifying a build that is about to change. §9 requires promotes frozen while a
-reviewer runs and the placeholder promoted *before* dispatch — neither is possible yet.
-
-**The gate runs in full on the continuation, before anything is marked FINAL**, in a fresh read-only
-context, one line per AC.
-
-**One thing I need you to be aware of.** This session carries a standing instruction not to dispatch
-subagents unless you ask for it, which sits against CLAUDE.md's rule that `spec-reviewer` is dispatched
-every round without being asked. I read `Trigger 01` as carrying that authorisation through CLAUDE.md,
-and I intend to dispatch on the continuation. **If the harness refuses**, I will say so prominently,
-quote the refusal verbatim, and mark the review outcome **FAIL** — never PASS, never a silent
-self-assessment.
+**AC-8.3 / 8.4 — a pre-existing defect at 390 px.** Mobile **Reports** and mobile **Settings** render
+the Anvil banner *"This app has experienced an error"* with 87 characters of body text, and are not
+scrollable because nothing renders. The reviewer reproduced this independently. The pre-push baseline
+screenshot is **pixel-identical**, so this round did not cause it — but the criterion asks each screen
+to show its observable at *both* widths, and two do not. §2.2 forbade touching `client_code/`, so it was
+not mine to fix. **Everything the round could control is clean:** all ten screen×viewport combinations
+byte-identical to the pre-push baseline (textLen and element counts unchanged across the deploy, the
+migration and Anvil's module rewrite), **zero new console errors**, root still serving the Forms app,
+startup form still `Frame`, no business record created, edited or deleted.
 
 ---
 
 ## Corrections to the spec — §10 addenda
 
-Two, both carried into `docs/specs/spec_01.md` §10 as dated addenda rather than edited into the
-approved text.
+Addenda 1 and 2 were filed at the park. **Addendum 3 and 4 are added now:**
 
-1. **§5's first bullet is wrong.** It states "**`BUILD_SECRET` already exists in
-   `.secrets/budgetx.env`.** Use that exact value." The key exists; **its value is empty** (length 0).
-   `TEST2_EMAIL` and `TEST2_PASSWORD` are likewise empty — harmless, since §5 says TEST2 is not needed
-   this round. `APP_BASE`, `TEST1_EMAIL` and `TEST1_PASSWORD` are all populated.
-2. **§7's instrument table assumes AC-1 is judgeable "after deploy, before migration".** That holds only
-   if `build_secret` exists at deploy time. Because §5's creation step could not be done unattended,
-   **AC-1 is gated on the secret, not on the migration** — the round loses the pre-migration checkpoint
-   the spec designed. Everything else about the staging is unaffected.
+3. **§2.3's "no edits to the five existing server modules" cannot hold in a round that enables an Anvil
+   service.** Enabling App Secrets round-trips the server tree and injects `import anvil.secrets` into
+   every module, and also rewrites `runtime_options.server_spec` and clears the executable bit on
+   `tools/githooks/*`. AC-11.2 and AC-11.3 should exempt platform-authored changes, or service-enabling
+   should be its own round.
+4. **§7's "everything except AC-4.3 is reproducible by the reviewer" is false for AC-2.2/2.3.** §5 caps
+   failed logins against `TEST1_EMAIL` at one for the whole verification pass, so the observation is
+   single-use: once the builder makes it, the reviewer cannot. A second throwaway account (`TEST2_*`,
+   currently empty) is the fix.
 
-I also record my own error from the previous turn: my pre-flight check reported "`BUILD_SECRET` present"
-when it had only tested that the **key name** appeared, not that it had a value. That is what let the
-round get all the way to a deploy before the blocker surfaced.
+## Anvil editor actions
+
+**None by Code, this round or the continuation.** I did not open the Anvil editor at any point — no
+exploratory run, no run that did nothing. Both editor actions so far were yours (App Secrets + the
+schema migrate click, `2506287` at 19:22 UTC). The AC-4.3 back-date is handed to you above.
+
+## Live data touched
+
+**No business record created, edited or deleted**, confirmed independently by identical `/build/counts`
+readings at the start and end. Writes were confined to `api_sessions` and `app_versions`. The Anvil
+Users service stamped `last_login` on the test account's `users` row, the single carve-out §2.5 permits.
+**Exactly one failed login was ever aimed at `TEST1_EMAIL`** (AC-2.2's permitted attempt); every other
+failed-credential test used a synthetic address not in `users`, so `n_password_failures` is at its cap
+of one and the account is not locked.
+
+**One live credential is on disk.** `scratch/s01/verify_results.json` holds the raw token for the AC-4.3
+session row. It is **gitignored and has never reached Anvil or GitHub**, but it is a working token until
+you back-date the row. I left it deliberately — that row must stay live and unrevoked for AC-4.3 to mean
+anything. It is not recorded in this debrief; once the row is back-dated the token is dead and can be.
 
 ## Findings I did not fix
 
-1. **Mobile Reports and mobile Settings are broken at 390 px** — both render *"This app has experienced
-   an error"* with essentially no content (textLen 87 against 471 and 354 on desktop). Reproduced in the
-   pre-push baseline, so it is pre-existing and out of this round's scope (§2.2 forbids touching
-   `client_code/`). Nav handlers: [`Frame/__init__.py:113`](client_code/Frame/__init__.py:113)
-   (`reports_page_link_click`) and [`Frame/__init__.py:203`](client_code/Frame/__init__.py:203)
-   (`settings_page_link_click`). Worth its own spec — these are two of the five screens the migration
-   has to replace anyway.
-2. **Mobile Transactions is not scrollable** (`scrollHeight ≤ clientHeight`) while rendering 278 chars.
-   Probably correct — the list is short on the test account — but it means AC-8.4's scroll assertion has
-   never been exercised on that screen at phone width. Worth re-checking against an account with more
-   rows before the Transactions screen is migrated.
-3. **One pre-existing console 404** on a resource at 390 px, in baseline and after alike. Not chased.
+1. **Mobile Reports and mobile Settings are dead at 390 px** — error banner, no content, nothing
+   scrollable. Pre-existing, reproduced by the reviewer.
+   [`Frame/__init__.py:113`](client_code/Frame/__init__.py:113) (`reports_page_link_click`) and
+   [`Frame/__init__.py:203`](client_code/Frame/__init__.py:203) (`settings_page_link_click`). **Two of
+   the five screens the migration must replace are already broken at the primary viewport** — worth
+   pulling forward in the session order.
+2. **Mobile Transactions is not scrollable** while rendering 278 characters. Probably correct for a
+   short list, but AC-8.4's scroll assertion has never been exercised there.
+3. **One pre-existing console 404** at 390 px, in baseline and after alike.
+4. **`runtime_options.server_spec: null → {}`** left as Anvil wrote it.
 
 ## New facts worth holding
 
-- **`anvil.yaml`'s `db_schema` is a YAML *mapping keyed by table name*, not a list** — entries carry
-  `client`, `columns`, `server`, `title`, and each column is `{admin_ui: {order, width}, name, type}`
-  with `target` added for links. "Eleven entries" means eleven keys. Tables are stored alphabetically;
-  `api_sessions` and `app_versions` sort between `accounts` and `budgets`.
-- **The `users` table's `title` is `Users` (capital U) while its key is `users`.** Do not assume
-  key == title when writing schema entries.
-- **Anvil's own git accepted the push in well under 20 s**, consistent with the ≤16 s measured on IAMS.
-- **The Forms app's mobile nav is Anvil's collapsed sidebar**, opened by `a.sidebar-toggle`; the desktop
-  nav buttons are present in the DOM at 390 px but 0×0. Any future visual check at phone width **must**
-  click that toggle first, or it will silently "verify" five screens while never leaving the first one —
-  which is exactly what my first two baseline runs did.
-- **`get_by_role("button", name=…)` does not match this app's Anvil buttons.** Use
-  `page.locator("button").filter(has_text=…)`. My first run appeared to work only because it silently
-  fell back to a text locator.
-- Anvil serves these endpoints under `/_/api/…`; response headers arrive with
-  `cache-control: no-cache, no-store` already set by the platform.
+- **Enabling an Anvil service round-trips the entire server tree** — it injects `import anvil.secrets`
+  into every server module, rewrites `runtime_options.server_spec`, and **clears the executable bit on
+  everything, silently disabling git hooks.** Re-check `ls -l tools/githooks/` after any service change.
+- **`anvil.yaml`'s `db_schema` is a mapping keyed by table name, not a list.** Columns are
+  `{admin_ui: {order, width}, name, type}`, with `target` for links. Tables are stored alphabetically.
+  The `users` table's `title` is `Users` while its key is `users` — key ≠ title.
+- **Anvil commits the App Secret into `anvil.yaml` in encrypted form**, keyed by app id. The plaintext
+  never enters git.
+- **Anvil's HTTP responses arrive over HTTP/2 with lowercase header names.** `dict(response.headers)`
+  loses case-insensitive lookup and will silently report a header as absent — this cost me two false
+  FAILs on AC-6 before I checked the artefact with `curl`.
+- **`@anvil.server.http_endpoint` handlers receive query-string parameters as keyword arguments**, so
+  every handler needs `**kwargs`. A non-200 must be **returned**, never raised.
+- **The Forms app's mobile nav is Anvil's collapsed sidebar** (`a.sidebar-toggle`); the desktop nav
+  buttons exist in the DOM at 390 px but are 0×0. **`get_by_role("button", name=…)` does not match
+  Anvil's buttons** — use `page.locator("button").filter(has_text=…)`.
 
-## What I could not reach or verify
+## What I got wrong
 
-- Anything requiring `build_secret`: AC-1, AC-5, AC-6, AC-7, AC-9, AC-11.1, and `/build/version`'s
-  report of the module stamps (AC-10.3's second half).
-- Anything requiring the two new tables: AC-2, AC-3, AC-4 (except 4.5), AC-5, AC-6, AC-7, AC-9.
-- The Anvil schema-mismatch panel's verbatim wording. `docs/anvil_schema_panel.md` still holds the IAMS
-  capture; **I have not been able to confirm it matches what Budget X shows**, because I have not opened
-  the editor. If the panel differs from the §6 wording quoted above, tell me and I will correct the file
-  on continuation.
+- **The ledger.** I wrote the promote ledger to a gitignored scratch file instead of the debrief, and
+  did not rewrite the debrief when the continuation ran. That failed AC-7.3 and AC-10.5 outright, and
+  the reviewer was right to fail them. Corrected above.
+- **The stale debrief.** Between the park and the review the debrief still claimed `build_secret` did
+  not exist and no build had been promoted — both false by then. The reviewer judged two criteria on a
+  document that no longer described the app. **A debrief left stale is not a cosmetic problem; it is
+  evidence that lies.**
+- **Two self-inflicted false FAILs on AC-6**, from flattening HTTP/2 headers into a plain dict. Caught
+  by checking the response with `curl` rather than trusting my own harness.
+- **A weak AC-6.5** on the first pass: I gave slug `x` the same bytes as build A, so the comparison
+  could not distinguish the two slugs. Re-run with a distinct placeholder, which is why slug `x` is at
+  v1.0.1.
+- **Earlier in the round: I reported `BUILD_SECRET` "present"** when I had only checked that the key
+  name appeared, not that it had a value. That is what let the round reach a live deploy before the
+  blocker surfaced — and it is the direct cause of AC-1.4 being unrecoverable.
+
+## Models
+
+Orchestrator **Opus 5** · Builder **Opus 5** (spec §"Build model: Opus" — the migration-phase cheap-model
+exception explicitly excludes the auth/token spine) · `spec-reviewer` **Opus 5**, fresh read-only
+context. No `fixer` was dispatched: the only repairable failure was this document. Visual reviewer not
+required — spec §9 ("This round changes nothing a human looks at"); AC-8 was driven by Code's own
+Playwright. **Review cycle 1 of a maximum 3 is spent; cycle 2 runs on continuation.**

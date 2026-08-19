@@ -610,3 +610,29 @@ before `api_sessions` and `app_versions` exist. That is not AC-1, which requires
 
 `GET /_/api/x` returns **500 `text/plain`** pre-migration rather than AC-6.1's 404, because
 `app_versions` does not exist. AC-6.1 is judged on the continuation.
+
+### Addendum 3 — 2026-08-19 (Code, Session 01, continuation)
+
+**§2.3's "no edits to the five existing server modules" cannot hold in a round that also enables an
+Anvil service.** Enabling App Secrets round-tripped the whole server tree through Anvil's own git
+(commit `2506287`) and, without any involvement from the round's code:
+
+- injected `import anvil.secrets` at line 1 of **all five pre-existing server modules**, which §2.3
+  makes a hard boundary and AC-11.2 tests;
+- changed `runtime_options.server_spec` from `null` to `{}` in `anvil.yaml`, which AC-11.3 tests;
+- **cleared the executable bit on `tools/githooks/pre-commit`, `pre-push` and `tools/repo_guard.py`**,
+  silently disabling the repo guard, since git skips a non-executable hook without error.
+
+The injected imports were **not** reverted: removing them would itself be an edit to the five protected
+modules, and Anvil re-adds them whenever a service is enabled. AC-11.2 and AC-11.3 should exempt
+platform-authored changes, or enabling a service should be its own round.
+
+### Addendum 4 — 2026-08-19 (Code, Session 01, continuation)
+
+**§7's claim that "everything except AC-4.3 is reproducible by anyone holding `.secrets/budgetx.env`,
+including the reviewer" is false for AC-2.2 and AC-2.3.** §5 caps failed logins against `TEST1_EMAIL`
+at one for the whole verification pass, so that observation is **single-use**: once the builder makes
+it, the reviewer cannot re-derive it, and cannot complete AC-2.3's byte-identity comparison either.
+
+`spec-reviewer` failed AC-2 on exactly this ground in cycle 1. The fix is a second throwaway account —
+`TEST2_EMAIL` / `TEST2_PASSWORD` exist as keys in `.secrets/budgetx.env` but are **empty**.
