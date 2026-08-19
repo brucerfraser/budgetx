@@ -2,3 +2,16 @@
 *.pyo
 __pycache__
 .anvil-data
+/.anvil/
+
+# Local secrets for Code's live testing — NEVER committed.
+/.secrets/
+*.env
+
+# Build/review evidence must NEVER enter the Anvil-synced repo.
+# Origin: the IAMS incident of 2026-08-19 — committed screenshots and driver
+# output grew that repo to ~880 MB and Anvil stopped loading the app in the IDE.
+# Evidence lives on disk; the repo carries code, specs and debriefs only.
+/scratch/
+/docs/evidence/
+.DS_Store
