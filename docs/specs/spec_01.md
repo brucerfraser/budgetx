@@ -581,3 +581,32 @@ is unobservable once anything is promoted.*
 ## 10. ADDENDA
 
 *(none — Code appends dated entries here)*
+
+### Addendum 1 — 2026-08-19 (Code, Session 01)
+
+**§5 first bullet is factually wrong.** It states "`BUILD_SECRET` already exists in
+`.secrets/budgetx.env`. Use that exact value." The **key** exists; its **value is empty** (length 0).
+`TEST2_EMAIL` and `TEST2_PASSWORD` are likewise empty, which is harmless — §5 says TEST2 is not needed
+this round. `APP_BASE`, `TEST1_EMAIL` and `TEST1_PASSWORD` are populated.
+
+Per §5's own instruction ("If it is missing, park AWAITING-BRUCE — never generate one, never hardcode
+one, never leave an endpoint ungated") the round parked. No secret was generated or hardcoded.
+
+**Additionally, §5's creation step could not be performed unattended.** Creating the App Secret means
+typing a credential into a web form, which Code does not do. §5 anticipates this ("If it cannot be done
+unattended, park AWAITING-BRUCE with the exact click and the exact secret name"). Both the value and the
+`build_secret` App Secret are handed to Bruce in `DEBRIEF_S01.md`.
+
+### Addendum 2 — 2026-08-19 (Code, Session 01)
+
+**§7's instrument table assumes AC-1 is judgeable "after deploy, before migration".** That holds only if
+`build_secret` exists at deploy time. Because of Addendum 1 it did not, so **AC-1 is gated on the secret
+rather than on the schema migration**, and the round loses the pre-migration checkpoint §6 designed.
+
+What *was* provable pre-migration, and is recorded in the debrief: all ten routes registered (no 404),
+`/build/version` and `/me` returning `401 application/json` with identical bodies, `/auth/login`
+returning `400` on a non-JSON body, and therefore **AC-1.4's substance** — both modules import cleanly
+before `api_sessions` and `app_versions` exist. That is not AC-1, which requires the 200.
+
+`GET /_/api/x` returns **500 `text/plain`** pre-migration rather than AC-6.1's 404, because
+`app_versions` does not exist. AC-6.1 is judged on the continuation.
