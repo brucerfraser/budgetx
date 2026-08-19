@@ -326,11 +326,15 @@ INTERIM one, because it stops the watch.
 ## Secrets and live testing
 
 `.secrets/budgetx.env` at the repo root — **gitignored, never committed, never echoed into chat
-or a commit message.** The vault remains the source of truth; this file is a local convenience.
+or a commit message.** `APP_BASE` is **https://budget-x.anvil.app**. The vault remains the source of truth; this file is a local convenience.
 If it is missing, ask — **do not** put a secret anywhere else and do not proceed with a hardcoded
 value.
 
-**Test with dedicated test accounts, never Bruce's own login**, and never against his real budget
+**Test with the dedicated test account, never Bruce's own login.** Budget X has no role
+distinction yet, so there is **one** test account rather than IAMS's permitted/forbidden pair; add
+a second the round a permission boundary first exists. Test mail reaches Bruce's own inbox by
+design (the account address is a `+` alias of it), which is fine — it must never be pointed
+anywhere else., and never against his real budget
 data. Budget X holds one person's finances: a test that writes to a live account, category or
 transaction is corrupting real records, and there is no audit log here to reconstruct them from.
 **Create `ZZ`-prefixed throwaway records of the same shape and drive those.** If a criterion
@@ -369,7 +373,32 @@ scripts, mechanical refactors with no behavioural intent.
 
 **If unsure, use Opus.** The cost is asymmetric.
 
----
+**If a model is out of credit, fall back to Opus and carry on.** No round stalls and no gate is
+skipped for want of credits. Record in the debrief which model actually ran each role.
+
+### MIGRATION-PHASE EXCEPTION (Bruce, 2026-08-19 — temporary, expires on completion)
+
+**For the duration of the classic→HTML migration only**, the table above is relaxed: run an
+**Opus orchestrator with Sonnet builders**, and grind the migration out over however many days it
+takes. Bruce's reasoning: **nobody is using this app yet**, so the cost of a slow, cheap round is
+low and the cost of a defect is bounded.
+
+**On completion of the migration this reverts to the table above — Fable orchestrator, Opus
+reviewers. Say so in the debrief of the round that ends the migration.**
+
+Three things the exception does **not** relax, because they are what makes a cheap round safe:
+
+1. **A reviewer is never weaker than what it reviews.** Sonnet-built work may be reviewed by
+   Sonnet (equal) or Opus (stronger) — never the reverse, and **never by the session that wrote
+   it**. The gate still runs, in a fresh read-only context, every round.
+2. **The spine and the money still get Opus.** Session 01 (auth, tokens, build/promote) and any
+   round touching budget rollups, variance or reporting arithmetic are built on Opus regardless
+   of the exception. The exception exists for the **screen-by-screen HTML grind**, which is
+   exactly the "localised client work" the table already assigns to Sonnet.
+3. **Every AC is still proven by observed behaviour.** Cheap models do not get cheap evidence.
+
+**Record in every debrief which model actually ran each role.** The record of who marked the work
+has to stay true, and it matters more under the exception, not less.
 
 ## Architectural intent (target state)
 
