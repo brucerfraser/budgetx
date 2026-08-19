@@ -286,10 +286,14 @@ package_name: BudgetX
 runtime_options:
   client_version: '3'
   preview_v3: true
-  server_spec: null
+  server_spec: {}
   server_spec_disabled: {base: python310-standard, requirements: ''}
   server_version: python3-full
   version: 2
+secrets:
+  build_secret:
+    type: secret
+    value: {7CPSHQA3GUEYMLO5: biI/G54X60U0jX9az9SBZWmpMP/+WsXyw7fjhvorapF6OFWUOnxdJs4tyKzXmF7Nx7P2RlIf9ib34DzgLOCRh4kufKq8aCMu9l3j9XxWT+dp+YNer9c0RngCk5NZ2qD0bWI11eVHfIm0aq2TrNNDv90q7pN84KlLpnlJUUzmcfTDGk4KtmKF00jvuT8+XrAM1nSRGlstjiypcRLNXUWl}
 services:
 - client_config: {}
   server_config: {}
@@ -300,5 +304,8 @@ services:
 - client_config: {}
   server_config: {file_table: files}
   source: /runtime/services/anvil/files.yml
+- client_config: {}
+  server_config: {}
+  source: /runtime/services/anvil/secrets.yml
 startup: {module: Frame, type: form}
 startup_form: null

@@ -1,3 +1,4 @@
+import anvil.secrets
 # ServerApi — v1
 # Budget X API spine: ApiError / api_http / require_auth, session tokens over Anvil Users.
 # History:
