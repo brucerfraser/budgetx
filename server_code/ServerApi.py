@@ -1,4 +1,3 @@
-import anvil.secrets
 # ServerApi — v1
 # Budget X API spine: ApiError / api_http / require_auth, session tokens over Anvil Users.
 # History:
@@ -18,6 +17,7 @@ import anvil.secrets
 # - Anvil Users remains the credential store. This module never reads or writes password_hash.
 
 import anvil.server
+import anvil.secrets
 import anvil.users
 from anvil.tables import app_tables
 
