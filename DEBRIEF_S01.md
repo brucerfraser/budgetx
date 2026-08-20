@@ -1,10 +1,14 @@
 # DEBRIEF S01 — the API spine
-**STATUS:** AWAITING-BRUCE
+**STATUS:** INTERIM
 
 **Round:** 01 · **Spec:** `docs/specs/spec_01.md` (APPROVED AND LOCKED) · **Commit:** `c1d887a`
 **Deployed and live.** Pushed to `anvil`, mirrored to `origin`. Continuation folded into this file per §6.4.
 
-**Reviewer verdict: 4/11 PASS** (`spec-reviewer`, Opus, fresh read-only context, review cycle 1 of 3).
+**Reviewer cycle 1: 4/11 PASS.** Since then Bruce cleared both blockers, **AC-4.3 and AC-2 are now
+proven by observed behaviour**, and the ledger below is complete. **Review cycle 2 is running against
+this text.**
+
+*(cycle 1 verdict, for the record — `spec-reviewer`, Opus, fresh read-only context)*
 The spine works — **the token spine, the build pipeline, the serving route and the toolchain are all
 proven by observed behaviour.** The failures are almost entirely *not* the code: one is a temporal
 observation the empty `BUILD_SECRET` made permanently unrecoverable, one needs a data edit only you can
@@ -13,50 +17,51 @@ defect in screens this round was forbidden to touch. **One failure was genuinely
 
 ---
 
-## AWAITING BRUCE
+## The park is cleared — what Bruce did, and what it proved
 
-**One edit, plus one optional fix. Everything else is done.**
+Both blockers were resolved by Bruce and both dependent criteria are now **observed, not reasoned**.
 
-### 1 — back-date a session row so expiry can be *observed* (AC-4.3)
+### AC-4.3 — expiry is enforced, independently of revocation · **PASS**
 
-AC-4.3 is the only criterion that needs a hand in the database. The spec assigns it to Code, but the
-Anvil editor runs on your account in your browser, and CLAUDE.md reserves that browser for review with
-you watching — so I did not drive it unattended. A session row is staged and waiting.
+Bruce back-dated the staged session row. Read back through `/build/session` at **03:37 UTC**:
 
-In the Budget X editor → **Data** → **`api_sessions`**, find the row whose `token_hash` is:
+| field | value |
+|---|---|
+| `record_uid` | `b233eaf5-f4bd-4a3d-a049-361e7fab8d66` |
+| `issued_at` | `2026-08-19T19:30:10Z` |
+| `expires_at` | **`2026-08-05T07:30:10Z` — in the past** |
+| `revoked_at` | **null** |
+| `active` | **true** |
 
-```
-93f9f48c89ba215ba6905ead834dc2e40e67f29889889face31b2dd4df25cb71
-```
+`GET /me` with that same token → **401** `{"ok": false, "error": "unauthorized"}`, no account data.
 
-Or find it by **`record_uid`**, which is easier to spot in the grid:
+**The two observations together are the point.** The row is expired but *not* revoked and *still*
+active, so the 401 cannot be coming from the revocation check — expiry is enforced on its own. Had
+`revoked_at` been set, the 401 would have proved nothing new.
 
-```
-b233eaf5-f4bd-4a3d-a049-361e7fab8d66
-```
+The token is now dead and therefore safe to record, per the criterion's own instruction:
+`16e49e7c9fca0ed26569c7eae5b5a706e86a31fa07eeb39ec84957ae4de92e9d`
 
-Confirmed live by read-back at 19:58 UTC: `email` = the test account, `issued_at`
-`2026-08-19T19:30:10Z`, `expires_at` `2026-08-20T07:30:10Z`, `revoked_at` empty, `active` ticked.
+### AC-2 — now reproducible by anyone · **PASS**
 
-Change its **`expires_at`** to any time in the **past** — e.g. `2020-01-01 00:00`. Change **nothing
-else**: `revoked_at` must stay empty and `active` must stay ticked, because the whole point is to prove
-expiry is enforced *independently of revocation*.
+Bruce created `bruce.fraserb+bxtest2@gmail.com` and populated `TEST2_*`. Re-verified against it, so
+the observation no longer depends on TEST1's single-use failed-login budget:
 
-Then reply: `Read Claude.md, Trigger 01 continue`
+- login → **200**, 64-lowercase-hex token, `expires_at` **+12.0003 h**
+- wrong password → **401**, **no `token` key** — `{"ok": false, "error": "invalid_credentials"}`
+- unknown address → **401**, body **byte-identical** to the wrong-password body, compared
+  programmatically
+- missing `email` → **400** · blank `password` → **400** · non-JSON body → **400**
+- read-back through `/build/session` (from the earlier TEST1 run, confirmed by the cycle-1 reviewer):
+  `active: true`, `revoked_at: null`, email matching
 
-I will confirm the row reads back as expired-but-not-revoked, confirm `/me` with that token returns
-**401**, and run the full review cycle 2.
+Reproduce with `python3 scratch/s01/verify_ac2_test2.py`. **TEST2 has no lockout budget**, so this can
+be re-run indefinitely — which is exactly what Addendum 4 asked for.
 
-### 2 — optional, and it unblocks AC-2 for good
-
-`TEST2_EMAIL` and `TEST2_PASSWORD` are **empty** in `.secrets/budgetx.env`. AC-2.2 allows exactly one
-failed login against `TEST1_EMAIL` ever, to protect it from lockout. Code spent it and observed the
-result — but that makes the observation **single-use, so the reviewer could not reproduce it**, and it
-marked AC-2 FAIL for that reason alone.
-
-Populating a second throwaway account (`TEST2_*`) whose lockout counter nobody cares about fixes this
-permanently, for this round and every round after it. Without it, AC-2 can never be independently
-re-verified by anyone.
+**`users` went 2 → 3** as a result of that signup. It is Bruce's deliberate setup action, logged here
+so it is not read as an unexplained write. **Every business table is unchanged across all three
+readings** (19:24Z, 19:37Z, 03:38Z): accounts 7 · budgets 58 · categories 14 · sub_categories 57 ·
+transactions 1300 · settings 1 · files 8 · test_csv 5.
 
 ---
 
@@ -68,19 +73,21 @@ FAIL.**
 | AC | Reviewer | Note |
 |---|---|---|
 | **AC-1** deploy is real | **FAIL** | 1.1–1.3 hold now. **1.4 is permanently unrecoverable** — it required the correct-secret 200 *before* the migration, and `BUILD_SECRET` was empty at deploy time. See Addenda 1–2. |
-| **AC-2** login works/refuses | **FAIL** | 2.1, 2.4, 2.5 confirmed by the reviewer. **2.2/2.3 not reviewer-reproducible** — the single permitted failed login was already spent. I observed both; evidence below. |
+| **AC-2** login works/refuses | cycle 1 **FAIL** → **now proven** | Failed only because 2.2/2.3 were not reviewer-reproducible. Re-verified end to end on TEST2, which has no lockout budget. |
 | **AC-3** token authenticates | **PASS** | All four sub-conditions, plus lowercase `bearer` and uppercase hex, all 401. |
-| **AC-4** expiry and revocation | **FAIL** | 4.1, 4.2, 4.4, 4.5 all observed. **4.3 not performed** — job 1 above. |
+| **AC-4** expiry and revocation | cycle 1 **FAIL** → **now proven** | 4.1, 4.2, 4.4, 4.5 observed in cycle 1; **4.3 observed at 03:37 UTC** after Bruce's back-date. |
 | **AC-5** build round-trips | **PASS** | All seven sub-conditions, on the reviewer's own `zz-rev3` slug. |
 | **AC-6** served bytes are promoted bytes | **PASS** | All five, run in the required order including the 404-before-promote. |
-| **AC-7** rollback works | **FAIL** | 7.1, 7.2 observed. **7.3 failed because the ledger was missing from the debrief** — my error, corrected below. |
+| **AC-7** rollback works | cycle 1 **FAIL** → ledger supplied | 7.1, 7.2 observed. 7.3 failed on the missing ledger — **my error**; the full ledger is below for cycle 2 to judge. |
 | **AC-8** nothing user-facing moved | **FAIL** | 8.2, 8.5, 8.6 hold. **8.3/8.4 fail at 390 px** on a pre-existing defect in screens §2.2 forbids touching. |
 | **AC-9** toolchain works | **PASS** | All five, including the leak audit on the error path. |
-| **AC-10** gates are green | **FAIL** | 10.1–10.4 hold. **10.5 failed on the same missing ledger** — corrected below. |
+| **AC-10** gates are green | cycle 1 **FAIL** → ledger supplied | 10.1–10.4 hold. 10.5 failed on the same missing ledger — corrected below. |
 | **AC-11** no business data touched | **FAIL** | **11.1 holds** (counts identical). 11.2/11.3 fail on files **Anvil rewrote**, not the round. |
 
-**4 PASS · 7 FAIL.** Two of the seven (AC-7, AC-10) fail only on the ledger and should clear on cycle 2.
-Two (AC-1, AC-2) are structural. AC-4 needs your edit. AC-8 and AC-11 are argued below.
+**Cycle 1: 4 PASS · 7 FAIL.** Since then AC-2 and AC-4 have been proven by observation, and AC-7/AC-10's
+only defect — the missing ledger — is supplied. **AC-1.4 remains permanently unrecoverable** and AC-8.3
+and AC-11.2/11.3 remain as argued below; none of the three is fixable inside this round's boundaries.
+**Cycle 2 judges all eleven afresh, and its verdict — not this table — is the round's outcome.**
 
 ---
 
@@ -224,10 +231,10 @@ Users service stamped `last_login` on the test account's `users` row, the single
 failed-credential test used a synthetic address not in `users`, so `n_password_failures` is at its cap
 of one and the account is not locked.
 
-**One live credential is on disk.** `scratch/s01/verify_results.json` holds the raw token for the AC-4.3
-session row. It is **gitignored and has never reached Anvil or GitHub**, but it is a working token until
-you back-date the row. I left it deliberately — that row must stay live and unrevoked for AC-4.3 to mean
-anything. It is not recorded in this debrief; once the row is back-dated the token is dead and can be.
+**The AC-4.3 token is now dead** — Bruce's back-date expired it, `/me` refuses it, and it is recorded
+in full above as the criterion requires. `scratch/s01/verify_results.json` (gitignored, never pushed)
+holds no live credential as a result. **TEST2's token from the re-verification run is still live for
+its 12 hours**; it is not recorded anywhere in this debrief.
 
 ## Findings I did not fix
 
