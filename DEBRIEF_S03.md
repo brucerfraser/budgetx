@@ -283,6 +283,69 @@ all five. All five are ≤250 KB (AC-13.5).
 
 ---
 
+## THE REVIEW — visual gate, two cycles so far
+
+Spec §9: **visual reviewer first, its verdict committed, then the spec reviewer.** Both verdicts
+are committed as small `.md` files **before** any repair, so the record cannot be tidied after the
+fact. Evidence stays on disk.
+
+### Cycle 1 — 26 PASS / 2 FAIL · `docs/review_s03_visual_cycle1.md`
+
+**The reviewer earned the round.** It found a **data-corrupting defect** no local drive had
+caught: on `m-trans`, opening *any* transfer transaction and tapping Save wrote `category: null`,
+destroying the transfer flag on a real row. It proved it on a live row and restored it.
+
+Root cause, confirmed independently by the orchestrator: the transfer sentinel is **not** one of
+the 57 `sub_categories` — it is published separately as the payload's `transfer_category_id` —
+and `m-trans` built its category select from `sub_categories` alone. **12 live transactions carry
+that sentinel.** The same hole made the category pill render the raw UUID.
+
+**Why no local drive caught it — an orchestrator error.** The round's §5 fixture published the
+sentinel **both** as the top-level key **and** as a `sub_categories` row. Live does only the
+former. So against that fixture the option was present by accident and the failing path never
+ran. **A fixture that does not mirror the live payload's shape guards nothing.** Corrected, and
+the corrected fixture reproduces the defect against the pre-fix build — which is what makes the
+green re-run non-vacuous.
+
+Second FAIL: the `d-trans` detail rail computed `border-radius: 0px` against AC-14.4's ≥12 px.
+
+The repair went beyond the reported bug: the edit sheet now **refuses to write a `category` or
+`account` the select never actually offered**, so any unrepresentable stored value is preserved
+rather than silently nulled. That closes the general shape — an archived sub-category, a future
+sentinel, a removed account — not just transfers. An explicit "Uncategorised" still writes `null`.
+
+### Cycle 2 — 37 PASS / 1 FAIL · `docs/review_s03_visual_cycle2.md`
+
+Re-run **in full from the first criterion**, not just the two failures, because repairs regress
+neighbours. Both cycle-1 FAILs re-proven fixed on the promoted 1.2.1 builds.
+
+One new FAIL, **AC-7.7**: `.bx-sort-btn` carries `min-height: 44px` but no `min-width`, so the
+DATE header collapses to **40×44** once the sort arrow moves to another column. It survived
+cycle 1's enumeration of **288 controls** because that enumeration measured every control in
+**one state only** — the control breaches the rule only *after a state change*. Confirmed
+independently by the orchestrator (53×44 → 40×44).
+
+Fixed in the canon, and the fix was followed by a **multi-state** sweep — 208 measurements across
+five pages × two widths × two motion modes × up to 24 driven states each, including zero-result
+searches, empty months, open sheets, pickers, decks, toasts and reduced-motion fallbacks. **No
+further breach found**, 0 states unreached, 0 elements never measured. The instrument was proven
+able to fail by reverting the fix and watching it report `40.4×44.0`.
+
+### Reviewer honesty, recorded because it is what makes the verdicts worth having
+
+Across the two cycles the reviewer caught and re-drove **eight of its own instrument errors before
+writing any verdict** — a blocking route handler, a zero-hit search term that would have passed a
+criterion vacuously, trimmed and stale sort keys, measuring a sheet's child instead of the sheet,
+and a swipe on a card that had no suggestion. It also correctly refused to call
+"right-swipe does nothing without a suggestion" a defect: that is §3.6's specified behaviour.
+
+**The orchestrator's instruments were wrong five times** — a dialog regex that matched the English
+word "confirm (" in prose, a stale element handle that read as a click interception, a `.tap()`
+that does not fire the pointer pair `m-trans` listens for, an `fmtR` scan that sliced only one of
+three canon blocks, and a first latency hypothesis that was simply wrong. Each was caught by
+checking the artefact rather than trusting the reading. **Recorded because a gate is only as
+honest as its instruments, and this round's instruments were wrong more often than its code.**
+
 ## Models actually used
 
 | Role | Model |
