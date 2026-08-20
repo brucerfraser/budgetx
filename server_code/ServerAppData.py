@@ -555,6 +555,8 @@ def _prefetched(table, ladder):
             _probe("rung%d-n%d" % (idx, len(out)), (time.time() - t0) * 1000)
             return out
         except Exception as err:
+            _probe("rungfail%d-%s" % (idx, type(err).__name__), 0)
+            _PROBE.append("why-%s" % str(err).replace(",", "_").replace(";", "_")[:90])
             print("ServerAppData: prefetch of (%s) unavailable — %s: %s; trying the next rung"
                   % (", ".join(columns), type(err).__name__, err))
     last = rungs[-1]
@@ -562,6 +564,41 @@ def _prefetched(table, ladder):
     out = list(table.search(q.fetch_only(*last))) if last else list(table.search())
     _probe("rungLast-n%d" % len(out), (time.time() - t0) * 1000)
     return out
+
+
+DIAG_COLS = ("transaction_id", "date", "description", "amount", "account", "category",
+             "transfer_account", "notes", "hash")
+
+
+def _diagnose():
+    """TEMPORARY. Is the per-row column cost paid per ROW or per COLUMN, and does a row cache
+    after first touch? Read-only; 200-row sample so the probe cannot dominate the request."""
+    sample = list(app_tables.transactions.search())[:200]
+    t0 = time.time()
+    for row in sample:
+        row["date"]
+    _probe("A-1col-200rows", (time.time() - t0) * 1000)
+
+    sample2 = list(app_tables.transactions.search())[:200]
+    t0 = time.time()
+    for row in sample2:
+        for name in DIAG_COLS:
+            row[name]
+    _probe("B-9cols-200rows", (time.time() - t0) * 1000)
+
+    t0 = time.time()
+    for row in sample2:
+        for name in DIAG_COLS:
+            row[name]
+    _probe("C-9cols-again", (time.time() - t0) * 1000)
+
+    t0 = time.time()
+    for row in sample:
+        try:
+            row["active"]
+        except Exception:
+            pass
+    _probe("D-missingcol-200rows", (time.time() - t0) * 1000)
 
 
 def _settings_row():
@@ -624,6 +661,8 @@ def api_app_bootstrap(include=None, **kwargs):
     _probe("bootstrap", (time.time() - t_boot) * 1000)
     if not wants_transactions(include):
         return payload
+    _PROBE.append("qNone-%s" % (q is None))
+    _diagnose()
     anomalies = []
     t_rows = time.time()
     rows = _prefetched(app_tables.transactions, TRANSACTION_COLUMN_LADDER)
