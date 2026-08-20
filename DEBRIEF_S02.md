@@ -111,6 +111,46 @@ language across all three pages.
 
 ---
 
+## Spec review — cycle 1: **13/14 PASS**
+
+**`spec-reviewer`, Opus, fresh read-only context, full AC-1…AC-14.** It confirmed the served bytes
+hashed identically at the start and end of its review and that `anvil/master` = `origin/master` =
+`59fd557`, so it judged a stable artefact. **It re-drove every criterion itself, including all 21
+in the visual reviewer's mandate, and reached the same verdict on all 21** — the two gates agree
+without either relying on the other.
+
+| AC | Verdict | The short of it |
+|---|---|---|
+| **AC-1** | PASS | key-set exact, counts equal an independent `/build/counts`, **13** auth-failure shapes all uniform-401 with zero data keys, **AST scan** of the pushed source found no write call, counts identical across three bootstrap calls |
+| **AC-2** | PASS | upload forging `uploaded_by`, `record_uid`, `sha256`, `bytes`, `is_current`, `promoted_at`, `active` → read-back shows **`build-api`**, server-computed sha256, server UUID, `is_current:False`. All 21 list entries carry `uploaded_by`, none carries `html` |
+| **AC-3** | PASS | stdout+stderr of login/whoami/build-list and **six** deliberate failures = 4,269 chars: zero secret literals, zero 64-hex, zero ≥32-hex runs; successful TEST2 login after every failure |
+| **AC-4** | PASS | served bytes hash to the promoted row; both widths; wrong password and unknown address indistinguishable; correct login lands on the right slug with 64-hex token; stored-token skip and garbage-token clear |
+| **AC-5** | PASS | six items, highlight, four inert; email = `/me`, **7 rows matched by name AND `acc_id`**; SIGN OUT revocation confirmed by an independent `/build/session` read-back (`revoked_at` set, `active:false`); scroll driven 0→50 and 50→350 |
+| **AC-6** | PASS | bars byte-identical across scroll at **390×844, 390×600 and 390×500**; 320×48 target; at 390×600 **four items below the bar became fully visible after driving scrollTop 0→290** |
+| **AC-7** | PASS | zero `<script src=`, only the two font origins, no img/iframe/@import/`url(http)`; **all six blocks equal the canon by HASH**; token block verbatim; palette live |
+| **AC-8** | PASS | both shells bounce with storage cleared; exactly one non-serving API response per bounce, uniform 401, zero data keys |
+| **AC-9** | PASS | baseline predates the first commit by ~11 min; observables reproduced exactly; mobile Reports/Settings same pre-existing dialog, no worse; console 1→1 |
+| **AC-10** | PASS | pyflakes clean; `node --check` passed **and a deliberately broken control file was rejected**, proving the checker was live; hooks executable and dated before the first commit; diff exactly the seven paths, `client_code/` tree hash **identical** at all three commits; **all six ledger rows reconcile against the live table** |
+| **AC-11** | PASS | all nine counts identical at 07:09:58Z, 07:11:29Z, 07:11:34Z and 07:54:12Z vs the 05:59:49Z start; `anvil.yaml` diff 0 lines |
+| **AC-12** | PASS | splitting both CLAUDE.md versions into 12 sections: **exactly one changed**, eleven byte-identical |
+| **AC-13** | **FAIL** | 13.1/13.2/13.3/13.5 all hold. **13.4 fails: the cold-start figure was absent from the debrief.** See below |
+| **AC-14** | PASS | rAF sampling caught opacity stepping 0→0.227→…→1; CDP screencast frames 13–15 ms apart differed by 90,038 px desktop / 65,583 px mobile; reduced motion resolves `animationName` to none with opacity constant at 1; bars byte-identical while 9 of 20 frames were mid-animation |
+
+### The one FAIL, stated plainly
+
+**AC-13 failed on a missing number in this file, not on a defect.** AC-13.4 requires "one recorded
+cold-start figure after ≥ 10 min idle" and "all figures go in the debrief"; the version of this
+debrief the reviewer judged said verbatim *"Cold start (≥10 min idle) is NOT yet measured"*. The
+criterion was unmet as written, and the reviewer was right to fail it rather than wave it through.
+
+It also **checked my >1 s attribution and confirmed it**: TLS handshake p50 555–624 ms, and
+`/build/version` — which touches no table — costs 1032 ms fresh / 417 ms reused, so bootstrap adds
+only ~317 ms over that floor while returning 78 rows. Its own warm figures (n=22), taken at a
+different hour than mine, came out faster: reused p50 `/x` 454 ms, `/app/bootstrap` 519 ms,
+`/auth/login` 566 ms.
+
+---
+
 ## My own basic test, before either reviewer
 
 Run against the promoted v1.1.1: **49/49 checks PASS** (`scratch/s02/drive_clients.py`), plus
@@ -165,8 +205,31 @@ feels is waiting on our code.**
 3. **Trim the bootstrap payload** — 16 KB / 78 rows costs ~240 ms. Smallest lever; later rounds
    want that data anyway.
 
-**Cold start (≥10 min idle) is NOT yet measured** — the app has been under continuous test all
-round. It is taken after the review cycle closes and recorded before this file goes FINAL.
+### Cold start, after ≥10 minutes of enforced idle
+
+Two independent readings. The idle **is** the measurement, so each one owns an uninterrupted
+window in which nothing else may touch the app.
+
+| reading | idle | first request | next request, same connection | cold penalty |
+|---|---|---|---|---|
+| **mine**, `GET /x?slug=d-dash`, 08:07:54Z→08:18:57Z | 11 min 0 s | **2957 ms** | 469 / 514 / 522 ms | **+2489 ms** |
+| **the spec reviewer's**, independent, 08:04:36Z | 10 min 23 s | **1752 ms** | 426 ms | +1326 ms |
+
+**They disagree by 1.2 s, and that is the finding.** A single cold request is not a stable
+quantity — Anvil's spin-up cost varies by a factor approaching two between two readings taken
+fourteen minutes apart. Neither number is wrong; reporting one alone would have implied a
+precision that does not exist. What both agree on:
+
+- The **first** request after a real idle costs **1.8–3.0 s**.
+- The **second** request on that connection drops straight to **~430–520 ms**, i.e. to the normal
+  warm floor. There is no lingering penalty — one request pays it and the session is warm.
+- The cold penalty (1.3–2.5 s) is far larger than the TLS handshake (~565 ms), so it is Anvil
+  spinning a worker up, not the network.
+
+**What it means for a person using this app:** opening Budget X after leaving it alone for a while
+costs about two to three seconds on the first page, and everything after that is sub-second. That
+is the honest shape of it, and it is the platform's cost, not the page's — the page itself renders
+in 37 ms once its HTML arrives.
 
 ---
 
@@ -299,24 +362,58 @@ changes, and no service was enabled.
 
 ## Findings I did not fix
 
+From both reviewers. None of these fails a criterion; each has a file and a reason.
+
 - **`--error` contrast ~3.6:1**, below WCAG AA (`client_src/bx_core.css`, the `--error` token).
-  The §3.4 token block is locked verbatim by AC-7.3, so this needs your ruling. Round 03.
+  The §3.4 token block is locked verbatim by AC-7.3, so **changing it needs your ruling.** Round 03.
+- **`d-dash` has no `data-primary` hook** — its sidebar SIGN OUT carries `data-nav="signout"` only,
+  so `document.querySelector('[data-primary]')` returns `null` there while it resolves on `x` and
+  `m-dash`. **This inconsistency is mine**: I asked Builder D for `data-nav` on all six sidebar
+  items and Builder M for `data-primary` on its SIGN OUT, and never reconciled the two. AC-7.4
+  passes anyway (the button computes to `rgb(30,185,128)`), and I deliberately did **not** re-cut
+  the artefact for it — the pages were frozen under review and a cosmetic hook change is not worth
+  invalidating two full gates. **Make the hook set uniform before round 03 copies it.**
+- **The desktop SIGN OUT button is 228×41 px**, under the 44 px minimum that AC-6.2 imposes on
+  mobile (where it measures 320×48). No criterion applies at desktop, so this is not a failure —
+  but if 44 px is a design-language rule rather than a mobile-only one, `bx_core.css`'s desktop
+  sidebar button does not honour it. Your call which it is.
 - **Desktop content column ~520 px in a ~1020 px area** (`d-dash`). Round 03 should set the
-  desktop grid.
+  desktop grid rather than inherit this.
+- **`tools/api.py` ignores a `BUILD_SECRET` environment override**, reading only
+  `.secrets/budgetx.env` — so the tool cannot be pointed at a second environment without editing
+  that file. Harmless today; it matters the first time there is a staging app.
 - **`docs/cowork_project_instructions.md` is modified in the working tree and I did not commit
-  it.** That edit predates this session — it was already dirty when the round started. It is not
-  mine to commit or to revert, so it is left exactly as found.
+  it.** That edit predates this session by ~11 hours (mtime 2026-08-19T19:08:25Z, last committed
+  at `b5fc1a9`); the spec reviewer verified that independently rather than taking my word, and
+  confirmed AC-10.4 is unaffected. It is not mine to commit or revert. **It does leave the working
+  tree diverged from both remotes, and round 03 inherits that** — worth resolving deliberately.
+- **A trailing space on the bearer token is accepted** (`Authorization: Bearer <valid> ` → 200).
+  The token is genuine so the behaviour is correct, not a leak; recorded only because it is the
+  single 200 in the reviewer's 401-probe matrix and a future reader should not misread it.
 
 ---
 
 ## What I could not verify
 
-- **Cold start after ≥10 min idle** — the app was under continuous test all round. Taken after the
-  review cycle, before FINAL.
-- **Archived accounts against real data** — the live table holds none. Proven by response
-  injection instead (above), which tests the client filter but not an archived row travelling the
-  full server path. The first round that archives an account should re-check it.
+- **`archived: true` has never travelled the live server path.** The `accounts` table holds 7 rows
+  and **0 archived**, so `GET /app/bootstrap` has only ever emitted `archived: false`. My route-mock
+  proof injects synthetic rows into the *response*, so it proves both clients filter correctly but
+  exercises nothing in `serialise_account`. The spec reviewer judged AC-5.2 and AC-6.3 on their
+  literal text — equality with the `archived:false` set — which holds, and passed them; it
+  independently reached the same conclusion I did about the gap. **Closing it properly needs a real
+  archived account, which is a business-table write and therefore BLOCKED this round.** The first
+  round that opens a write path to `accounts` should create a `ZZ`-prefixed account, archive it,
+  and re-check.
 
 ---
 
-*Spec review running. This file goes FINAL with its verdict and the count.*
+## Cycle 2 — what changed, and why the whole gate re-ran
+
+The only repair between cycles was **adding the cold-start figure to this file**. No promoted byte
+changed: `x`, `d-dash` and `m-dash` are the same v1.1.1 records the cycle-1 reviewers judged, with
+the same sha256. I deliberately did not fold in the `data-primary` hook or any other cosmetic
+finding, because changing the artefact would have invalidated both cycle-1 gates to fix something
+that fails no criterion.
+
+The full review re-ran from AC-1 regardless — never only the failure, because repairs regress
+neighbours.
