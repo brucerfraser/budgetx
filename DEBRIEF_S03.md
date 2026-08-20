@@ -1,46 +1,90 @@
 # Budget X — Session 03 debrief
 
-**STATUS:** AWAITING-BRUCE
+**STATUS:** INTERIM
 
 **Round:** 03 · **Spec:** `docs/specs/spec_03.md` (approved and locked, 2026-08-20)
-**Round started (UTC):** 2026-08-20T14:21:37Z · **Updated (UTC):** 2026-08-20T15:52Z
+**Round started (UTC):** 2026-08-20T14:21:37Z · **Updated (UTC):** 2026-08-20T19:20Z
 
-> Still the **park** of spec §3.8 / §11.4. Everything that can be built and proven without the
-> schema click is now built, deployed and proven; what remains is blocked on one click.
-> **No acceptance criterion is FINAL** — the reviewers have not run.
+> **The park is over — Bruce approved the migration and the round is running again.** The
+> migration then did something the spec ruled out, hid all 1,300 transactions, and was found,
+> diagnosed and fully reconciled; that incident is the most important thing in this debrief.
+> **No acceptance criterion is FINAL** — the visual reviewer is running, the spec reviewer
+> follows it.
 
 ---
 
-## AWAITING BRUCE
+## ⚠ THE INCIDENT — the migration wrote `False` into all 1,300 rows and hid every transaction
 
-**Approve one schema migration in the Anvil editor. Nothing to type, nothing to create.**
+**This is the round's most important finding, and it is a platform fact the spec had explicitly
+ruled out.**
 
-I have added the column myself and pushed it — per Bruce's ruling of 2026-08-20, *"I never add
-columns or tables. You do. Then I approve the schema."* Spec §3.8 had this backwards and asked
-Bruce to create the column by hand; corrected in **Addendum 5**, and the rule is now recorded in
-CLAUDE.md and the vault's Master Note so no later round repeats it.
+Spec §3.8.3 and §4.3 state that adding the column "without touching the 1,300 existing rows"
+leaves them reading `None`, and that *"this is deliberate and the serialiser depends on it"*.
+**That is not what Anvil does.** After the migration was approved, every one of the 1,300
+pre-existing rows carried a real **`False`**.
 
-**What is waiting for you:**
+The failure was total and silent:
 
-1. Open the Anvil editor → **DATA** tab. There will be a **⚠** beside `Default Database`
-   (not in Version History).
-2. Click through the schema-mismatch panel and take the **RED / LEFT** side — *the source code is
-   correct* — which migrates the database to match git.
-3. The change is **exactly one column**: `transactions.active`, type **bool**. Nothing else.
+- `GET /app/bootstrap?include=transactions` returned **`200` with an empty array**.
+- `/build/counts` still reported `transactions 1300` — nothing was deleted.
+- Nothing raised, nothing logged, no error reached any client.
+- Both new screens rendered **zero transactions**. The Forms app was unaffected throughout, because
+  it knows nothing about `active`.
 
-**If the panel offers anything beyond that single column — another column, another table, a
-`client:`/`server:` change — STOP and tell me rather than clicking through.** The pushed diff was
-verified read-only to be exactly that one column, with `client: full` / `server: full` unchanged
-on the table and no other table or top-level key altered (AC-11.5).
+**The `is not False` test did not save us, and could not have.** §4.3 correctly insists on
+`is not False` over `is True`, and the code implements it in exactly one function. But the stored
+values genuinely *were* `False` — and no test can separate "archived" from "never initialised"
+once the platform has written a real boolean. The defence the spec designed was aimed at the right
+hazard and was defeated by a different mechanism.
 
-**Do not set a value on any existing row.** All 1,300 stay blank and read as `None`, which the
-serialiser treats as *"predates soft-delete, therefore active"* — already proven live: bootstrap
-returns all 1,300 rows today, before the column exists.
+**How it was found and handled:**
 
-Then say **done**, and I finish with `Read Claude.md, Trigger 03 continue`.
+1. Caught by the orchestrator's own post-push health check, not by a reviewer and not by Bruce.
+2. **Diagnosed with one minimal, reversible write** — a single `/txn/restore` on one id — which
+   made exactly that row reappear in an independent fetch. Mechanism confirmed on one row before
+   anything was done to 1,300.
+3. All 1,300 rows restored to `active: true` in **seven batches of ≤200** through `/txn/restore`,
+   every row written to the ledger as it happened.
+4. **Reconciled against the snapshot taken before any write:**
 
-*(Spec §3.8 also asked for two `ZZ` rows on `accounts`. Both already existed before the round
-opened and match §3.8 field-for-field — see Addendum 1. Nothing to do there.)*
+| check | result |
+|---|---|
+| rows returned | **1300** (round-start 1300) |
+| every `active` a real boolean | yes — distinct value set `[True]` |
+| ids missing vs round-start | **0** |
+| ids new vs round-start | **0** |
+| rows differing on **any** field except `active` | **0** |
+| `sum(amount_cents)` | **identical** — `-13,576,179` |
+| row order contract | intact |
+| all table counts | unchanged |
+
+**The standing rule this produced**, now in CLAUDE.md, the Master Note and spec Addendum 6:
+
+> **After adding a bool column, explicitly initialise every existing row in the same round, before
+> anything reads it. Treat a migration as leaving the column *wrong*, not empty.** The bad window
+> opens at the schema **push**, before approval — the intermediate state already returns `False`.
+> Prove the recovery by field-by-field reconciliation against a pre-migration snapshot, never by a
+> row count.
+
+**Consequence for AC-3.1:** its wording — "every legacy `None`-valued row is present" — can no
+longer be proven, because after remediation no row is `None`; all 1,300 carry an explicit `True`.
+The substance (all 1,300 present, none lost, none altered) is proven, and more strongly than the
+criterion asked. Recorded rather than quietly re-interpreted.
+
+---
+
+## Bruce's correction, applied in four places
+
+Bruce, mid-round: *"I never add columns or tables. You do. Then I approve the schema."* Spec §3.8
+had this backwards and asked him to create the column by hand. Corrected in **Addendum 5**, and the
+rule now lives in **CLAUDE.md** (§"Schema changes need Bruce's click"), the vault's **Master
+Note** standing decisions, and this session's memory. Code edited `db_schema` in `anvil.yaml`
+**textually**, pushed it, and Bruce approved the migration — the sequence every later round follows.
+
+**AC-11.5 — the `anvil.yaml` diff for the whole round is exactly one column:**
+`transactions.active`, type `bool`. `client: full` / `server: full` unchanged on the table, no
+other table touched, no top-level key altered, no `runtime_options` churn. Verified by a read-only
+parse against a pre-edit copy, never `safe_load` → `dump`.
 
 ---
 
@@ -77,19 +121,19 @@ these is re-judged independently by the two reviewers before anything is called 
 | AC | State | Evidence |
 |---|---|---|
 | **AC-1** | **6/6 verified** | Live. No-query key-set exactly v1's; `?include=transactions` returns **1,300** rows, every row's key-set and types checked on **every** row, order `date` desc + `id` asc; `?include=garbage` and `?include=` both return v1's key-set; all four auth failures uniform 401 with no data key; counts identical across a bootstrap call; `/build/version` reports `ServerAppData v2` + `ServerTxn v1` |
-| **AC-2** | **BLOCKED** | Needs the column — `/txn/create`, `/txn/archive`, `/txn/restore` all set `active` |
-| **AC-3.1** | verified | payload length **1300** == `/build/counts` transactions **1300** |
-| **AC-3.2–3.4** | **BLOCKED** | Needs the column |
+| **AC-2** | **8/8 verified** | Every write proven by an **independent** bootstrap re-fetch, never the endpoint's own `ok:true`. Single + 25-row batch categorise; bad category and a **mixed** batch both 400 with **no row changed** (atomic); `"transaction_id":"FORGED"` / `"hash":"FORGED"` ignored and a real uuid4 + computed hash stored, with neither forged value anywhere in the table; hash recomputed on date/amount/account change and matched by independent Python; archive removes the row from the payload while `/build/counts` is **unchanged**; archive→restore returns it; 404 with no data keys, 201-item batch 400 |
+| **AC-3.1** | verified in substance, **wording overtaken** | payload length **1300** == `/build/counts` **1300**. Its "`None`-valued row" wording is no longer provable — see the incident and Addendum 6 |
+| **AC-3.2–3.4** | **verified** | Archiving one row removed **exactly** that id (1301→1300) with every other row still present, compared by **id set**; restore returned the set to exactly its former membership (symmetric difference **0**); a row created this round carries `active: true` as a real bool and the serialiser emits no null for `active` on any of 1,301 rows |
 | **AC-3.5** | **verified — S02's open gap is CLOSED** | `serialise_account` emitted its first-ever live `"archived": true`; and across **all five clients at both widths**, `ZZ Test Archived` renders **nowhere** while `ZZ Test Active` renders on every one |
 | **AC-4.1** | verified | all 1,300 `amount_cents` are integers; zero floats, strings or nulls |
 | **AC-4.3** | **verified — the round's key unknown, settled** | see below |
-| **AC-4.2 / 4.4** | partial / BLOCKED | round-start snapshot taken before any write; round-end comparison needs the writes |
+| **AC-4.4** | **verified** | Every `(transaction_id, amount_cents)` pair compared between the round-start snapshot and a post-remediation fetch: **zero** rows differ on any field except `active`, `sum(amount_cents)` identical at `-13,576,179` |
 | **AC-5** | **5/5 verified** | 85 golden cases green (spec asks ≥40); gate proven live by **my own** independent corruption; no `fetch`/`document`/`window`; **totals recomputed in Python match the rendered `data-cents` exactly**; `bxSuggest` beats the legacy bug |
 | **AC-6 / AC-8** | substantially verified, reviewers to judge | 273 rows render on both screens for 2025-12; **zero** requests across 8 month steps; scrollers drive and MOVE |
 | **AC-7** | verified | all **15** canon extractions hash-equal; token block verbatim in all five; `--error` **measured**; zero `fmtR(` call sites; non-blocking fonts on all five; 44 px enumeration clean |
-| **AC-9** | **verified (except 9.5)** | Forms app observably **identical** to the locked baseline on all 10 screen×width cells, no new console errors, no regressions. 9.5 needs a write |
+| **AC-9** | **verified, 9.5 included** | Forms app observably **identical** to the locked baseline on all 10 screen×width cells, no new console errors, no regressions. **9.5 is the strongest proof in the round:** the row this round wrote with `amount_cents: 12345` renders in the Forms app — which knows nothing about `amount_cents` and divides the raw column by 100 — as **R123.45**, with its own Inflow total agreeing. Not R1,234,500, not R1.23 |
 | **AC-10** | verified except 10.4/10.7 | pyflakes clean; `node --check` clean and **proven live**; guard exit 0 before the first commit and after; ledger written as part of each promote |
-| **AC-11** | **BLOCKED** | The ledger is empty because **nothing has been written** |
+| **AC-11** | **verified** | 1,357 ledger entries across 1,301 distinct ids, written **as the writes happened**; reconciled field-by-field; structural tables moved by **zero**; `anvil.yaml` diff is exactly the one column |
 | **AC-12** | verified | section-by-section diff: **exactly one** section changed, purely additive |
 | **AC-13** | partial | 13.1 verified live (zero further requests); 13.5 all five ≤250 KB; **13.6 is a real finding, below**; 13.8 needs a 2-hour quiet window |
 | **AC-14** | partial | 14.2 reduced motion now resolves `0s`; 14.3 zero dialogs in served bytes |
@@ -174,18 +218,55 @@ centre resolves to a `TD` inside the row).
 
 ---
 
-## Written-rows ledger (AC-11.1)
+## Written-rows ledger (AC-11)
 
-**Still empty. Nothing has been written to any table by this round.** Every live call has been a
-read; the Forms baseline and re-drive navigate and scroll only; all builder work ran against a
-local fixture server on `127.0.0.1:8703` with `ZZ`-synthetic data. The Anvil Users service's own
-`last_login` bookkeeping on TEST2 is the platform writing and is the standing S01 exemption.
+**1,357 entries across 1,301 distinct `transaction_id`s**, written to
+`scratch/s03/ledger/written_rows.jsonl` **as each write happened**, never reconstructed. The
+evidence file stays on disk — the repo carries code only.
 
-`/build/counts` — **identical** at round start (14:21:37Z) and now:
-`accounts 9 · budgets 58 · categories 14 · files 8 · settings 1 · sub_categories 57 · test_csv 5 ·
-transactions 1300 · users 3`
+| operation | entries | what |
+|---|---|---|
+| `restore` | **1,301** | the remediation: 1,300 rows Anvil's migration had wrongly set to `False`, plus the single diagnostic probe that confirmed the mechanism |
+| `categorise` | 52 | AC-2.1's single row + a 25-row batch, **each reverted to its original category** (26 forward, 26 back) |
+| `create` | 1 | the AC-2.3/2.5 probe row |
+| `update` | 1 | AC-2.4's date/amount/account change, to force a hash recomputation |
+| `archive` | 2 | AC-2.6/2.7 archive→restore, and one further archive during the cycle |
 
----
+**AC-11.2 — the ledger reconciles against the data.** A post-remediation
+`?include=transactions` compared field-by-field against the round-start snapshot yields **zero**
+rows differing on any field except `active`, zero ids missing and zero ids new. Every categorise
+was reverted and confirmed reverted by an independent fetch.
+
+**AC-11.3 — the structural tables moved by exactly zero.** Round start (14:21:37Z) and now
+(19:20Z), UTC-stamped:
+
+| table | round start | now |
+|---|---|---|
+| `accounts` | 9 | **9** |
+| `budgets` | 58 | **58** |
+| `categories` | 14 | **14** |
+| `sub_categories` | 57 | **57** |
+| `settings` | 1 | **1** |
+| `users` | 3 | **3** |
+| `files` / `test_csv` | 8 / 5 | **8 / 5** |
+| `transactions` | 1300 | **1301** (+1, the deliberate probe) |
+
+Every pre-existing `accounts` row is unchanged on every field the payload exposes. The two `ZZ`
+accounts pre-dated the round (Addendum 1), so the round's own structural delta is **zero** — not
+the +2 §3.8.4 anticipated.
+
+**AC-11.4 — nothing was hard-deleted.** `transactions` ended **≥** its start count (1300 → 1301),
+and every round-start `transaction_id` is present in a round-end fetch. `ServerTxn.py` contains
+**zero** `.delete(` calls, proven by AST walk.
+
+**Live rows left behind, declared:**
+
+- `74f7a3a5-c7f9-4671-98c7-bf6781453b03` — description **"ZZ S03 cents probe"**, `amount_cents`
+  **12345**, dated 2026-08-20, account `619b96af-2` (Discovery), currently **active**. It is
+  AC-2.5's and AC-9.5's evidence and is deliberately left in place for the reviewers to reproduce.
+  It is visible in the Forms app's Transactions list as `R123.45`. **There is no hard-delete path
+  by design**; Bruce can archive it from the new Transactions screen whenever he likes.
+- The two `ZZ` accounts, `ZZ-TEST-ACTIVE` and `ZZ-TEST-ARCHIVED`, which pre-dated the round.
 
 ## Promote / rollback ledger (AC-10.6) — written as part of each promote
 
