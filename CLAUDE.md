@@ -326,6 +326,26 @@ click in the Anvil editor.** Adding a table shows the schema-mismatch panel and 
 migrate click *plus* a confirmation dialog; removing one needs the same. Nothing happens until he
 clicks.
 
+**WHO DOES WHAT — Bruce's ruling, 2026-08-20. Do not get this backwards.**
+
+> *"I never add columns or tables. You do. Then I approve the schema."*
+
+- **Code makes every schema change**, by editing `db_schema` in `anvil.yaml` and pushing it.
+  Adding a column, adding a table, removing one — all of it is Code's edit, in the repo.
+- **Bruce only ever APPROVES the resulting migration** in the Anvil editor. He does not hand-add
+  a column, hand-create a table, or type a value into the DATA tab, and **a round must never ask
+  him to.** Asking him to create the object himself is the wrong request and wastes the round's
+  one park.
+- The sequence is always: **Code edits `anvil.yaml` → Code pushes → the mismatch panel appears →
+  Bruce clicks RED / LEFT (*the source code is correct*) → the database is migrated to match git.**
+- **This is the one sanctioned exception to "do not hand-edit `anvil.yaml`"** below. A deliberate,
+  spec'd schema change is edited into that file **textually** — never `yaml.safe_load` →
+  `yaml.dump`, which reformats the whole file and buries the change. Everything else in
+  `anvil.yaml` remains Anvil's to generate and is never touched by hand.
+- **Verify the diff before pushing:** it must show *exactly* the intended column(s) and nothing
+  else — no other table, no `client:`/`server:` change, no `runtime_options` churn. Parse the file
+  read-only to confirm, and declare any drift first.
+
 - **Therefore a round that touches schema CANNOT close unattended.** Say so in the debrief, hand
   Bruce the click, and mark any criterion that depends on the new schema as **BLOCKED** — never
   as passed.

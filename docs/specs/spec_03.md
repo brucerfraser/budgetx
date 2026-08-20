@@ -1144,3 +1144,25 @@ raise `TypeError` rather than rendering. It is the tripwire for the 100× defect
 exist to prevent: a page that accidentally passes rands fails loudly instead of silently
 rendering every figure 100× too small. **The cost is that a page must guard its own missing
 values before formatting them**, which both client builders were told.
+
+**Addendum 5 — 2026-08-20 — §3.8 asks Bruce for the wrong thing. Code adds the column; Bruce
+approves the migration.**
+§3.8 parks the round by asking Bruce to *"add one column"* on `transactions` in the Anvil editor.
+That inverts how this project actually works. Bruce's ruling, given during the round:
+
+> *"I never add columns or tables. You do. Then I approve the schema."*
+
+**Corrected sequence, and the one now followed:** Code edits `db_schema` in `anvil.yaml`, pushes
+it to `anvil`, the schema-mismatch panel appears in the DATA tab, and **Bruce clicks RED / LEFT —
+*the source code is correct* — migrating the database to match git.** He never hand-creates the
+object. The park still exists and the round still cannot close unattended; what changes is that
+the request put to him is *approve this migration*, not *build this column*.
+
+This is also the one sanctioned exception to CLAUDE.md's "do not hand-edit `anvil.yaml`": a
+deliberate, spec'd schema change is edited into that file **textually**, never via
+`yaml.safe_load` → `yaml.dump`. The diff was verified to be exactly the one column —
+`transactions.active`, type `bool`, `client: full` / `server: full` unchanged, no other table and
+no top-level key altered — which is what AC-11.5 requires.
+
+The rule is now recorded in **CLAUDE.md** (§"Schema changes need Bruce's click") and in the
+vault's **Budget X — Master Note** standing decisions, so no later round repeats the mistake.
