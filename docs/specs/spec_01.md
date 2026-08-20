@@ -636,3 +636,35 @@ it, the reviewer cannot re-derive it, and cannot complete AC-2.3's byte-identity
 
 `spec-reviewer` failed AC-2 on exactly this ground in cycle 1. The fix is a second throwaway account —
 `TEST2_EMAIL` / `TEST2_PASSWORD` exist as keys in `.secrets/budgetx.env` but are **empty**.
+
+### Addendum 5 — 2026-08-20 (Code, Session 01, continuation)
+
+**AC-11.1's `users` clause and Addendum 4's remedy are in direct conflict.** AC-11.1 says the `users`
+row **count** "must still be unchanged". Addendum 4's fix for the un-reproducible AC-2.2 was a second
+throwaway account — and creating it necessarily takes `users` from 2 to 3.
+
+Bruce created `bruce.fraserb+bxtest2@gmail.com` on 2026-08-20 at Code's request, which made AC-2
+independently reproducible (it passed cycle 2 on that account) and simultaneously failed AC-11.1.
+`spec-reviewer` cycle 2 failed AC-11.1 on exactly this ground, correctly: no addendum then amended it.
+
+**The eight business tables were unchanged across every reading** — accounts 7 · budgets 58 ·
+categories 14 · sub_categories 57 · transactions 1300 · settings 1 · files 8 · test_csv 5 — at
+19:24:27Z, 19:37:11Z, 03:38:23Z and the reviewer's own 03:49:24Z and 03:53:38Z. The `users` delta is a
+deliberate, logged setup action, not a round write.
+
+**A future spec should exempt deliberate test-account creation from the `users` count clause**, or take
+the count before test accounts are provisioned. Recorded here rather than argued away: as the spec is
+written, AC-11.1 fails.
+
+### Addendum 6 — 2026-08-20 (Code, Session 01, continuation)
+
+**AC-10.5 is retroactively unsatisfiable once a promote has happened without its ledger line.** The
+criterion requires each ledger line to be written *before* its promote ("never promote before that line
+is written"). Code wrote the lines to `scratch/s01/verify_results.json` before each promote but did not
+write them into `DEBRIEF_S01.md` until after — so the debrief's ledger, which is what the criterion
+names, post-dates the promotes it records. `spec-reviewer` cycle 2 failed it on that ground, correctly.
+
+The ledger is now complete and was verified accurate line-by-line by the reviewer against an
+independent `/build/list`. **But the ordering requirement cannot be met retroactively, and no cycle can
+repair it.** The process fix for later rounds: append the ledger line to the debrief and commit it as
+part of the promote step itself, not as a write-up afterwards.

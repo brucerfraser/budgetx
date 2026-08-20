@@ -1,14 +1,20 @@
 # DEBRIEF S01 — the API spine
-**STATUS:** INTERIM
+**STATUS:** FINAL — 7/11 PASS
 
-**Round:** 01 · **Spec:** `docs/specs/spec_01.md` (APPROVED AND LOCKED) · **Commit:** `c1d887a`
+**Round:** 01 · **Spec:** `docs/specs/spec_01.md` (APPROVED AND LOCKED) · **Commit reviewed:** `bda13ff`
 **Deployed and live.** Pushed to `anvil`, mirrored to `origin`. Continuation folded into this file per §6.4.
 
-**Reviewer cycle 1: 4/11 PASS.** Since then Bruce cleared both blockers, **AC-4.3 and AC-2 are now
-proven by observed behaviour**, and the ledger below is complete. **Review cycle 2 is running against
-this text.**
+**Reviewer cycle 1: 4/11 · cycle 2: 7/11 PASS.** `spec-reviewer`, Opus, a fresh read-only context each
+time, full re-run from AC-1 both times.
 
-*(cycle 1 verdict, for the record — `spec-reviewer`, Opus, fresh read-only context)*
+**The spine works and is proven.** Auth, tokens, expiry, revocation, the build pipeline, byte-exact
+serving, rollback and the toolchain — **AC-2 through AC-7 and AC-9 all PASS on observed behaviour**,
+every write confirmed by an independent fetch through a different endpoint.
+
+**The four remaining failures are structural, not defects in the code, and I stopped rather than
+grinding a third cycle** (spec §9). None can be repaired by a fixer: two need a window that has closed,
+one is in code this round was forbidden to touch, and one is Anvil rewriting files the round never
+opened. They need your ruling, not more work — see **What needs your ruling** below.
 The spine works — **the token spine, the build pipeline, the serving route and the toolchain are all
 proven by observed behaviour.** The failures are almost entirely *not* the code: one is a temporal
 observation the empty `BUILD_SECRET` made permanently unrecoverable, one needs a data edit only you can
@@ -65,29 +71,46 @@ transactions 1300 · settings 1 · files 8 · test_csv 5.
 
 ---
 
-## Verdict — one line per criterion
+## Verdict — cycle 2, one line per criterion
 
-Reviewer's outcome first, then what I observed. **Nothing below is marked PASS by me over a reviewer
-FAIL.**
+**The reviewer's verdict is the round's outcome. I have not marked anything PASS over a FAIL.**
 
-| AC | Reviewer | Note |
-|---|---|---|
-| **AC-1** deploy is real | **FAIL** | 1.1–1.3 hold now. **1.4 is permanently unrecoverable** — it required the correct-secret 200 *before* the migration, and `BUILD_SECRET` was empty at deploy time. See Addenda 1–2. |
-| **AC-2** login works/refuses | cycle 1 **FAIL** → **now proven** | Failed only because 2.2/2.3 were not reviewer-reproducible. Re-verified end to end on TEST2, which has no lockout budget. |
-| **AC-3** token authenticates | **PASS** | All four sub-conditions, plus lowercase `bearer` and uppercase hex, all 401. |
-| **AC-4** expiry and revocation | cycle 1 **FAIL** → **now proven** | 4.1, 4.2, 4.4, 4.5 observed in cycle 1; **4.3 observed at 03:37 UTC** after Bruce's back-date. |
-| **AC-5** build round-trips | **PASS** | All seven sub-conditions, on the reviewer's own `zz-rev3` slug. |
-| **AC-6** served bytes are promoted bytes | **PASS** | All five, run in the required order including the 404-before-promote. |
-| **AC-7** rollback works | cycle 1 **FAIL** → ledger supplied | 7.1, 7.2 observed. 7.3 failed on the missing ledger — **my error**; the full ledger is below for cycle 2 to judge. |
-| **AC-8** nothing user-facing moved | **FAIL** | 8.2, 8.5, 8.6 hold. **8.3/8.4 fail at 390 px** on a pre-existing defect in screens §2.2 forbids touching. |
-| **AC-9** toolchain works | **PASS** | All five, including the leak audit on the error path. |
-| **AC-10** gates are green | cycle 1 **FAIL** → ledger supplied | 10.1–10.4 hold. 10.5 failed on the same missing ledger — corrected below. |
-| **AC-11** no business data touched | **FAIL** | **11.1 holds** (counts identical). 11.2/11.3 fail on files **Anvil rewrote**, not the round. |
+| AC | Cycle 1 | Cycle 2 | Note |
+|---|---|---|---|
+| **AC-1** deploy is real | FAIL | **FAIL** | 1.1–1.3 verified (incl. lowercase `x-build-secret` → 200). **1.4 unrecoverable** — needed the correct-secret 200 *before* a migration that completed 19:22Z. |
+| **AC-2** login works/refuses | FAIL | **PASS** | All five, reproduced by the reviewer itself on TEST2. |
+| **AC-3** token authenticates | PASS | **PASS** | Plus lowercase `bearer`, uppercase hex, double space — 401 each. |
+| **AC-4** expiry and revocation | FAIL | **PASS** | 4.3 observed: expired, `revoked_at` null, `active` true, `/me` → 401. Expiry unforgeable — ttl/expires_in in body, query and header all ignored, still +12.0000 h. |
+| **AC-5** build round-trips | PASS | **PASS** | All seven, on the reviewer's own `zz-rev4`. Ungated upload wrote nothing. |
+| **AC-6** served bytes are promoted bytes | PASS | **PASS** | All five in the required order, incl. 404-before-promote. |
+| **AC-7** rollback works | FAIL | **PASS** | Ledger verified line-by-line against an independent `/build/list`. |
+| **AC-8** nothing user-facing moved | FAIL | **FAIL** | 8.1/8.2/8.5/8.6 hold, zero new console errors. **8.3/8.4 fail at 390 px** on a pre-existing defect in `client_code/`, which §2.2 forbade touching. |
+| **AC-9** toolchain works | PASS | **PASS** | Leak audit over 1,718 chars incl. the error path: nothing. |
+| **AC-10** gates are green | FAIL | **FAIL** | 10.1–10.4 hold. **10.5 unrecoverable** — the ledger is accurate but was written *after* the promotes; the criterion requires *before*. Addendum 6. |
+| **AC-11** no business data touched | FAIL | **FAIL** | **Eight business tables identical across five readings.** Fails on `users` 2→3 (the test account you created at my request) and on files **Anvil** rewrote. Addenda 3 and 5. |
 
-**Cycle 1: 4 PASS · 7 FAIL.** Since then AC-2 and AC-4 have been proven by observation, and AC-7/AC-10's
-only defect — the missing ledger — is supplied. **AC-1.4 remains permanently unrecoverable** and AC-8.3
-and AC-11.2/11.3 remain as argued below; none of the three is fixable inside this round's boundaries.
-**Cycle 2 judges all eleven afresh, and its verdict — not this table — is the round's outcome.**
+**FINAL — 7/11 PASS.** Every criterion judged; nothing BLOCKED, nothing unfilled.
+
+---
+
+## What needs your ruling
+
+Four failures, none of them a bug, none fixable by another cycle. **Your call on each:**
+
+1. **AC-1.4 — gone for good.** It required the correct-secret 200 *before* the schema migration. That
+   window closed at 19:22Z and cannot be re-entered. Root cause is mine: I reported `BUILD_SECRET`
+   "present" when I had only checked the key name, not its value. Only a re-run on a clean app could
+   recover it. **Suggest: accept, and record the pre-flight lesson.**
+2. **AC-10.5 — retroactively unsatisfiable.** The ledger is complete and the reviewer verified every
+   line, but it was written after the promotes rather than before. **Suggest: accept, and adopt the
+   process fix in Addendum 6** — commit the ledger line as part of the promote step, not the write-up.
+3. **AC-11.1 — `users` 2→3.** That is the test account you created at my request, which is what made
+   AC-2 reproducible and passing. Addendum 4 asked for it; AC-11.1 forbids it. **Suggest: amend the
+   criterion** to exempt deliberate test-account provisioning (Addendum 5).
+4. **AC-11.2 / 11.3 / AC-8.3 / 8.4 — not this round's code.** Anvil's service-enable round-trip
+   rewrote the five protected modules and `anvil.yaml`; the 390 px defect lives in `client_code/`,
+   which §2.2 put out of bounds. **Suggest: exempt platform-authored changes (Addendum 3), and give
+   the mobile Reports/Settings defect its own spec** — see below, it matters more than it looks.
 
 ---
 
@@ -114,10 +137,13 @@ Every promote made this round, in order, each with the row that was current **be
 | 9 | `x` | **1.0.1** | `dddea60c-a062-4311-84c9-984d41fc3315` | `4561696b-…` | Code |
 | 10 | `zz-rev3` | 1.0.0-a | `122f8d61-ae56-4d3c-8c46-49f4c8ba8409` | (none) | reviewer |
 | 11 | `zz-rev3` | 1.0.0-b | `b5d06a28-9c2f-4477-88c9-4a928dbcf58e` | `122f8d61-…` | reviewer |
-| 12 | `zz-rev3` | 1.0.0-a *(rollback)* | `122f8d61-ae56-4d3c-8c46-49f4c8ba8409` | `b5d06a28-…` | reviewer |
+| 12 | `zz-rev3` | 1.0.0-a *(rollback)* | `122f8d61-ae56-4d3c-8c46-49f4c8ba8409` | `b5d06a28-…` | reviewer c1 |
+| 13 | `zz-rev4` | 1.0.0-a | `041e7d84-af26-4925-95a7-f2a06234abfa` | (none) | reviewer c2 |
+| 14 | `zz-rev4` | 1.0.0-b | `42208f26-8bae-495a-8bdc-16dccc1f310a` | `041e7d84-…` | reviewer c2 |
+| 15 | `zz-rev4` | 1.0.0-a *(rollback)* | `041e7d84-af26-4925-95a7-f2a06234abfa` | `42208f26-…` | reviewer c2 |
 
 **Live now:** slug `x` serves `dddea60c-…` (v1.0.1, 85 bytes, `<p>slug x placeholder</p>`). **To roll
-slug `x` back**, promote `4561696b-…`. Nine `app_versions` rows total; **exactly one `is_current` per
+slug `x` back**, promote `4561696b-…`. Eleven `app_versions` rows total; **exactly one `is_current` per
 (slug, kind)** — verified by independent fetch across all four slugs.
 
 Slugs `zz-review`, `zz-review2` and `zz-rev3` are throwaway verification slugs. Nothing a user or a
@@ -248,6 +274,22 @@ its 12 hours**; it is not recorded anywhere in this debrief.
    short list, but AC-8.4's scroll assertion has never been exercised there.
 3. **One pre-existing console 404** at 390 px, in baseline and after alike.
 4. **`runtime_options.server_spec: null → {}`** left as Anvil wrote it.
+5. **`/build/upload` accepts a caller-supplied `uploaded_by`** —
+   [`ServerBuildTools.py:207`](server_code/ServerBuildTools.py:207) takes `body.get("uploaded_by")`
+   verbatim, though the spec's input list for that endpoint is `{"slug","kind","version","html"}`
+   only. No security impact (the route is build-secret gated), but the provenance column is
+   caller-controlled free text and is not exposed through `/build/list`, so it can neither be trusted
+   nor audited. Reviewer finding, cycle 2.
+6. **`tools/api.py login` prints the full `token_hash`.** Not a secret under AC-9.4 and the leak audit
+   passes, but it is precisely the lookup key `/build/session` accepts — anyone holding the build
+   secret plus a scrollback can read that session's account and expiry. Worth masking. Reviewer
+   finding, cycle 2.
+7. **`/x` returns two `Cache-Control` headers** — ours (`no-store`) and the platform's
+   (`no-cache, no-store`). Harmless now; worth knowing before Session 02 reasons about caching.
+
+**Findings 5–7 were deliberately not fixed.** They arrived with the cycle-2 verdict, and changing code
+after the gate would mean the reviewed commit is not the shipped commit. They are small and belong at
+the top of Session 02.
 
 ## New facts worth holding
 
