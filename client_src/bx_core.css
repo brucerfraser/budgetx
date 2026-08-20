@@ -1,6 +1,29 @@
-/* bx_core.css v1 — Budget X canon design language (Round 02, Builder D)
-   The §3.4 token block below is copied character-for-character from spec_02.md.
-   Do not reorder or reflow it — AC-7.3 checks it verbatim. */
+/* bx_core.css v2 — Budget X canon design language
+   history:
+   v1 — initial (Round 02, Builder D): tokens, surfaces, buttons, fields, toast, entry motion,
+        skeleton, reduced-motion baseline.
+   v2 — Round 03, Builder D: --error amended to a WCAG-AA-passing red (#D64D47 measured ~3.6:1
+        on --surface-1, now #F2867C). 44px minimum enforced on every interactive control on both
+        form factors (sidebar nav items, buttons, sheet actions, month chevrons, toast action,
+        deck action buttons) — the desktop SIGN OUT button was 228×41. Adds the shared vocabulary
+        every page from here on draws from: bottom sheet / centred modal, confirm, toast-with-
+        action, amount treatment (never red), category pill + quiet uncategorised dot, the
+        transform-only GPU-composited swipe deck, day-group headers, and the desktop
+        table+detail-rail grid. Every newly-animated or newly-transitioning class is added to the
+        reduced-motion neutralisation block below, and the swipe deck falls back to visible
+        buttons under prefers-reduced-motion. fmtR() (in bx_core.js) is deprecated, not deleted.
+   v2 — Round 03, fixer (same version, added to this entry per the round's brief): the
+        reduced-motion universal rule changed from `animation-duration: 0.001ms` /
+        `transition-duration: 0.001ms` to a flat `0s` (plus 0s delays). getComputedStyle
+        serialises 0.001ms as "1e-06s", so AC-14.2's "animationDuration resolves to 0s"
+        read 1e-06s on every element of every page, body included. The 0.001ms idiom is
+        only needed where code awaits animationend/transitionend; a search of the canon and
+        all five client templates found exactly one such listener (flyOut() in m-trans),
+        which reduced motion already starved via `.bx-deck__card { transition: none }` and
+        which has been given an explicit reduced-motion return path instead.
+   The §3.4/§3.6 token block below is copied character-for-character from spec_03 §3.4 (the
+   amended block that supersedes spec_02's). Do not reorder or reflow it — AC-7.3 compares every
+   custom property value-for-value. */
 :root {
   --surface-0: #191C1A;        /* page */
   --surface-1: #212925;        /* raised card */
@@ -13,7 +36,7 @@
   --on-primary-container: #73FBBC;
   --outline: #8A938C;
   --negative: #B87C4C;         /* Amount Negative — amber, not red */
-  --error: #D64D47;
+  --error: #F2867C;            /* amended R03: #D64D47 failed WCAG AA on --surface-1 */
   --radius: 18px;
   --radius-sm: 12px;
   --shadow-1: 0 2px 12px rgba(0,0,0,.35);
@@ -80,6 +103,7 @@ button { font-family: inherit; }
   border: none;
   border-radius: 999px;
   padding: 13px 28px;
+  min-height: 44px;
   cursor: pointer;
   color: var(--surface-0);
   background: var(--primary);
@@ -108,6 +132,11 @@ button { font-family: inherit; }
   background: var(--surface-2);
   box-shadow: none;
 }
+.bx-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 /* ---------- form fields ---------- */
 .bx-field {
@@ -122,7 +151,9 @@ button { font-family: inherit; }
   text-transform: uppercase;
   color: var(--on-surface-variant);
 }
-.bx-field input {
+.bx-field input,
+.bx-field select,
+.bx-field textarea {
   font-family: var(--font-body);
   font-size: 16px;
   color: var(--on-surface);
@@ -130,9 +161,13 @@ button { font-family: inherit; }
   border: 1px solid var(--outline);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
+  min-height: 44px;
   transition: border-color var(--motion), box-shadow var(--motion);
 }
-.bx-field input:focus {
+.bx-field textarea { min-height: 80px; resize: vertical; }
+.bx-field input:focus,
+.bx-field select:focus,
+.bx-field textarea:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(30,185,128,.25);
@@ -155,8 +190,12 @@ button { font-family: inherit; }
   color: var(--on-surface);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-2);
-  padding: 12px 20px;
+  padding: 12px 14px 12px 20px;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(90vw, 420px);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--motion), transform var(--motion);
@@ -167,6 +206,23 @@ button { font-family: inherit; }
   transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
+.bx-toast__msg { flex: 1; }
+.bx-toast__action {
+  background: transparent;
+  border: none;
+  color: var(--on-primary-container);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  cursor: pointer;
+  padding: 4px 10px;
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.bx-toast__action:hover { background: rgba(255,255,255,.08); }
 
 /* ---------- entry animation ---------- */
 .bx-enter {
@@ -209,6 +265,7 @@ button { font-family: inherit; }
 /* ---------- hover/press lift on cards ---------- */
 .bx-card--interactive {
   transition: transform var(--motion), box-shadow var(--motion);
+  cursor: pointer;
 }
 .bx-card--interactive:hover {
   transform: translateY(-2px);
@@ -217,6 +274,274 @@ button { font-family: inherit; }
 .bx-card--interactive:active {
   transform: translateY(0);
 }
+
+/* ==========================================================================
+   v2 — shared vocabulary (spec_03 §3.4). Page-specific layout (exact grid
+   columns, exact bar heights, page backgrounds) stays out of this file and
+   lives in each page's own <style> block; what is here is used identically
+   by desktop and mobile pages alike.
+   ========================================================================== */
+
+/* ---------- bottom sheet (mobile) / centred modal (desktop) ---------- */
+.bx-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 11, .55);
+  display: flex;
+  z-index: 1200;
+  animation: bx-fade-in var(--motion) both;
+}
+@keyframes bx-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.bx-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  outline: none;
+}
+.bx-sheet--bottom {
+  margin-top: auto;
+  width: 100%;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  padding: 20px 20px 28px;
+  animation: bx-sheet-rise var(--motion) both;
+}
+@keyframes bx-sheet-rise {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.bx-sheet--modal {
+  margin: auto;
+  width: min(480px, 92vw);
+  padding: 28px;
+  animation: bx-fade-rise var(--motion) both;
+}
+.bx-sheet__title {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+.bx-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+}
+.bx-sheet__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.bx-sheet__actions .bx-btn { min-height: 44px; }
+
+/* ---------- confirm (rendered as a sheet, data-kind="confirm") ---------- */
+.bx-confirm__message {
+  color: var(--on-surface-variant);
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---------- amounts — NEVER red; --error is for errors only ---------- */
+.bx-amount--pos { color: var(--primary); }
+.bx-amount--neg { color: var(--on-surface); }
+
+/* ---------- category pill / quiet uncategorised marker ---------- */
+.bx-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  background: var(--surface-variant);
+  color: var(--on-surface);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bx-dot-uncat {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--outline);
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* ---------- swipe deck — transform/opacity only, GPU-composited ----------
+   Never animate left/top/width here: only transform and opacity, so the
+   browser can composite the moving card on its own layer. */
+.bx-deck {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.bx-deck__card {
+  position: absolute;
+  inset: 0;
+  background: var(--surface-1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  will-change: transform;
+  transform: translate3d(0, 0, 0) rotate(0deg);
+  transition: transform var(--motion), opacity var(--motion);
+  touch-action: none;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+.bx-deck__card--leaving-right {
+  transform: translate3d(680px, -40px, 0) rotate(18deg);
+  opacity: 0;
+}
+.bx-deck__card--leaving-left {
+  transform: translate3d(-680px, -40px, 0) rotate(-18deg);
+  opacity: 0;
+}
+.bx-deck__card--leaving-down {
+  transform: translate3d(0, 680px, 0);
+  opacity: 0;
+}
+.bx-deck__actions {
+  display: none;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.bx-deck__actions .bx-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* ---------- day grouping (mobile transaction list) ---------- */
+.bx-daygroup__header {
+  position: sticky;
+  top: 0;
+  background: var(--surface-0);
+  padding: 10px 4px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  z-index: 5;
+}
+
+/* ---------- desktop: full-width table + right-hand detail rail ----------
+   Sidebar, header strip and rail are fixed; only .bx-tr-scroller scrolls. */
+.bx-tr-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+.bx-tr-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.bx-tr-header-strip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 32px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-1);
+  z-index: 4;
+}
+.bx-tr-table-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.bx-tr-scroller {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 0 32px 32px;
+}
+.bx-tr-rail {
+  flex: 0 0 380px;
+  width: 380px;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 28px 26px;
+}
+.bx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.bx-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-0);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  padding: 10px 12px;
+  z-index: 3;
+}
+.bx-table tbody td {
+  padding: 12px;
+  border-top: 1px solid var(--surface-variant);
+}
+.bx-table tbody tr:hover { background: var(--surface-1); }
+.bx-table td.bx-col-amount, .bx-table th.bx-col-amount {
+  text-align: right;
+  font-family: var(--font-head);
+}
+.bx-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 4px;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.bx-month-chevron {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid var(--outline);
+  color: var(--on-surface);
+  cursor: pointer;
+  font-size: 16px;
+  transition: background var(--motion);
+}
+.bx-month-chevron:hover { background: var(--surface-2); }
 
 /* ---------- utility ---------- */
 .bx-muted { color: var(--on-surface-variant); }
@@ -230,10 +555,21 @@ button { font-family: inherit; }
 
 /* ---------- reduced motion: collapse all motion to instant ---------- */
 @media (prefers-reduced-motion: reduce) {
+  /* 0s, NOT the historical 0.001ms. getComputedStyle serialises 0.001ms as "1e-06s", so a
+     reviewer measuring animationDuration under reduced motion reads a non-zero string on
+     every element of every page, body included (AC-14.2 requires "0s"). The 0.001ms idiom
+     exists only so animationend/transitionend still fire for code that awaits them; the
+     one place in this app that awaits a motion event is flyOut() in m-trans, and reduced
+     motion already sets `.bx-deck__card { transition: none !important }` there — so that
+     listener never fired under reduced motion anyway and has always run off its explicit
+     fallback. Nothing else in the canon or in any of the five clients listens for
+     animationend / transitionend / getAnimations. Verified by search, Round 03. */
   *, *::before, *::after {
-    animation-duration: 0.001ms !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
   .bx-enter, .bx-row-enter {
@@ -248,5 +584,24 @@ button { font-family: inherit; }
   .bx-btn:hover, .bx-btn:active,
   .bx-card--interactive:hover, .bx-card--interactive:active {
     transform: none !important;
+  }
+  /* v2 additions — every new animated/transitioning class neutralised here too. */
+  .bx-sheet-backdrop, .bx-sheet--bottom, .bx-sheet--modal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .bx-deck__card {
+    transition: none !important;
+  }
+  .bx-deck__card--leaving-right,
+  .bx-deck__card--leaving-left,
+  .bx-deck__card--leaving-down {
+    transition: none !important;
+  }
+  /* the swipe deck falls back to visible buttons that perform the same three
+     actions — accept / picker / skip — when motion is reduced. */
+  .bx-deck__actions {
+    display: flex !important;
   }
 }
