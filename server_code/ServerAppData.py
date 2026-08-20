@@ -4,11 +4,11 @@
 #   v1  2026-08-20  Session 02 — created. GET /app/bootstrap (spec_02 §3.1, contract §4).
 #   v2  2026-08-20  Session 03 — GET /app/bootstrap gains the optional ?include=transactions
 #                   parameter and, only then, one new top-level key (spec_03 §3.2, §4.1–4.3).
-#   v2  2026-08-20  Session 03, in-round repair — every table read is prefetched with
-#                   q.fetch_only() instead of being resolved lazily one row at a time. No
-#                   behaviour, key, type or order change (spec_03 AC-13.6, the 1-second rule).
-#                   The stamp stays v2 ON PURPOSE: spec_03 AC-1.6 pins /build/version to
-#                   ServerAppData v2, so this repair is folded into v2 rather than bumping it.
+#   v2  2026-08-20  Session 03, in-round repair — whether the `active` column is READABLE is
+#                   now decided once per call instead of being rediscovered on every row, which
+#                   took ?include=transactions from p50 10,457 ms to the figure in the debrief
+#                   (spec_03 AC-13.6). No key, type, value or order change. The stamp stays v2
+#                   on purpose: AC-1.6 pins /build/version to ServerAppData v2.
 #
 # DESIGN NOTES (read before editing)
 # - Self-contained: this module declares its own ApiError / api_http / require_session /
@@ -59,41 +59,39 @@
 # - The transaction serialiser is DUPLICATED here and in ServerTxn rather than imported, per
 #   the self-contained-module rule. scratch/s03/shape_check.py asserts the two agree.
 #
-# THE PREFETCH (spec_03 AC-13.6; no contract change of any kind) — added in the v2 repair
-# - A bare search() hands back rows whose column data is resolved LAZILY. The serialiser then
-#   touches ~10 columns on each of ~1,300 transactions, and the cost is paid per row, not per
-#   query: measured 2026-08-20 against live, ?include=transactions ran p50 10,457 ms
-#   (7,838–14,826) for a 404,192-byte body while the same call without it ran p50 829 ms. The
-#   body is small; the row walk is what costs. q.fetch_only() names the columns up front so the
-#   data arrives with the search instead of being chased row by row.
-# - fetch_only names columns, and NAMING A COLUMN THE LIVE SCHEMA DOES NOT HAVE IS AN ERROR.
-#   `active` is exactly that column until Bruce's schema click lands, so the prefetch is tried
-#   as a LADDER: the fullest column list first, then the same list without `active`, then a
-#   bare search(). Each rung is attempted inside list(), because a lazy fetch would otherwise
-#   escape the try during iteration. The endpoint therefore degrades to correct-but-slower, and
-#   never to broken, whatever the schema state — and it needs no edit on the day of the click.
-# - The prefetch is a READ optimisation only. is_active() still tests `is not False`, so a row
-#   fetched WITHOUT the active column reads None -> active, the same answer the pre-repair
-#   code gave. Nothing about the payload changes: same eight (or nine) keys, same ten
-#   transaction keys, same integer cents, same date-DESC/transaction_id-ASC order.
+# READING A COLUMN THE SCHEMA DOES NOT HAVE COSTS A SERVER ROUND TRIP, EVERY TIME
+# (measured on live 2026-08-20, and the whole of the AC-13.6 defect)
+# - ?include=transactions ran p50 10,457 ms (7,838–14,826) for 1,300 rows. Server-side timing
+#   of the legs put 390 ms in the search and 10,350 ms in the SERIALISER, so the body size and
+#   the query were never the problem. Instrumenting a 200-row sample settled the rest:
+#       reading one existing column on 200 rows ......   0 ms
+#       reading nine existing columns on 200 rows ...    1 ms
+#       reading them all a second time ..............    1 ms
+#       reading the MISSING `active` column, 200 rows  577–804 ms   (~3–4 ms EACH)
+#   search() already hands back every stored column, so column access is free. A column the
+#   schema does not have is not free: Anvil goes and asks the data layer before it raises.
+# - is_active() was called TWICE per row — once to filter, once to fill the `active` key — so
+#   the pre-click set cost 2 × 1,300 ≈ 2,600 round trips ≈ 10 s. That is the entire defect.
+# - THE FIX: readability of `active` is a property of the SCHEMA, not of a row. It is therefore
+#   probed ONCE per call (_active_readable, which tries at most three rows) and threaded through
+#   as a flag. Not readable => the column reads None for every row, and None is exactly what the
+#   per-row lookup returned anyway — same answer, O(1) lookups instead of O(2n).
+# - This is why _active_raw/is_active take the flag rather than consulting a module-level cache:
+#   a cached "missing" would survive Bruce's schema click inside a warm server process and go on
+#   hiding archived rows after the column existed. The flag is re-derived on every request.
+# - AFTER the click the flag is True, every row is read exactly as before, and the cost is the
+#   ~0 ms that reading a real column costs. The repair needs no edit on the day of the click.
+# - NOT the fix: q.fetch_only(). It was tried and deployed first, and this app's data tables
+#   reject it outright — `TableError: Invalid argument to table query` on every table, including
+#   ones with no missing column (Accelerated Tables is not enabled; anvil.yaml's tables service
+#   carries an empty server_config). It also could not have helped, because the measurements
+#   above show stored columns are already resolved by search().
 
 import anvil.server
 from anvil.tables import app_tables
 
-# The query helpers are imported DEFENSIVELY. This module's standing guarantee is that it
-# imports cleanly in any environment — a module that fails to import takes its endpoint down
-# with it (spec_01 AC-1.4, learned in S01), and the off-platform shape gate imports it under
-# stub anvil modules that have no `query` submodule. If the import fails, `q` is None, every
-# fetch_only rung of the ladder below raises AttributeError, and _prefetched falls through to a
-# plain search() — the exact pre-repair behaviour. Slower, never broken.
-try:
-    from anvil.tables import query as q
-except Exception:
-    q = None
-
 import hashlib
 import json
-import time
 import re
 import traceback
 from datetime import date, datetime, timezone
@@ -139,28 +137,12 @@ def _as_utc(value):
     return value.astimezone(timezone.utc)
 
 
-_PROBE = []
-
-
-def _probe_reset():
-    _PROBE.clear()
-
-
-def _probe(label, ms):
-    _PROBE.append("%s;dur=%.0f" % (label, ms))
-
-
 def _json_response(status, body):
-    t0 = time.time()
-    encoded = json.dumps(body)
-    _probe("jsondumps", (time.time() - t0) * 1000)
-    resp = anvil.server.HttpResponse(int(status), encoded)
+    resp = anvil.server.HttpResponse(int(status), json.dumps(body))
     # dict.__setitem__ rather than bracketed assignment on resp.headers — see the DESIGN
     # NOTES: this module must contain no subscript assignment, because AC-1.4 proves it writes
     # nothing by scanning the source. Behaviour is identical to the S01-proven assignment form.
     resp.headers.__setitem__("Content-Type", "application/json")
-    if _PROBE:
-        resp.headers.__setitem__("Server-Timing", ", ".join(_PROBE))
     return resp
 
 
@@ -395,12 +377,41 @@ def _iso_date_text(value):
     return text[:10] if text else ""
 
 
-def _active_raw(row):
+def _active_readable(rows):
+    """Whether the `active` column can be read at all — decided ONCE for the whole set.
+
+    Presence is a property of the SCHEMA, not of a row: if the column is not there, it is not
+    there for any row. Rediscovering that per row costs a server round trip per row (see the
+    DESIGN NOTES), which is what made ?include=transactions a ten-second call before the click.
+
+    Up to three rows are tried and ANY success means readable. The bias is deliberate: a
+    transient failure on one row must not be mistaken for "no such column", because that answer
+    would report an archived row as active. Falling back to readable=True is always safe — it
+    just pays the per-row lookup and reads the truth.
+    """
+    tried = 0
+    for row in rows:
+        try:
+            row["active"]
+            return True
+        except Exception:
+            tried += 1
+            if tried >= 3:
+                return False
+    return tried == 0
+
+
+def _active_raw(row, readable=True):
     """The raw `active` column: True, False or None.
 
     None covers BOTH "the column exists and this legacy row was never touched" and "the column
     is not there yet" (before Bruce's click). Both mean active.
+
+    `readable=False` says the column is absent from the schema, which is precisely the case the
+    except branch below used to discover — one row at a time, at a round trip each.
     """
+    if not readable:
+        return None
     try:
         value = row["active"]
     except Exception:
@@ -408,9 +419,13 @@ def _active_raw(row):
     return value if value is True or value is False else None
 
 
-def is_active(row):
-    """The active test, in ONE place so it cannot drift: `is not False` — NEVER `is True`."""
-    return _active_raw(row) is not False
+def is_active(row, readable=True):
+    """The active test, in ONE place so it cannot drift: `is not False` — NEVER `is True`.
+
+    The test runs on every path. `readable` only changes how the raw value is obtained, never
+    how it is judged.
+    """
+    return _active_raw(row, readable) is not False
 
 
 def _amount_cents(value, anomalies=None, transaction_id=None):
@@ -433,8 +448,12 @@ def _amount_cents(value, anomalies=None, transaction_id=None):
     return int(value)
 
 
-def serialise_transaction(row, anomalies=None):
-    """The spec_03 §4.2 transaction object — exactly these ten keys, no extras, no omissions."""
+def serialise_transaction(row, anomalies=None, readable=True):
+    """The spec_03 §4.2 transaction object — exactly these ten keys, no extras, no omissions.
+
+    `readable` is the caller's one-off answer to "is the `active` column in the schema?"; it
+    defaults to True so a lone call behaves exactly as it always did.
+    """
     transaction_id = _text(_get(row, "transaction_id"))
     return {
         "transaction_id": transaction_id,
@@ -446,7 +465,7 @@ def serialise_transaction(row, anomalies=None):
         "transfer_account": _nullable_text(_get(row, "transfer_account")),
         "notes": _text(_get(row, "notes")),
         "hash": _text(_get(row, "hash")),
-        "active": is_active(row),
+        "active": is_active(row, readable),
     }
 
 
@@ -464,9 +483,16 @@ def _transaction_sort_key(txn):
 
 
 def build_transactions_payload(rows, anomalies=None):
-    """Every row where `active` is not False, serialised and sorted by the contract order."""
+    """Every row where `active` is not False, serialised and sorted by the contract order.
+
+    The rows are materialised first so the readability probe and the walk see the same set, and
+    so a one-shot iterator is not consumed by the probe.
+    """
+    materialised = list(rows)
+    readable = _active_readable(materialised)
     return sorted(
-        [serialise_transaction(r, anomalies) for r in rows if is_active(r)],
+        [serialise_transaction(r, anomalies, readable)
+         for r in materialised if is_active(r, readable)],
         key=_transaction_sort_key,
     )
 
@@ -516,90 +542,6 @@ def build_bootstrap_payload(email, server_date, accounts, categories, sub_catego
 # The endpoint. Table access lives here and nowhere above.
 # ---------------------------------------------------------------------------------------------
 
-# The prefetch column ladders. Each is the exact column set the matching serialiser reads,
-# most-complete first, ending in () which means "plain search(), no fetch_only". A rung naming a
-# column the live schema does not have simply fails and the next rung is tried, so this file
-# needs no edit on the day `transactions.active` lands. These are plain tuples of strings; a
-# module-level constant is not a table access (see the DESIGN NOTES).
-TRANSACTION_COLUMN_LADDER = (
-    ("transaction_id", "date", "description", "amount", "account", "category",
-     "transfer_account", "notes", "hash", "active"),
-    ("transaction_id", "date", "description", "amount", "account", "category",
-     "transfer_account", "notes", "hash"),
-    (),
-)
-ACCOUNT_COLUMN_LADDER = (("acc_id", "acc_name", "archived"), ())
-CATEGORY_COLUMN_LADDER = (("category_id", "name", "colour_back", "colour_text", "order"), ())
-SUB_CATEGORY_COLUMN_LADDER = (
-    ("sub_category_id", "name", "icon", "belongs_to", "order", "roll_over", "roll_over_date"),
-    (),
-)
-
-
-def _prefetched(table, ladder):
-    """Every row of `table`, with the columns the serialiser reads fetched in ONE pass instead of
-    being resolved lazily row by row.
-
-    Read-only — search() and nothing else. list() is inside the try on purpose: the fetch a bad
-    column set provokes happens during iteration, so a lazier form would let it escape.
-
-    The LAST rung is deliberately outside the try. Falling all the way through means the table
-    itself is unreadable, and that must surface as an error, not as an empty result that quietly
-    drops every row from the payload.
-    """
-    rungs = list(ladder)
-    for idx, columns in enumerate(rungs[:-1]):
-        try:
-            t0 = time.time()
-            out = list(table.search(q.fetch_only(*columns)))
-            _probe("rung%d-n%d" % (idx, len(out)), (time.time() - t0) * 1000)
-            return out
-        except Exception as err:
-            _probe("rungfail%d-%s" % (idx, type(err).__name__), 0)
-            _PROBE.append("why-%s" % str(err).replace(",", "_").replace(";", "_")[:90])
-            print("ServerAppData: prefetch of (%s) unavailable — %s: %s; trying the next rung"
-                  % (", ".join(columns), type(err).__name__, err))
-    last = rungs[-1]
-    t0 = time.time()
-    out = list(table.search(q.fetch_only(*last))) if last else list(table.search())
-    _probe("rungLast-n%d" % len(out), (time.time() - t0) * 1000)
-    return out
-
-
-DIAG_COLS = ("transaction_id", "date", "description", "amount", "account", "category",
-             "transfer_account", "notes", "hash")
-
-
-def _diagnose():
-    """TEMPORARY. Is the per-row column cost paid per ROW or per COLUMN, and does a row cache
-    after first touch? Read-only; 200-row sample so the probe cannot dominate the request."""
-    sample = list(app_tables.transactions.search())[:200]
-    t0 = time.time()
-    for row in sample:
-        row["date"]
-    _probe("A-1col-200rows", (time.time() - t0) * 1000)
-
-    sample2 = list(app_tables.transactions.search())[:200]
-    t0 = time.time()
-    for row in sample2:
-        for name in DIAG_COLS:
-            row[name]
-    _probe("B-9cols-200rows", (time.time() - t0) * 1000)
-
-    t0 = time.time()
-    for row in sample2:
-        for name in DIAG_COLS:
-            row[name]
-    _probe("C-9cols-again", (time.time() - t0) * 1000)
-
-    t0 = time.time()
-    for row in sample:
-        try:
-            row["active"]
-        except Exception:
-            pass
-    _probe("D-missingcol-200rows", (time.time() - t0) * 1000)
-
 
 def _settings_row():
     """The single settings row, or None.
@@ -641,34 +583,20 @@ def api_app_bootstrap(include=None, **kwargs):
     v2: with ?include=transactions the payload gains ONE extra top-level key. With any other
     include value, or none, the key-set is exactly v1's. The extra key is added by building a
     NEW dict from the old one, never by assigning into it.
-
-    The prefetch repair: every search goes through _prefetched(). Same rows, same order, same
-    keys — the columns simply arrive with the query instead of one row at a time.
     """
-    _probe_reset()
-    t_auth = time.time()
     user = require_auth()
-    _probe("auth", (time.time() - t_auth) * 1000)
-    t_boot = time.time()
     payload = build_bootstrap_payload(
         email=_text(_get(user, "email")),
         server_date=_now().date().isoformat(),
-        accounts=_prefetched(app_tables.accounts, ACCOUNT_COLUMN_LADDER),
-        categories=_prefetched(app_tables.categories, CATEGORY_COLUMN_LADDER),
-        sub_categories=_prefetched(app_tables.sub_categories, SUB_CATEGORY_COLUMN_LADDER),
+        accounts=list(app_tables.accounts.search()),
+        categories=list(app_tables.categories.search()),
+        sub_categories=list(app_tables.sub_categories.search()),
         settings_row=_settings_row(),
     )
-    _probe("bootstrap", (time.time() - t_boot) * 1000)
     if not wants_transactions(include):
         return payload
-    _PROBE.append("qNone-%s" % (q is None))
-    _diagnose()
     anomalies = []
-    t_rows = time.time()
-    rows = _prefetched(app_tables.transactions, TRANSACTION_COLUMN_LADDER)
-    _probe("txnfetch", (time.time() - t_rows) * 1000)
-    t_ser = time.time()
-    transactions = build_transactions_payload(rows, anomalies)
-    _probe("txnserialise", (time.time() - t_ser) * 1000)
+    transactions = build_transactions_payload(
+        list(app_tables.transactions.search()), anomalies)
     _report_amount_anomalies(anomalies)
     return {**payload, "transactions": transactions}
