@@ -647,3 +647,47 @@ MATCH/MISMATCH verdict is still computed on the **full** digests, so the evidenc
 **Consequence, and it matters for AC-4.1:** no full sha256 reaches CLI output anywhere, so the
 served-bytes comparison reads `sha256` from `/build/list`'s JSON directly (urllib), never from the
 CLI table — which is itself scanned by AC-3.1.
+
+### Addendum 5 — 2026-08-20 (Code, Session 02)
+
+**§3.4 says all three clients are uploaded as version `1.1.0`; the promoted versions are
+`1.1.1`.** `1.1.0` was uploaded and promoted for all three at 06:20Z. Basic testing then found a
+real defect (below), it was repaired, and the repaired bytes were uploaded and promoted as
+**`1.1.1`** at 06:32Z. Re-using `1.1.0` for different bytes would have put two rows with the same
+version and different `sha256` on the same slug, which destroys the rollback ledger's meaning —
+the version bump is the correct behaviour and the ledger carries all six promotes.
+
+**The defect that forced it, recorded because it is a reusable finding.** A render-blocking
+`<link rel="stylesheet">` in `<head>` makes Chromium defer execution of every subsequent
+`<script>` — **including one at the end of `<body>`** — until that external CSS resolves. Because
+all three clients load the Google Fonts stylesheet, the page's inline JS, and therefore the single
+`/app/bootstrap` fetch and the render, could not start until the fonts request came back.
+Measured on the live pages, clock started at the navigation's `responseEnd` so the HTML download
+is excluded:
+
+| page | fonts link | responseEnd → shell proof rendered |
+|---|---|---|
+| `d-dash` v1.1.0 | render-blocking | **970 ms** — AC-13.3 FAIL |
+| `d-dash` v1.1.1 | non-blocking | **44 ms** — PASS |
+| `m-dash` v1.1.1 | non-blocking | **34 ms** — PASS |
+
+The fix is the standard non-blocking pattern — `media="print" onload="this.media='all'"` plus a
+`<noscript>` fallback — now identical in all three head blocks. **Every later screen round must
+copy it**; a page that loads the fonts stylesheet the obvious way silently costs ~1 s.
+
+**Two instrument corrections, recorded because a reviewer will hit the same traps.**
+
+1. **AC-13.3 must not be timed from `page.goto()`.** That includes downloading the HTML from
+   Anvil (~0.4–1.4 s), which is the network the criterion explicitly excludes. Time from the
+   navigation entry's `responseEnd` to the moment the shell proof is on screen.
+2. **AC-8.2's 401 body cannot be read from Playwright's `response` event.** The bounce navigates
+   away and the body can no longer be resolved (`(UNREADABLE: Error)`), which reads as a FAIL of
+   a passing page. Capture it with `page.route` + `route.fetch()`, which reads the body before the
+   page acts on it. Also note the serving route `/x` is itself under `/_/api`, so the page's own
+   HTML passes through the same handler — and that HTML contains the words "email" and "accounts".
+   Filter the serving route out before scanning for leaked data keys.
+
+**AC-7.2 must be checked by HASH, not by containment.** `m-dash`'s template put the END marker on
+its own line, so the extracted block was `canon + "\n"` — substring containment passed while the
+hash differed. Marker formatting was normalised so all six extractions hash equal. A containment
+check would have shipped this.
