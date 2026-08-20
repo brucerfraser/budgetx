@@ -1,11 +1,14 @@
 # DEBRIEF S02 — the shell: login, entry, and the two-client pattern
-**STATUS:** INTERIM
+**STATUS:** FINAL — 14/14 PASS
 
-**Round:** 02 · **Spec:** `docs/specs/spec_02.md` (APPROVED AND LOCKED, + Addenda 1–5)
-**Commit under review:** `29728a4` · **Deployed and live**, pushed to `anvil`, mirrored to `origin`.
+**Round:** 02 · **Spec:** `docs/specs/spec_02.md` (APPROVED AND LOCKED, + Addenda 1–7)
+**Commits reviewed:** `59fd557` (cycle 1) · `b11a1c7` (cycle 2) · **Deployed and live**, pushed to
+`anvil`, mirrored to `origin`.
 
-**Visual review is complete and committed: 21/21 PASS.** The spec review is running now; this file
-goes FINAL when it hands back. Nothing here is marked PASS by the session that wrote the code.
+**Two independent gates, both green.** `visual-reviewer` **21/21**; `spec-reviewer` **13/14** at
+cycle 1 and **14/14** at cycle 2 on the full AC-1…AC-14. **Nothing here is marked PASS by the
+session that wrote the code** — and where a reviewer contradicted me, the reviewer won and this
+file says so.
 
 ---
 
@@ -37,7 +40,7 @@ Server side: **`ServerAppData` v1** (new, `GET /app/bootstrap`), **`ServerBuildT
 | Builder M — `m-dash` | **Sonnet** | localised client work |
 | `fixer` | **Opus** | two repairs, own context, twice |
 | `visual-reviewer` | **Fable** | fresh read-only context |
-| `spec-reviewer` | **Opus** | fresh read-only context — running |
+| `spec-reviewer` | **Opus** | fresh read-only context, **a new one per cycle** |
 
 No model was out of credit; no role was downgraded. **No reviewer was weaker than what it
 reviewed, and no reviewer was the session that wrote the code.**
@@ -205,31 +208,44 @@ feels is waiting on our code.**
 3. **Trim the bootstrap payload** — 16 KB / 78 rows costs ~240 ms. Smallest lever; later rounds
    want that data anyway.
 
-### Cold start, after ≥10 minutes of enforced idle
+### Cold start, after ≥10 minutes of enforced idle — **three readings, and no established cause**
 
-Two independent readings. The idle **is** the measurement, so each one owns an uninterrupted
-window in which nothing else may touch the app.
+The idle **is** the measurement, so each reading owns an uninterrupted window in which nothing
+else may touch the app. `GET /x?slug=d-dash`, fresh connection, each after ≥10 min idle:
 
-| reading | idle | first request | next request, same connection | cold penalty |
+| reading | idle | first request | next requests, same connection | penalty |
 |---|---|---|---|---|
-| **mine**, `GET /x?slug=d-dash`, 08:07:54Z→08:18:57Z | 11 min 0 s | **2957 ms** | 469 / 514 / 522 ms | **+2489 ms** |
-| **the spec reviewer's**, independent, 08:04:36Z | 10 min 23 s | **1752 ms** | 426 ms | +1326 ms |
+| spec review cycle 1, 08:04:36Z | 10 min 23 s | 1752 ms | 426 ms | +1326 ms |
+| mine, 08:07:54Z→08:18:57Z | 11 min 0 s | **2957 ms** | 469 / 514 / 522 ms | +2489 ms |
+| spec review cycle 2, 09:16:36Z | 11 min 0 s | **661 ms** | 739 / 873 / 831 ms | **−78 ms** |
 
-**They disagree by 1.2 s, and that is the finding.** A single cold request is not a stable
-quantity — Anvil's spin-up cost varies by a factor approaching two between two readings taken
-fourteen minutes apart. Neither number is wrong; reporting one alone would have implied a
-precision that does not exist. What both agree on:
+**Range 0.66–2.96 s. Cause not established.** I got this wrong in an earlier version of this file
+and the cycle-2 reviewer caught it — the correction is the honest result, so it stands here in
+place of what I wrote.
 
-- The **first** request after a real idle costs **1.8–3.0 s**.
-- The **second** request on that connection drops straight to **~430–520 ms**, i.e. to the normal
-  warm floor. There is no lingering penalty — one request pays it and the session is warm.
-- The cold penalty (1.3–2.5 s) is far larger than the TLS handshake (~565 ms), so it is Anvil
-  spinning a worker up, not the network.
+**What I claimed from the first two readings, and why it was wrong.** With 2957 ms and 1752 ms in
+hand I wrote that a cold first request costs "1.8–3.0 s" and that the penalty, being much larger
+than the ~565 ms TLS handshake, was "Anvil spinning a worker up, not the network". The third
+reading falsifies both: 661 ms is a third of my lower bound, and its penalty was **negative** —
+the three follow-up requests on the already-warm connection were *slower* than the "cold" one,
+while the 646 ms handshake was the dominant term. **A penalty that vanishes in one reading out of
+three is not a spin-up signature; it is variance in a single-sample measurement.** I had noted
+"a single cold request is not a stable quantity" and then immediately reasoned as though it were.
 
-**What it means for a person using this app:** opening Budget X after leaving it alone for a while
-costs about two to three seconds on the first page, and everything after that is sub-second. That
-is the honest shape of it, and it is the platform's cost, not the page's — the page itself renders
-in 37 ms once its HTML arrives.
+**What is actually established**, because it was measured independently three times and agrees
+every time:
+
+- **The fresh-connection >1 s p50 is a platform floor, not our code.** TCP+TLS handshake alone
+  p50 **555–646 ms**; `GET /build/version`, which reads no table and returns 93 bytes, p50
+  **1032–1073 ms**. `/app/bootstrap` adds only ~230–320 ms on top of that while returning 78 rows.
+- **Once a connection is warm, everything is sub-second** — reused-connection p50s across three
+  independent runs: `/x` 454–718 ms, `/app/bootstrap` 519–823 ms, `/auth/login` 566–639 ms.
+- **The page itself costs 33–41 ms desktop and 20–33 ms mobile** once its HTML has arrived.
+
+**What to tell a user:** the first page of a session takes somewhere between about half a second
+and three seconds, unpredictably, and everything after it is sub-second. If the cold end of that
+range matters to you, it needs a proper repeated-sample experiment across a day — **three
+single-sample readings cannot support a number, and I should not have offered one.**
 
 ---
 
@@ -254,7 +270,7 @@ in 37 ms once its HTML arrives.
 
 ## Corrections to the spec — expected output, not failure
 
-Five addenda, all in `docs/specs/spec_02.md` §11, none edited in place:
+**Seven addenda**, all in `docs/specs/spec_02.md` §11, none edited in place:
 
 1. **§3.3 vs §6 contradicted each other** on which account `tools/api.py login` drives. §3.3 said
    "everything else unchanged" (the tool read `TEST1_*`); §6 said "drive everything as TEST2".
@@ -276,6 +292,13 @@ Five addenda, all in `docs/specs/spec_02.md` §11, none edited in place:
    contract**, and the fixture is not in the endpoint's order — flagged so a reviewer diffing row
    order against the fixture does not misread it. Also the version bump to 1.1.1 and the
    render-blocking fonts defect (below).
+6. **AC-10.4's allowed-path list omits `DEBRIEF_S02.md`, which §9 of the same spec mandates** — so
+   as written, a compliant round cannot satisfy it. Both review cycles judged it on substance and
+   passed it. Future specs should name the debrief in any "diff touches only" criterion.
+7. **AC-13.4 asks for "one recorded cold-start figure", and one figure cannot support a
+   conclusion here** — three readings spread 661–2957 ms. A future spec wanting a usable
+   cold-start number must ask for repeated samples across a period, the way the warm clause
+   already asks for ≥20 requests.
 
 ---
 
@@ -390,6 +413,16 @@ From both reviewers. None of these fails a criterion; each has a file and a reas
 - **A trailing space on the bearer token is accepted** (`Authorization: Bearer <valid> ` → 200).
   The token is genuine so the behaviour is correct, not a leak; recorded only because it is the
   single 200 in the reviewer's 401-probe matrix and a future reader should not misread it.
+- **The Forms app's mobile Transactions screen cannot scroll at all.** At 390×844 *and* 390×500,
+  the document and every candidate container report `scrollHeight == clientHeight` — there is no
+  scrollable region to drive. Identical to the pre-round baseline and nothing is below the fold
+  today, so it is **not this round's defect**, but the screen is laid out in a fixed-height region
+  that will **clip rather than scroll** the moment it has more rows. Worth knowing before round 03
+  replaces it — and it is the same shape as the IAMS dashboard defect that survived three review
+  cycles.
+- **`tools/api.py session <bogus>` prints `null` and exits 0** (`tools/api.py:242`). A not-found
+  session is not an error, so the exit code is defensible, but a caller cannot distinguish "no such
+  session" from a successful lookup.
 
 ---
 
@@ -407,13 +440,48 @@ From both reviewers. None of these fails a criterion; each has a file and a reas
 
 ---
 
-## Cycle 2 — what changed, and why the whole gate re-ran
+## Spec review — cycle 2: **14/14 PASS**
 
 The only repair between cycles was **adding the cold-start figure to this file**. No promoted byte
-changed: `x`, `d-dash` and `m-dash` are the same v1.1.1 records the cycle-1 reviewers judged, with
-the same sha256. I deliberately did not fold in the `data-primary` hook or any other cosmetic
-finding, because changing the artefact would have invalidated both cycle-1 gates to fix something
-that fails no criterion.
+changed: `x`, `d-dash` and `m-dash` are the same v1.1.1 records cycle 1 judged, same sha256. I
+deliberately did not fold in the `data-primary` hook or any other cosmetic finding, because
+changing the artefact would have invalidated two clean gates to fix things that fail no criterion.
 
-The full review re-ran from AC-1 regardless — never only the failure, because repairs regress
-neighbours.
+**The full review re-ran from AC-1 regardless** — never only the failure, because repairs regress
+neighbours. Fresh read-only context, Opus, its own instruments.
+
+```
+AC-1  PASS   AC-2  PASS   AC-3  PASS   AC-4  PASS   AC-5  PASS
+AC-6  PASS   AC-7  PASS   AC-8  PASS   AC-9  PASS   AC-10 PASS
+AC-11 PASS   AC-12 PASS   AC-13 PASS   AC-14 PASS
+```
+
+**14/14 PASS.** It confirmed the artefact did not move underneath it: the same three v1.1.1 rows,
+served bytes hashing to them, and `anvil/master` = `origin/master` = `HEAD` = `b11a1c7`, at both
+08:21:42Z and 09:17:25Z.
+
+A few of its checks went beyond either earlier pass and are worth keeping: an **AST walk** of the
+pushed `ServerAppData.py` (rather than a regex) confirming no write call and no subscript
+assignment anywhere · an upload forging **seven** server-owned fields at once, all of which
+read back server-computed · confirmation that **no row anywhere** in `app_versions` carries
+`uploaded_by: "EVIL"` · all **20** custom properties in the token block compared value-for-value ·
+**CDP screencast** frames rather than `page.screenshot`, which is too slow to catch a 200 ms
+animation · and asserting the primary element **exists** before reading its colour, so AC-7.4
+could not pass vacuously.
+
+### The reviewer falsified a claim I had made, and it was right
+
+Recorded prominently because it is the most important thing I got wrong this round.
+
+With two cold-start readings (2957 ms, 1752 ms) I wrote that a cold first request costs
+"**1.8–3.0 s**" and that the penalty was "**Anvil spinning a worker up, not the network**". The
+reviewer took a **third** reading after its own 11-minute idle: **661 ms**, with a **negative**
+penalty — the follow-up requests on the warm connection were slower than the "cold" one — and a
+646 ms handshake as the dominant term.
+
+Both my claims were wrong. I had even written "a single cold request is not a stable quantity" and
+then reasoned as though it were. **The cold-start section above has been rewritten to the honest
+result: 0.66–2.96 s across three readings, cause not established.** The correction was made after
+the cycle-2 verdict and does not disturb it — AC-13.4 was judged on the recorded figures and on
+the >1 s attribution, which the reviewer independently confirmed (handshake 561 ms, no-table
+endpoint 1073 ms), not on my narrative around them.

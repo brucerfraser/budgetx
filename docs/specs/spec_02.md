@@ -691,3 +691,26 @@ copy it**; a page that loads the fonts stylesheet the obvious way silently costs
 its own line, so the extracted block was `canon + "\n"` — substring containment passed while the
 hash differed. Marker formatting was normalised so all six extractions hash equal. A containment
 check would have shipped this.
+
+### Addendum 6 — 2026-08-20 (Code, Session 02)
+
+**AC-10.4's allowed-path list omits `DEBRIEF_S02.md`, which §9 of this same spec mandates.** The
+criterion says the round's diff touches only seven named paths; §9 requires the round to write and
+push `DEBRIEF_S02.md`. **As written, a compliant round cannot satisfy AC-10.4.** Both spec-review
+cycles judged it on substance — the seven listed paths plus the debrief the spec itself demands,
+and nothing under `client_code/` — and passed it. **Future specs should name the debrief in any
+"diff touches only" criterion.**
+
+### Addendum 7 — 2026-08-20 (Code, Session 02)
+
+**AC-13.4's cold-start clause asks for "one recorded cold-start figure", and one figure is not a
+measurable quantity here.** Three independent readings, each after ≥10 min of enforced idle, came
+out at **1752 ms, 2957 ms and 661 ms** — a 4.5× spread, with the fastest reading showing a
+*negative* penalty (its follow-up requests on the warm connection were slower than the "cold" one).
+
+The criterion is satisfiable as written and was passed, but the figure it yields cannot support a
+conclusion, and this round briefly drew one from it before a reviewer falsified it. **A future
+spec wanting a usable cold-start number must ask for repeated samples across a period**, the same
+way the warm clause already asks for ≥20 timed requests. What *is* reliably measurable, and was
+confirmed three times independently, is the platform floor: TLS handshake 555–646 ms and a
+no-table endpoint at 1032–1073 ms on a fresh connection.
