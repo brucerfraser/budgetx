@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Budget X API CLI — the round-01 toolchain.
 
-Reads .secrets/budgetx.env (gitignored) for APP_BASE, BUILD_SECRET, TEST1_EMAIL, TEST1_PASSWORD.
+Reads .secrets/budgetx.env (gitignored) for APP_BASE, BUILD_SECRET, TEST1_*, TEST2_*.
 
-SECRET DISCIPLINE (spec_01 §3.3, AC-9.4): no secret, password or full token is ever written to
-stdout or stderr, on success OR on error. Error paths are where secrets leak, so nothing here
-prints a request header, a repr of the config, or a URL carrying credentials.
+SECRET DISCIPLINE (spec_01 §3.3, AC-9.4; spec_02 §3.3, AC-3): no secret, password, full token
+or full hash is ever written to stdout or stderr, on success OR on error. Error paths are where
+secrets leak, so nothing here prints a request header, a repr of the config, or a URL carrying
+credentials. Anything token- or digest-shaped goes through mask() first — spec_02 AC-3.1 scans
+this tool's captured output for any 64-lowercase-hex string and expects none. A password is
+never accepted as a command-line argument either: it would land in shell history and in ps.
 
-  login | whoami | logout | version | counts
+Logins default to TEST2 (spec_02 §6 — TEST2 is the account everything is driven as).
+
+  login [--account {1,2}] [--email E] | whoami | logout | version | counts
   build-upload <file> --version V [--slug S] [--kind K]
   build-promote <record_uid> | build-list [--slug S] [--kind K] | session <token_hash>
 """
@@ -15,6 +20,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -25,9 +31,15 @@ ENV_PATH = os.path.join(ROOT, ".secrets", "budgetx.env")
 TOKEN_PATH = os.path.join(ROOT, ".secrets", ".token")
 
 
+# Any long lowercase-hex run in an error message is a token, a digest or a token_hash that has
+# no business on stderr. `session` puts a token_hash in a query string, and some urllib failures
+# stringify the URL — so the failure path is redacted rather than trusted (spec_02 AC-3.1).
+_HEXISH = re.compile(r"[0-9a-f]{32,}")
+
+
 def die(msg, code=1):
-    """Fail with a short reason. Never echoes a secret or a token."""
-    sys.stderr.write("error: %s\n" % msg)
+    """Fail with a short reason. Never echoes a secret, a token or a full hash."""
+    sys.stderr.write("error: %s\n" % _HEXISH.sub(lambda m: mask(m.group(0)), str(msg)))
     sys.exit(code)
 
 
@@ -46,7 +58,11 @@ def load_env():
 
 
 def mask(token):
-    """First 6 characters then an ellipsis. Never the whole token."""
+    """First 6 characters then an ellipsis. Never the whole token, hash or digest.
+
+    Six characters is enough to correlate two lines of output with each other and far too few
+    to be used as a credential.
+    """
     if not token:
         return "(none)"
     return token[:6] + "…"
@@ -113,7 +129,11 @@ def write_token(token):
 def main():
     ap = argparse.ArgumentParser(prog="tools/api.py", description="Budget X API CLI")
     sub = ap.add_subparsers(dest="cmd")
-    sub.add_parser("login").add_argument("--email", default=None)
+    lg = sub.add_parser("login")
+    lg.add_argument("--email", default=None, help="override the address; password still comes "
+                                                  "from the selected account's env pair")
+    lg.add_argument("--account", choices=["1", "2"], default="2",
+                    help="which TESTn_* pair to use (default 2 — spec_02 §6)")
     sub.add_parser("whoami")
     sub.add_parser("logout")
     sub.add_parser("version")
@@ -136,10 +156,13 @@ def main():
     cfg = load_env()
 
     if args.cmd == "login":
-        email = getattr(args, "email", None) or cfg.get("TEST1_EMAIL")
-        password = cfg.get("TEST1_PASSWORD")
+        # spec_02 §6: everything is driven as TEST2, so TEST2 is the default. (spec_02 §3.3
+        # said only "login"; the S01 tool read TEST1_* — filed as spec_02 Addendum 1.)
+        prefix = "TEST%s" % getattr(args, "account", "2")
+        email = getattr(args, "email", None) or cfg.get(prefix + "_EMAIL")
+        password = cfg.get(prefix + "_PASSWORD")
         if not email or not password:
-            die("TEST1_EMAIL / TEST1_PASSWORD missing from .secrets/budgetx.env")
+            die("%s_EMAIL / %s_PASSWORD missing from .secrets/budgetx.env" % (prefix, prefix))
         status, payload = call(cfg, "POST", "/auth/login",
                                body={"email": email, "password": password})
         require_ok(status, payload)
@@ -150,7 +173,9 @@ def main():
         print("logged in as %s" % payload.get("email"))
         print("token %s (cached at .secrets/.token, mode 0600)" % mask(token))
         print("expires_at %s" % payload.get("expires_at"))
-        print("token_hash %s" % hashlib.sha256(token.encode("utf-8")).hexdigest())
+        # Masked, not full (spec_02 §3.3, S01 finding 6). The full hash is a lookup key for
+        # /build/session and belongs in a request, never in captured output.
+        print("token_hash %s" % mask(hashlib.sha256(token.encode("utf-8")).hexdigest()))
 
     elif args.cmd == "whoami":
         status, payload = call(cfg, "GET", "/me", token=read_token())
@@ -180,11 +205,15 @@ def main():
                                body={"slug": args.slug, "kind": args.kind,
                                      "version": args.version, "html": html})
         require_ok(status, payload)
+        remote = payload.get("sha256")
         print("record_uid %s" % payload.get("record_uid"))
-        print("sha256     %s" % payload.get("sha256"))
+        print("sha256     %s" % mask(remote))
         print("bytes      %s" % payload.get("bytes"))
-        print("local sha  %s  %s" % (local, "MATCH" if local == payload.get("sha256") else "MISMATCH"))
-        if local != payload.get("sha256"):
+        # The verdict is computed on the FULL digests; only the display is masked, so no
+        # 64-hex string reaches captured output (spec_02 AC-3.1). The full digest stays
+        # available from /build/list's JSON for the served-bytes comparison (spec_02 §7).
+        print("local sha  %s  %s" % (mask(local), "MATCH" if local == remote else "MISMATCH"))
+        if local != remote:
             sys.exit(3)
 
     elif args.cmd == "build-promote":
@@ -199,10 +228,13 @@ def main():
                                params={"slug": args.slug, "kind": args.kind})
         require_ok(status, payload)
         builds = payload.get("builds", [])
-        print("%-38s %-10s %-10s %-8s %-5s %s" % ("record_uid", "slug", "version", "bytes", "cur", "uploaded_at"))
+        row_fmt = "%-38s %-10s %-10s %-8s %-5s %-26s %s"
+        # uploaded_by is the read-back that proves the server stamped it (spec_02 AC-2.1/2.3).
+        print(row_fmt % ("record_uid", "slug", "version", "bytes", "cur", "uploaded_at",
+                         "uploaded_by"))
         for b in builds:
-            print("%-38s %-10s %-10s %-8s %-5s %s" % (b["record_uid"], b["slug"], b["version"],
-                                                      b["bytes"], b["is_current"], b["uploaded_at"]))
+            print(row_fmt % (b["record_uid"], b["slug"], b["version"], b["bytes"],
+                             b["is_current"], b["uploaded_at"], b.get("uploaded_by")))
         print("(%d build(s))" % len(builds))
 
     elif args.cmd == "session":

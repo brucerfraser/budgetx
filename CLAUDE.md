@@ -70,24 +70,86 @@ is deliberately changing most of it.
 ## WHERE THIS APP IS GOING — the migration
 
 Budget X was built as a classic Anvil app (Forms + `@anvil.server.callable`). Bruce's decision,
-2026-08-19: **reshape it like IAMS** — server modules exposing HTTP endpoints, business logic
-server-side, and a **single responsive client written as HTML by Code**, served from the database
-and versioned through a build/promote pipeline. That collapses the two UI trees into one and puts
-the logic where authority belongs.
+2026-08-19: **reshape it like IAMS** — server modules exposing HTTP endpoints and business logic
+server-side, with the UI written as HTML by Code, served from the database and versioned through a
+build/promote pipeline. That puts the logic where authority belongs.
+
+**Bruce's ruling, 2026-08-20 — every screen ships as TWO clients.** The earlier "single responsive
+client" target is withdrawn. Each screen is a **desktop client** (`d-<screen>`) and a **phone-first
+client** (`m-<screen>`) designed for thumbs rather than a squeezed desktop, plus the one shared
+**`x` entry/login client** that serves both form factors and redirects on
+`matchMedia("(max-width: 998px)")` — the breakpoint the Forms app's `Responsive.py` already uses.
+Two designed clients replace the two hand-maintained Form trees; what collapses is `client_code/`,
+not the design.
+
+### The slug scheme
+
+| Slug | What it is | Round |
+|---|---|---|
+| `x` | Entry + login. One page, both form factors. The only login surface. | 01 placeholder · 02 real |
+| `d-dash` / `m-dash` | Dashboard shell — nav, auth, one bootstrap fetch | 02 |
+| `d-trans` / `m-trans` | Transactions | 03 |
+| `d-budget` / `m-budget` | Budget | 04–07 |
+| `d-reports` / `m-reports` | Reports (`Reporting.py`, 1,046 lines — its own round) | 04–07 |
+| `d-settings` / `m-settings` | Settings | 04–07 |
+| `zz-*` | Throwaway build/review slugs. Never promoted to a real name. | any |
+
+Slugs are served from `/_/api/x?slug=<slug>`. **The app root is never one of them** — it keeps
+serving the Forms app until every screen has landed.
 
 **This is several rounds, and it is staged so the app never stops working:**
 
 - **Session 01 — the spine, invisible to users.** `api_http`/`ApiError` helpers, session tokens
   over Anvil Users, `/me`, `/build/upload|promote|list|version`, an `app_versions` table, a
   landing route. Existing Forms keep running untouched.
-- **Session 02 — one screen end to end.** The smallest screen, moved server-side and served as
-  HTML, to prove the pipeline on something real.
+- **Session 02 — the shell.** A login page plus a desktop and a phone shell that authenticate and
+  fetch real data through `GET /app/bootstrap`. The pattern every later screen copies, and the
+  round that sets the design language and the speed bar.
 - **Session 03+ — screen by screen**, retiring each desktop/mobile Form pair as its replacement
   lands. `Reporting.py` is its own round; 1,046 lines is not a side-quest.
 
 **Until the spine exists there are no version pings, no `tools/api.py`, and no API-level
 acceptance evidence.** Round 01's own criteria have to be proven some other way, and the debrief
 must say which.
+
+### Standing rules of the migration
+
+*(from Session 01 — each one cost a review cycle to learn)*
+
+- **Platform-authored changes are exempt from no-edit criteria, but they are logged.** What Anvil
+  itself writes when a service is enabled or its git round-trips — injected imports,
+  `runtime_options` rewrites, permission-bit changes — is not an edit by the round; every such
+  change is listed in the debrief.
+- **Re-check `ls -l tools/githooks/` immediately after any service change.** Anvil silently strips
+  the executable bit, disabling the repo guard without saying so.
+- **Deliberate, logged test-account provisioning requested of Bruce is exempt** from `users`-count
+  criteria. It is setup, not a business-data write.
+- **The rollback-ledger line is written into the debrief as part of the promote step** — slug,
+  version, `record_uid`, and the row that was current before — never reconstructed afterwards.
+
+*(Bruce, 2026-08-20 — the 1-second rule)*
+
+- **No interaction a user feels may wait on the network.** Any load over one second is named in the
+  debrief with its cause and its justification; page behaviour is the round's to fix, platform
+  latency is reported to Bruce with options rather than silently accepted.
+- **Display maths runs client-side** — it holds no secrets. **Authority and verification stay
+  server-side**, and every money figure must remain reproducible by independent recomputation from
+  the raw rows.
+
+*(Bruce, 2026-08-20 — the beauty mandate)*
+
+- **The clients must be beautiful, not merely correct.** This app talks to a person about their
+  money. The `bx_core` design language — layered dark surfaces, 16–20 px radii, soft shadows,
+  150–250 ms motion, skeleton states while data is in flight — and **no browser `alert()`,
+  `confirm()` or `prompt()` anywhere, ever**. The current Forms app is a floor, not a ceiling.
+- **Feel criteria are first-class acceptance criteria**, driven by the visual reviewer — motion
+  that actually plays, reduced motion honoured, surfaces that compute to the design language.
+
+*(shared code)*
+
+- **The canonical `client_src/` files are embedded verbatim in every client.** Each embedded copy
+  must be byte-identical to the canon in the same commit, compared by hash — that is what stops
+  two clients per screen drifting into two design languages.
 
 ---
 

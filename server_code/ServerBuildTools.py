@@ -1,15 +1,22 @@
-# ServerBuildTools — v1
+# ServerBuildTools — v2
 # Budget X build pipeline: upload/promote/list of app_versions, the /x serving route, and the
 # read-back instruments (/build/session, /build/counts) that prove a write actually landed.
 # History:
 #   v1  2026-08-19  Session 01 — created. upload/promote/list/version/session/counts and /x.
+#   v2  2026-08-20  Session 02 — upload stamps uploaded_by server-side; /build/list reports it;
+#                   /build/version also reports ServerAppData.
 #
 # DESIGN NOTES (read before editing)
 # - Self-contained: this module declares its own ApiError / api_http rather than importing
-#   ServerApi's. The ONE sanctioned cross-module reference is reading ServerApi.MODULE_VERSION
-#   inside _module_versions(), because /build/version must report both stamps and spec_01 §3.4
-#   requires each stamp to come from a single in-module constant so header and endpoint cannot
-#   drift. It is imported INSIDE the function, never at module level.
+#   ServerApi's. The ONLY sanctioned cross-module references are reading MODULE_VERSION from
+#   ServerApi and (from v2) ServerAppData inside _module_versions(), because /build/version must
+#   report every module's stamp and spec_01 §3.4 requires each stamp to come from a single
+#   in-module constant so header and endpoint cannot drift. Both are imported INSIDE the
+#   function, never at module level — which is exactly why no module may touch app_tables at
+#   import time: a module that fails to import would take /build/version down with it.
+# - v2: /build/upload stamps uploaded_by itself (spec_02 §3.2). The caller cannot set it — a
+#   client-supplied provenance field is not provenance. /build/list carries it so the stamp is
+#   provable by read-back, and still never carries html.
 # - NO module-level app_tables access, so this module imports cleanly before api_sessions and
 #   app_versions exist (AC-1.4).
 # - /build/version deliberately touches NO table: it must answer on the near side of the schema
@@ -32,10 +39,17 @@ import traceback
 import uuid
 from datetime import datetime, timezone
 
-MODULE_VERSION = "v1"
+MODULE_VERSION = "v2"
 
 DEFAULT_SLUG = "x"
 DEFAULT_KIND = "html"
+
+# Provenance is stamped by the server, never accepted from the caller (spec_02 §3.2).
+UPLOADED_BY = "build-api"
+
+# The entire accepted input set of /build/upload. Anything else in the body is ignored and
+# never stored — including uploaded_by, which is the whole point of the v2 change.
+UPLOAD_KEYS = ("slug", "kind", "version", "html")
 
 # Tables reported by /build/counts — the AC-11.1 instrument. Counts only, never row contents.
 COUNTED_TABLES = [
@@ -133,7 +147,7 @@ def api_http(path, methods=("GET",)):
 
 
 def _module_versions():
-    """Both module stamps, each read from that module's single in-module constant."""
+    """Every module stamp, each read from that module's single in-module constant."""
     versions = {"ServerBuildTools": MODULE_VERSION}
     try:
         import ServerApi
@@ -141,6 +155,12 @@ def _module_versions():
     except Exception:
         traceback.print_exc()
         versions["ServerApi"] = "unavailable"
+    try:
+        import ServerAppData
+        versions["ServerAppData"] = ServerAppData.MODULE_VERSION
+    except Exception:
+        traceback.print_exc()
+        versions["ServerAppData"] = "unavailable"
     return versions
 
 
@@ -156,6 +176,8 @@ def _manifest(row):
         "is_current": row["is_current"],
         "uploaded_at": _iso(row["uploaded_at"]),
         "promoted_at": _iso(row["promoted_at"]),
+        # v2: the read-back that proves the server, not the caller, set this (spec_02 AC-2).
+        "uploaded_by": row["uploaded_by"],
     }
 
 
@@ -169,12 +191,16 @@ def api_build_version(**kwargs):
 def api_build_upload(**kwargs):
     require_build_secret()
     body = _request_json()
+    # The accepted input set, applied once and explicitly: every other key in the body is
+    # dropped here and can therefore never reach a column — a caller cannot forge provenance,
+    # or set any other stored field, by adding keys (spec_02 §3.2).
+    fields = {key: body.get(key) for key in UPLOAD_KEYS}
 
-    html = body.get("html")
+    html = fields.get("html")
     if not isinstance(html, str) or html == "":
         raise ApiError(400, "bad_request")
 
-    version = body.get("version")
+    version = fields.get("version")
     if not isinstance(version, str) or not version.strip():
         raise ApiError(400, "bad_request")
     version = version.strip()
@@ -182,8 +208,8 @@ def api_build_upload(**kwargs):
     if version.startswith("0."):
         raise ApiError(400, "bad_request")
 
-    slug = body.get("slug") or DEFAULT_SLUG
-    kind = body.get("kind") or DEFAULT_KIND
+    slug = fields.get("slug") or DEFAULT_SLUG
+    kind = fields.get("kind") or DEFAULT_KIND
     if not isinstance(slug, str) or not slug.strip():
         raise ApiError(400, "bad_request")
     if not isinstance(kind, str) or not kind.strip():
@@ -204,7 +230,9 @@ def api_build_upload(**kwargs):
         is_current=False,
         uploaded_at=_now(),
         promoted_at=None,
-        uploaded_by=str(body.get("uploaded_by") or "tools/api.py"),
+        # Server-stamped constant. A caller-supplied uploaded_by is read nowhere and stored
+        # never; the field means "this row came in through /build/upload" and nothing else.
+        uploaded_by=UPLOADED_BY,
         active=True,
     )
     return {"ok": True, "record_uid": record_uid, "sha256": digest, "bytes": len(encoded)}
