@@ -1166,3 +1166,39 @@ no top-level key altered — which is what AC-11.5 requires.
 
 The rule is now recorded in **CLAUDE.md** (§"Schema changes need Bruce's click") and in the
 vault's **Budget X — Master Note** standing decisions, so no later round repeats the mistake.
+
+**Addendum 6 — 2026-08-20 — §4.3 is WRONG about what the migration leaves behind. Anvil writes
+`False`, not `None`, and it hid all 1,300 rows.**
+§3.8.3 and §4.3 state that Bruce's click "adds the column without touching the 1,300 existing
+rows, so they read `None`", and that *"this is deliberate and the serialiser depends on it"*.
+**Measured on the live app: it is not what happens.** After the migration was approved, every one
+of the 1,300 pre-existing rows carried a real **`False`**.
+
+The effect was total and silent: `GET /app/bootstrap?include=transactions` returned **200 with an
+empty array**, `/build/counts` still reported `transactions 1300`, and nothing raised. The
+serialiser's `is not False` test — which §4.3 correctly insists on over `is True` — **does not
+help**, because the stored values genuinely are `False`. No test can separate "archived" from
+"never initialised" once the platform has written a real boolean.
+
+**What actually happened, in order:** the column was pushed (14:5x) and the intermediate,
+pre-approval state already returned `False` for unmigrated rows, hiding everything; the migration
+was approved; the rows still read `False`. Diagnosed with one minimal, reversible `/txn/restore`
+on a single id, which made exactly that row reappear in an independent fetch — confirming the
+mechanism before anything was done at scale. All 1,300 rows were then restored to `active: true`
+in seven batches of ≤200 through `/txn/restore`, every row ledgered as it happened.
+
+**Reconciliation after remediation** (independent fetch vs the snapshot taken before any write):
+1,300 rows returned, every `active` a real boolean with distinct value set `[True]`, **zero ids
+missing, zero new, and zero rows differing on any field except `active`**, `sum(amount_cents)`
+identical at `-13,576,179`, order contract intact, all table counts unchanged.
+
+**The standing rule this produces** — now in CLAUDE.md: *after adding a bool column, explicitly
+initialise every existing row in the same round, before anything reads it. Treat a migration as
+leaving the column wrong, not empty, and prove the recovery by field-by-field reconciliation
+against a pre-migration snapshot rather than by a row count.*
+
+**Consequence for AC-3:** AC-3.1's "every legacy `None`-valued row is present" can no longer be
+proven as written — after remediation no row is `None`; all 1,300 carry an explicit `True`. The
+substance (all 1,300 rows present, none lost, none altered) **is** proven, and more strongly than
+the criterion asked. AC-11's ledger now legitimately contains 1,300 restore entries plus the
+single diagnostic restore, all of them this round's deliberate writes.

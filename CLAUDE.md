@@ -346,6 +346,27 @@ clicks.
   else — no other table, no `client:`/`server:` change, no `runtime_options` churn. Parse the file
   read-only to confirm, and declare any drift first.
 
+**A migrated bool column arrives as `False` on every existing row — NOT blank. Measured on this
+app, Session 03.**
+
+Adding `transactions.active` (bool) and approving the migration wrote a real **`False`** into all
+1,300 pre-existing rows. It did **not** leave them `None`. The round had been designed on the
+opposite assumption, and the consequence was immediate and total: the serialiser's `is not False`
+test — correct, and deliberately chosen over `is True` for exactly this hazard — filtered out
+**every one of Bruce's 1,300 transactions**. The API returned `200` with an empty array; nothing
+errored; the table still held all 1,300 rows.
+
+- **`is not False` does not protect you here.** The values genuinely *are* `False`. No test
+  distinguishes "archived" from "never initialised" once the platform has written a real boolean.
+- **Therefore: after adding a bool column, EXPLICITLY INITIALISE every existing row**, in the same
+  round, before anything reads it. Treat the migration as leaving the column *wrong*, not empty.
+- **The window is live.** Between pushing the schema and initialising the rows, the app is serving
+  wrong data. Plan the initialisation as part of the schema change, not as a follow-up.
+- **Prove the recovery by reconciliation, not by a row count**: re-fetch independently and compare
+  every field against a snapshot taken *before* the schema push. S03's check was "zero rows differ
+  on any field except `active`, and `sum(amount_cents)` is identical".
+
+
 - **Therefore a round that touches schema CANNOT close unattended.** Say so in the debrief, hand
   Bruce the click, and mark any criterion that depends on the new schema as **BLOCKED** — never
   as passed.
