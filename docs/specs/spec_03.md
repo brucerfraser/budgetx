@@ -1202,3 +1202,35 @@ proven as written — after remediation no row is `None`; all 1,300 carry an exp
 substance (all 1,300 rows present, none lost, none altered) **is** proven, and more strongly than
 the criterion asked. AC-11's ledger now legitimately contains 1,300 restore entries plus the
 single diagnostic restore, all of them this round's deliberate writes.
+
+**Addendum 7 — 2026-08-20 — AC-10.4's path list omits the reviewer verdict files, which the
+round's own method requires it to commit.**
+AC-10.4 enumerates the paths the round's diff may touch. The round also commits
+`docs/review_s03_visual_cycle1.md`, `…cycle2.md` (and a cycle-3 file if the gate runs a third
+time), because **CLAUDE.md requires it**: *"verdicts are recorded as small committed `.md` files,
+the artefacts behind them stay on disk"*, and spec §9 requires the visual reviewer's verdict to be
+**committed before the spec reviewer runs** — precisely so a verdict cannot be tidied up after a
+repair. A path list that forbids those files fails a tree that is correct.
+
+**Resolution: AC-10.4's permitted path list gains `docs/review_s03_<NN>_*.md`** — the reviewer
+verdict files for the round.
+
+**This is the third occurrence of this exact pattern** — S02 Addendum 6 added `DEBRIEF_S<NN>.md`,
+this round's Addendum 2 added `server_code/ServerBuildTools.py`, and now the verdict files. The
+standing rule in CLAUDE.md already says a "the diff touches only" criterion must name that round's
+debrief; **it should be read as naming every artefact the round's own method obliges it to
+commit** — the debrief, the reviewer verdicts, and any file a criterion elsewhere in the same spec
+forces the round to edit. Recorded so spec_04 writes the list correctly the first time.
+
+**Verified for this round** (`7085660..HEAD`), 16 paths, every one either named in AC-10.4 or
+added by an addendum: `CLAUDE.md` · `DEBRIEF_S03.md` · `anvil.yaml` · `client_src/bx_calc.js` ·
+`client_src/bx_core.css` · `client_src/bx_core.js` · `docs/cowork_project_instructions.md` (the
+§3.7 housekeeping commit, explicitly exempt) · `docs/review_s03_visual_cycle1.md` ·
+`docs/review_s03_visual_cycle2.md` · `docs/specs/spec_03.md` · `server_code/ServerAppData.py` ·
+`server_code/ServerBuildTools.py` (Addendum 2) · `server_code/ServerTxn.py` · `tools/api.py` ·
+`tools/calc_cases.json` · `tools/calc_golden.mjs`.
+
+**And nothing under `client_code/`:** the tree hash is `dbe106cf57e69d2e3ef9f0f1edbcd9bad3e8849d`
+at round start and **identical** now — not one byte of either Forms UI tree changed. The five
+original server modules (`ServerModule1`, `account_work`, `budget_work`, `csv_handler`,
+`transaction_work`) are byte-identical by blob hash.
