@@ -3,7 +3,7 @@
 **STATUS:** AWAITING-BRUCE
 
 **Round:** 03 · **Spec:** `docs/specs/spec_03.md` (approved and locked, 2026-08-20)
-**Round started (UTC):** 2026-08-20T14:21:37Z · **Updated (UTC):** 2026-08-20T15:30Z
+**Round started (UTC):** 2026-08-20T14:21:37Z · **Updated (UTC):** 2026-08-20T15:52Z
 
 > Still the **park** of spec §3.8 / §11.4. Everything that can be built and proven without the
 > schema click is now built, deployed and proven; what remains is blocked on one click.
@@ -13,23 +13,34 @@
 
 ## AWAITING BRUCE
 
-**One thing, in the Anvil editor.**
+**Approve one schema migration in the Anvil editor. Nothing to type, nothing to create.**
 
-On the **`transactions`** table, add **one column**: **name `active`, type `bool`**.
+I have added the column myself and pushed it — per Bruce's ruling of 2026-08-20, *"I never add
+columns or tables. You do. Then I approve the schema."* Spec §3.8 had this backwards and asked
+Bruce to create the column by hand; corrected in **Addendum 5**, and the rule is now recorded in
+CLAUDE.md and the vault's Master Note so no later round repeats it.
 
-**Do not set a value on any existing row — leave all 1,300 blank.** They will read as `None`,
-which the serialiser treats as *"predates soft-delete, therefore active"*. Proving that is half
-of what this round is for, and it is already proven live: bootstrap returns all 1,300 rows today,
-before the column exists.
+**What is waiting for you:**
+
+1. Open the Anvil editor → **DATA** tab. There will be a **⚠** beside `Default Database`
+   (not in Version History).
+2. Click through the schema-mismatch panel and take the **RED / LEFT** side — *the source code is
+   correct* — which migrates the database to match git.
+3. The change is **exactly one column**: `transactions.active`, type **bool**. Nothing else.
+
+**If the panel offers anything beyond that single column — another column, another table, a
+`client:`/`server:` change — STOP and tell me rather than clicking through.** The pushed diff was
+verified read-only to be exactly that one column, with `client: full` / `server: full` unchanged
+on the table and no other table or top-level key altered (AC-11.5).
+
+**Do not set a value on any existing row.** All 1,300 stay blank and read as `None`, which the
+serialiser treats as *"predates soft-delete, therefore active"* — already proven live: bootstrap
+returns all 1,300 rows today, before the column exists.
 
 Then say **done**, and I finish with `Read Claude.md, Trigger 03 continue`.
 
-**Nothing else.** No other column, no new table, no type change, no `client:`/`server:` change.
-If the editor offers anything beyond that single column, **stop and tell me** rather than
-clicking through it.
-
-*(Spec §3.8 also asked for two `ZZ` rows on `accounts`. Bruce had already created both before
-the round opened; they match §3.8 field-for-field. See Addendum 1.)*
+*(Spec §3.8 also asked for two `ZZ` rows on `accounts`. Both already existed before the round
+opened and match §3.8 field-for-field — see Addendum 1. Nothing to do there.)*
 
 ---
 
