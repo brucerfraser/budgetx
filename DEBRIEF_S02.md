@@ -154,6 +154,54 @@ different hour than mine, came out faster: reused p50 `/x` 454 ms, `/app/bootstr
 
 ---
 
+## Spec review — cycle 2: **14/14 PASS**
+
+The only repair between cycles was **adding the cold-start figure to this file**. No promoted byte
+changed: `x`, `d-dash` and `m-dash` are the same v1.1.1 records cycle 1 judged, same sha256. I
+deliberately did not fold in the `data-primary` hook or any other cosmetic finding, because
+changing the artefact would have invalidated two clean gates to fix things that fail no criterion.
+
+**The full review re-ran from AC-1 regardless** — never only the failure, because repairs regress
+neighbours. Fresh read-only context, Opus, its own instruments.
+
+```
+AC-1  PASS   AC-2  PASS   AC-3  PASS   AC-4  PASS   AC-5  PASS
+AC-6  PASS   AC-7  PASS   AC-8  PASS   AC-9  PASS   AC-10 PASS
+AC-11 PASS   AC-12 PASS   AC-13 PASS   AC-14 PASS
+```
+
+**14/14 PASS.** It confirmed the artefact did not move underneath it: the same three v1.1.1 rows,
+served bytes hashing to them, and `anvil/master` = `origin/master` = `HEAD` = `b11a1c7`, at both
+08:21:42Z and 09:17:25Z.
+
+A few of its checks went beyond either earlier pass and are worth keeping: an **AST walk** of the
+pushed `ServerAppData.py` (rather than a regex) confirming no write call and no subscript
+assignment anywhere · an upload forging **seven** server-owned fields at once, all of which
+read back server-computed · confirmation that **no row anywhere** in `app_versions` carries
+`uploaded_by: "EVIL"` · all **20** custom properties in the token block compared value-for-value ·
+**CDP screencast** frames rather than `page.screenshot`, which is too slow to catch a 200 ms
+animation · and asserting the primary element **exists** before reading its colour, so AC-7.4
+could not pass vacuously.
+
+### The reviewer falsified a claim I had made, and it was right
+
+Recorded prominently because it is the most important thing I got wrong this round.
+
+With two cold-start readings (2957 ms, 1752 ms) I wrote that a cold first request costs
+"**1.8–3.0 s**" and that the penalty was "**Anvil spinning a worker up, not the network**". The
+reviewer took a **third** reading after its own 11-minute idle: **661 ms**, with a **negative**
+penalty — the follow-up requests on the warm connection were slower than the "cold" one — and a
+646 ms handshake as the dominant term.
+
+Both my claims were wrong. I had even written "a single cold request is not a stable quantity" and
+then reasoned as though it were. **The cold-start section above has been rewritten to the honest
+result: 0.66–2.96 s across three readings, cause not established.** The correction was made after
+the cycle-2 verdict and does not disturb it — AC-13.4 was judged on the recorded figures and on
+the >1 s attribution, which the reviewer independently confirmed (handshake 561 ms, no-table
+endpoint 1073 ms), not on my narrative around them.
+
+---
+
 ## My own basic test, before either reviewer
 
 Run against the promoted v1.1.1: **49/49 checks PASS** (`scratch/s02/drive_clients.py`), plus
@@ -440,48 +488,61 @@ From both reviewers. None of these fails a criterion; each has a file and a reas
 
 ---
 
-## Spec review — cycle 2: **14/14 PASS**
+## For Spec 03 — what this round hands forward
 
-The only repair between cycles was **adding the cold-start figure to this file**. No promoted byte
-changed: `x`, `d-dash` and `m-dash` are the same v1.1.1 records cycle 1 judged, same sha256. I
-deliberately did not fold in the `data-primary` hook or any other cosmetic finding, because
-changing the artefact would have invalidated two clean gates to fix things that fail no criterion.
+Round 03 is **Transactions** (`d-trans` / `m-trans`), and it is the first round to copy the
+pattern this one established. Collected here so nothing has to be reconstructed from the prose
+above.
 
-**The full review re-ran from AC-1 regardless** — never only the failure, because repairs regress
-neighbours. Fresh read-only context, Opus, its own instruments.
+### Decisions only Bruce can make
 
-```
-AC-1  PASS   AC-2  PASS   AC-3  PASS   AC-4  PASS   AC-5  PASS
-AC-6  PASS   AC-7  PASS   AC-8  PASS   AC-9  PASS   AC-10 PASS
-AC-11 PASS   AC-12 PASS   AC-13 PASS   AC-14 PASS
-```
+1. **`--error` contrast.** `rgb(214,77,71)` on `--surface-1` computes to ~3.6:1, under WCAG AA's
+   4.5:1. The token is inside the §3.4 block that AC-7.3 locks **verbatim**, so it cannot be
+   changed without amending that block. Change it, or accept it deliberately.
+2. **Is 44 px a design-language rule or a mobile-only one?** Mobile SIGN OUT is 320×48; the
+   desktop sidebar button is 228×41. No criterion applies at desktop today.
+3. **The desktop grid.** `d-dash` puts ~520 px of content in a ~1020 px area. Round 03 should
+   decide the desktop layout rather than inherit that.
 
-**14/14 PASS.** It confirmed the artefact did not move underneath it: the same three v1.1.1 rows,
-served bytes hashing to them, and `anvil/master` = `origin/master` = `HEAD` = `b11a1c7`, at both
-08:21:42Z and 09:17:25Z.
+### Carry into spec_03 as written rules
 
-A few of its checks went beyond either earlier pass and are worth keeping: an **AST walk** of the
-pushed `ServerAppData.py` (rather than a regex) confirming no write call and no subscript
-assignment anywhere · an upload forging **seven** server-owned fields at once, all of which
-read back server-computed · confirmation that **no row anywhere** in `app_versions` carries
-`uploaded_by: "EVIL"` · all **20** custom properties in the token block compared value-for-value ·
-**CDP screencast** frames rather than `page.screenshot`, which is too slow to catch a 200 ms
-animation · and asserting the primary element **exists** before reading its colour, so AC-7.4
-could not pass vacuously.
+- **Every client must use the non-blocking fonts pattern** — `media="print"` +
+  `onload="this.media='all'"` + `<noscript>` fallback. The obvious `<link rel="stylesheet">`
+  silently costs ~1 s, because it defers execution of every later `<script>`, including one at
+  the end of `<body>`. This round measured 970 ms → 44 ms.
+- **AC-7.2-style embed checks must say "compared by hash"**, never containment. Containment
+  passed a block that was `canon + "\n"`.
+- **Any "the diff touches only" criterion must list `DEBRIEF_S<NN>.md`** — §9 mandates the
+  debrief, so AC-10.4 as written could not be satisfied by a compliant round (Addendum 6).
+- **A cold-start criterion must ask for repeated samples across a period**, not "one recorded
+  figure" — three readings this round spread 661–2957 ms (Addendum 7).
+- **Give the reviewers the instrument traps up front.** The five in Addendum 5 cost me four false
+  FAILs against working code; handing them to both reviewers meant neither repeated them.
+- **`data-*` test hooks are part of the deliverable**, not an afterthought — they are what makes
+  §7's "reproducible by anyone, including the reviewers" true. Specify the hook set in the spec so
+  it is uniform across both clients from the start.
 
-### The reviewer falsified a claim I had made, and it was right
+### Loose ends round 03 should close
 
-Recorded prominently because it is the most important thing I got wrong this round.
+- **Make the hook set uniform**: `d-dash` has no `data-primary` (its SIGN OUT carries
+  `data-nav="signout"` only), while `x` and `m-dash` do. My inconsistency; not fixed because the
+  pages were frozen under review and it fails no criterion.
+- **The Forms app's mobile Transactions screen cannot scroll at all** — `scrollHeight ==
+  clientHeight` at 390×844 and 390×500. Nothing is below the fold today, so it is not a defect
+  yet, but it will **clip rather than scroll** the moment it has more rows. **Round 03 replaces
+  exactly this screen**, so build `m-trans` with a real scroller and prove it with a driven
+  `scrollTop`, not a screenshot.
+- **Prove the `archived` path end to end.** `accounts` holds 7 rows and **0 archived**, so
+  `archived: true` has never travelled the live server path — only a route-mocked response. The
+  first round that opens a write path to `accounts` should create a `ZZ`-prefixed account, archive
+  it, and re-check.
+- **`docs/cowork_project_instructions.md` is uncommitted in the working tree** (Bruce's own edit,
+  ~11 h before this round). It leaves the tree diverged from both remotes and round 03 inherits
+  that. Commit or discard it deliberately.
 
-With two cold-start readings (2957 ms, 1752 ms) I wrote that a cold first request costs
-"**1.8–3.0 s**" and that the penalty was "**Anvil spinning a worker up, not the network**". The
-reviewer took a **third** reading after its own 11-minute idle: **661 ms**, with a **negative**
-penalty — the follow-up requests on the warm connection were slower than the "cold" one — and a
-646 ms handshake as the dominant term.
+### What round 03 can rely on
 
-Both my claims were wrong. I had even written "a single cold request is not a stable quantity" and
-then reasoned as though it were. **The cold-start section above has been rewritten to the honest
-result: 0.66–2.96 s across three readings, cause not established.** The correction was made after
-the cycle-2 verdict and does not disturb it — AC-13.4 was judged on the recorded figures and on
-the >1 s attribution, which the reviewer independently confirmed (handshake 561 ms, no-table
-endpoint 1073 ms), not on my narrative around them.
+`GET /app/bootstrap` is the one-fetch-per-page-open contract and is frozen: future rounds may
+**add** keys, never rename or repurpose one. `bx_core.css` / `bx_core.js` are the canon — embed
+them verbatim and hash-check every copy. The two-client pattern, the fixtures-decouple-the-builders
+plan, and the disjoint-ownership table all worked and are worth repeating unchanged.
