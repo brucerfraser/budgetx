@@ -21,6 +21,14 @@
         all five client templates found exactly one such listener (flyOut() in m-trans),
         which reduced motion already starved via `.bx-deck__card { transition: none }` and
         which has been given an explicit reduced-motion return path instead.
+   v2 — Round 03, fixer, review cycle 2 (same version, added to this entry per the round's
+        brief): `.bx-sort-btn` gains `min-width: 44px` and `justify-content: center`. It had
+        min-height only, and the sort arrow is rendered INSIDE the button — so the moment the
+        active sort moved off DATE the arrow left that button and the shortest label collapsed
+        to 40x44 (measured, d-trans @1280x800, after clicking Amount). The 44px rule binds on
+        the smaller dimension, so a control whose width is content-driven needs the floor
+        stated on both axes. The bug shape is "passes at rest, breaches after a state change";
+        the enumeration that missed it measured one state per page.
    The §3.4/§3.6 token block below is copied character-for-character from spec_03 §3.4 (the
    amended block that supersedes spec_02's). Do not reorder or reflow it — AC-7.3 compares every
    custom property value-for-value. */
@@ -511,11 +519,17 @@ button { font-family: inherit; }
   text-align: right;
   font-family: var(--font-head);
 }
+/* The sort arrow lives INSIDE the button, so the button's width changes when the active
+   sort moves to another column. min-height alone left the shortest label (DATE) at 40x44
+   once its arrow was gone; the 44px floor binds on the SMALLER dimension, so the floor has
+   to be stated on both. */
 .bx-sort-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   min-height: 44px;
+  min-width: 44px;
   padding: 0 4px;
   background: none;
   border: none;
