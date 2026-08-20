@@ -93,6 +93,7 @@ except Exception:
 
 import hashlib
 import json
+import time
 import re
 import traceback
 from datetime import date, datetime, timezone
@@ -138,12 +139,28 @@ def _as_utc(value):
     return value.astimezone(timezone.utc)
 
 
+_PROBE = []
+
+
+def _probe_reset():
+    _PROBE.clear()
+
+
+def _probe(label, ms):
+    _PROBE.append("%s;dur=%.0f" % (label, ms))
+
+
 def _json_response(status, body):
-    resp = anvil.server.HttpResponse(int(status), json.dumps(body))
+    t0 = time.time()
+    encoded = json.dumps(body)
+    _probe("jsondumps", (time.time() - t0) * 1000)
+    resp = anvil.server.HttpResponse(int(status), encoded)
     # dict.__setitem__ rather than bracketed assignment on resp.headers — see the DESIGN
     # NOTES: this module must contain no subscript assignment, because AC-1.4 proves it writes
     # nothing by scanning the source. Behaviour is identical to the S01-proven assignment form.
     resp.headers.__setitem__("Content-Type", "application/json")
+    if _PROBE:
+        resp.headers.__setitem__("Server-Timing", ", ".join(_PROBE))
     return resp
 
 
@@ -531,16 +548,20 @@ def _prefetched(table, ladder):
     drops every row from the payload.
     """
     rungs = list(ladder)
-    for columns in rungs[:-1]:
+    for idx, columns in enumerate(rungs[:-1]):
         try:
-            return list(table.search(q.fetch_only(*columns)))
+            t0 = time.time()
+            out = list(table.search(q.fetch_only(*columns)))
+            _probe("rung%d-n%d" % (idx, len(out)), (time.time() - t0) * 1000)
+            return out
         except Exception as err:
             print("ServerAppData: prefetch of (%s) unavailable — %s: %s; trying the next rung"
                   % (", ".join(columns), type(err).__name__, err))
     last = rungs[-1]
-    if last:
-        return list(table.search(q.fetch_only(*last)))
-    return list(table.search())
+    t0 = time.time()
+    out = list(table.search(q.fetch_only(*last))) if last else list(table.search())
+    _probe("rungLast-n%d" % len(out), (time.time() - t0) * 1000)
+    return out
 
 
 def _settings_row():
@@ -587,7 +608,11 @@ def api_app_bootstrap(include=None, **kwargs):
     The prefetch repair: every search goes through _prefetched(). Same rows, same order, same
     keys — the columns simply arrive with the query instead of one row at a time.
     """
+    _probe_reset()
+    t_auth = time.time()
     user = require_auth()
+    _probe("auth", (time.time() - t_auth) * 1000)
+    t_boot = time.time()
     payload = build_bootstrap_payload(
         email=_text(_get(user, "email")),
         server_date=_now().date().isoformat(),
@@ -596,10 +621,15 @@ def api_app_bootstrap(include=None, **kwargs):
         sub_categories=_prefetched(app_tables.sub_categories, SUB_CATEGORY_COLUMN_LADDER),
         settings_row=_settings_row(),
     )
+    _probe("bootstrap", (time.time() - t_boot) * 1000)
     if not wants_transactions(include):
         return payload
     anomalies = []
-    transactions = build_transactions_payload(
-        _prefetched(app_tables.transactions, TRANSACTION_COLUMN_LADDER), anomalies)
+    t_rows = time.time()
+    rows = _prefetched(app_tables.transactions, TRANSACTION_COLUMN_LADDER)
+    _probe("txnfetch", (time.time() - t_rows) * 1000)
+    t_ser = time.time()
+    transactions = build_transactions_payload(rows, anomalies)
+    _probe("txnserialise", (time.time() - t_ser) * 1000)
     _report_amount_anomalies(anomalies)
     return {**payload, "transactions": transactions}
