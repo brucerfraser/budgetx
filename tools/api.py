@@ -15,6 +15,18 @@ Logins default to TEST2 (spec_02 §6 — TEST2 is the account everything is driv
   login [--account {1,2}] [--email E] | whoami | logout | version | counts
   build-upload <file> --version V [--slug S] [--kind K]
   build-promote <record_uid> | build-list [--slug S] [--kind K] | session <token_hash>
+
+Round 03 verification commands (spec_03 §3.1, §4):
+  bootstrap [--include transactions] [--out FILE]
+  txn-categorise (--id ID --category CAT | --batch FILE)     CAT may be the literal `null`
+  txn-update --id ID --field K=V [--field K=V ...]           amount_cents is cast to int
+  txn-create --date D --amount-cents N --account A [--description X] [--category C]
+             [--notes N] [--transfer-account A]
+  txn-archive --id ID [--id ID ...] | txn-restore --id ID [--id ID ...]
+
+Every one prints the PARSED response, routed through emit() so the redaction that covers the
+older commands covers these too — including their error paths. --out writes the raw response
+body to a file (a file is not stdout); the bootstrap payload carries no secret, only app data.
 """
 import argparse
 import hashlib
@@ -66,6 +78,21 @@ def mask(token):
     if not token:
         return "(none)"
     return token[:6] + "…"
+
+
+def redact(text):
+    """Every long lowercase-hex run masked. The single funnel for anything printed by the
+    round-03 commands, so a digest cannot reach captured output down ANY path, including an
+    unexpected server message echoed inside a response body (spec_02 AC-3.1)."""
+    return _HEXISH.sub(lambda m: mask(m.group(0)), str(text))
+
+
+def emit(obj):
+    """Print a parsed response. A transaction `hash` is a short numeric-ish string like
+    "3082026-66981ZZ-ACC-CHEQUE" and a transaction_id is a uuid4 whose longest hex run is 12
+    characters, so neither trips the 32+-lowercase-hex rule — but the output still goes through
+    redact() rather than relying on that, because the rule is the contract, not the shape."""
+    print(redact(json.dumps(obj, indent=1, sort_keys=True)))
 
 
 def api_base(cfg):
@@ -148,6 +175,40 @@ def main():
     bl.add_argument("--slug", default=None)
     bl.add_argument("--kind", default=None)
     sub.add_parser("session").add_argument("token_hash")
+
+    # ---- round 03 --------------------------------------------------------------------------
+    bs = sub.add_parser("bootstrap")
+    bs.add_argument("--include", default=None,
+                    help="pass `transactions` for the §4.2 array; anything else is ignored "
+                         "by the server and must leave the v1 key-set intact")
+    bs.add_argument("--out", default=None, help="write the RAW response JSON to this file")
+
+    tc = sub.add_parser("txn-categorise")
+    tc.add_argument("--id", dest="ids", action="append", default=[])
+    tc.add_argument("--category", default=None,
+                    help="a sub_category_id, the transfer sentinel, or the literal `null`")
+    tc.add_argument("--batch", default=None, help="a JSON file: a list of §3.1 items, or an "
+                                                  "object with an `items` key")
+
+    tu = sub.add_parser("txn-update")
+    tu.add_argument("--id", required=True)
+    tu.add_argument("--field", dest="fields", action="append", default=[], metavar="K=V",
+                    help="repeatable; amount_cents is cast to int, `null` means JSON null")
+
+    tn = sub.add_parser("txn-create")
+    tn.add_argument("--date", required=True, help="ISO YYYY-MM-DD")
+    tn.add_argument("--amount-cents", required=True, type=int,
+                    help="INTEGER CENTS — the column already holds cents; never multiply by 100")
+    tn.add_argument("--account", required=True)
+    tn.add_argument("--description", default=None)
+    tn.add_argument("--category", default=None)
+    tn.add_argument("--notes", default=None)
+    tn.add_argument("--transfer-account", default=None)
+
+    for name in ("txn-archive", "txn-restore"):
+        pr = sub.add_parser(name)
+        pr.add_argument("--id", dest="ids", action="append", default=[], required=True)
+
     args = ap.parse_args()
     if not args.cmd:
         ap.print_help()
@@ -236,6 +297,104 @@ def main():
             print(row_fmt % (b["record_uid"], b["slug"], b["version"], b["bytes"],
                              b["is_current"], b["uploaded_at"], b.get("uploaded_by")))
         print("(%d build(s))" % len(builds))
+
+    elif args.cmd == "bootstrap":
+        params = {"include": args.include} if args.include is not None else None
+        status, payload = call(cfg, "GET", "/app/bootstrap", params=params,
+                               token=read_token())
+        require_ok(status, payload)
+        if args.out:
+            with open(args.out, "w", encoding="utf-8") as fh:
+                json.dump(payload, fh, indent=1, sort_keys=True)
+            print("wrote %s" % args.out)
+        # A compact summary: the KEY-SET is the thing AC-1.1/1.3 turn on, so it is printed in
+        # full and in sorted order; the arrays are reported by length, never dumped.
+        keys = sorted(payload.keys()) if isinstance(payload, dict) else []
+        print("keys (%d): %s" % (len(keys), ", ".join(keys)))
+        print("transactions key present: %s" % ("transactions" in keys))
+        for key in ("accounts", "categories", "sub_categories", "transactions"):
+            if isinstance(payload.get(key), list):
+                print("%-16s %d" % (key, len(payload[key])))
+        txns = payload.get("transactions")
+        if isinstance(txns, list) and txns:
+            non_int = [t for t in txns
+                       if not isinstance(t.get("amount_cents"), int)
+                       or isinstance(t.get("amount_cents"), bool)]
+            print("amount_cents all int: %s" % (not non_int))
+            print("active all bool:      %s"
+                  % all(isinstance(t.get("active"), bool) for t in txns))
+            print("sum(amount_cents):    %d" % sum(t["amount_cents"] for t in txns
+                                                   if isinstance(t.get("amount_cents"), int)))
+            print("first row:")
+            emit(txns[0])
+
+    elif args.cmd == "txn-categorise":
+        if args.batch:
+            with open(args.batch, encoding="utf-8") as fh:
+                loaded = json.load(fh)
+            items = loaded["items"] if isinstance(loaded, dict) else loaded
+        else:
+            if not args.ids:
+                die("txn-categorise needs --id (repeatable) or --batch FILE")
+            category = None if args.category in (None, "null") else args.category
+            items = [{"transaction_id": i, "category": category} for i in args.ids]
+        status, payload = call(cfg, "POST", "/txn/categorise", body={"items": items},
+                               token=read_token())
+        print("HTTP %s" % status)
+        emit(payload)
+        if not (200 <= status < 300):
+            sys.exit(2)
+
+    elif args.cmd == "txn-update":
+        fields = {}
+        for pair in args.fields:
+            if "=" not in pair:
+                die("--field expects K=V")
+            key, value = pair.split("=", 1)
+            key = key.strip()
+            if value == "null":
+                fields[key] = None
+            elif key == "amount_cents":
+                try:
+                    fields[key] = int(value)
+                except ValueError:
+                    die("amount_cents must be an integer number of cents")
+            else:
+                fields[key] = value
+        if not fields:
+            die("txn-update needs at least one --field K=V")
+        status, payload = call(cfg, "POST", "/txn/update",
+                               body={"transaction_id": args.id, "fields": fields},
+                               token=read_token())
+        print("HTTP %s" % status)
+        emit(payload)
+        if not (200 <= status < 300):
+            sys.exit(2)
+
+    elif args.cmd == "txn-create":
+        # amount_cents goes over the wire exactly as typed. NO multiply by 100 anywhere in this
+        # tool: the column already holds cents (spec_03 §0.1), and a multiply here would inflate
+        # the figure 100x just as surely as one on the server.
+        body = {"date": args.date, "amount_cents": args.amount_cents, "account": args.account}
+        for key, value in (("description", args.description), ("category", args.category),
+                           ("notes", args.notes),
+                           ("transfer_account", getattr(args, "transfer_account", None))):
+            if value is not None:
+                body[key] = None if value == "null" else value
+        status, payload = call(cfg, "POST", "/txn/create", body=body, token=read_token())
+        print("HTTP %s" % status)
+        emit(payload)
+        if not (200 <= status < 300):
+            sys.exit(2)
+
+    elif args.cmd in ("txn-archive", "txn-restore"):
+        path = "/txn/archive" if args.cmd == "txn-archive" else "/txn/restore"
+        status, payload = call(cfg, "POST", path, body={"transaction_ids": args.ids},
+                               token=read_token())
+        print("HTTP %s" % status)
+        emit(payload)
+        if not (200 <= status < 300):
+            sys.exit(2)
 
     elif args.cmd == "session":
         status, payload = call(cfg, "GET", "/build/session", build_secret=True,

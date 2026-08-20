@@ -1,0 +1,267 @@
+{
+  "_readme": [
+    "calc_cases.json v1 — the specification of Budget X's arithmetic (Round 03, Builder C).",
+    "Run with: node tools/calc_golden.mjs   (exits non-zero on any mismatch).",
+    "",
+    "Every expectation here is an INTEGER CENT value or a formatted string. Nothing in this",
+    "file is a rand float, and nothing anywhere multiplies by 100 — the stored column already",
+    "holds cents (spec_03 §0.1).",
+    "",
+    "Arg resolvers understood by the runner:",
+    "  {\"$ref\": \"fixture\"}                       the fixture array/object itself",
+    "  {\"$index\": \"fixture\"}                     bxSmartIndex(fixture)",
+    "  {\"$call\": {\"fn\": \"...\", \"args\": [...]}}    a composed call, resolved recursively",
+    "Case options: \"pluck\": \"transaction_id\" compares selected ids instead of whole rows;",
+    "\"throws\": \"substring\" expects a throw; \"legacy_compare\" additionally runs the ported",
+    "legacy is_it_smart and REQUIRES its answer to differ (spec_03 AC-5.5).",
+    "",
+    "The transfer sentinel category id is ec8e0085-8408-43a2-953f-ebba24549d96 (spec_03 §3.2)."
+  ],
+
+  "fixtures": {
+    "empty": [],
+
+    "singleRow": [
+      { "transaction_id": "s1", "date": "2024-03-11", "description": "CHECKERS HYPER", "amount_cents": -45678, "account": "cheque", "category": "sub-groceries", "transfer_account": "", "notes": "", "hash": "h-s1", "active": true }
+    ],
+
+    "mixed": [
+      { "transaction_id": "t1", "date": "2024-03-01", "description": "WOOLWORTHS SANDTON", "amount_cents": -12345, "account": "cheque", "category": "sub-groceries", "transfer_account": "", "notes": "", "hash": "h-t1", "active": true },
+      { "transaction_id": "t2", "date": "2024-03-15", "description": "SALARY", "amount_cents": 5500000, "account": "cheque", "category": "sub-salary", "transfer_account": "", "notes": "", "hash": "h-t2", "active": true },
+      { "transaction_id": "t3", "date": "2024-03-20", "description": "PICK N PAY", "amount_cents": -8990, "account": "cheque", "category": "sub-groceries", "transfer_account": "", "notes": "", "hash": "h-t3", "active": true },
+      { "transaction_id": "t4", "date": "2024-03-25", "description": "ATM CASH", "amount_cents": -200000, "account": "cheque", "category": null, "transfer_account": "", "notes": "", "hash": "h-t4", "active": true },
+      { "transaction_id": "t5", "date": "2024-03-28", "description": "REFUND", "amount_cents": 4500, "account": "cheque", "category": "", "transfer_account": "", "notes": "", "hash": "h-t5", "active": true }
+    ],
+
+    "posOnly": [
+      { "transaction_id": "p1", "date": "2024-04-01", "description": "SALARY", "amount_cents": 4200000, "category": "sub-salary" },
+      { "transaction_id": "p2", "date": "2024-04-02", "description": "INTEREST", "amount_cents": 1234, "category": "sub-salary" }
+    ],
+
+    "negOnly": [
+      { "transaction_id": "n1", "date": "2024-04-01", "description": "RENT", "amount_cents": -1500000, "category": "sub-housing" },
+      { "transaction_id": "n2", "date": "2024-04-02", "description": "FIBRE", "amount_cents": -99900, "category": "sub-housing" }
+    ],
+
+    "cancelsToZero": [
+      { "transaction_id": "z1", "date": "2024-04-01", "description": "PAID IN", "amount_cents": 250000, "category": null },
+      { "transaction_id": "z2", "date": "2024-04-02", "description": "PAID OUT", "amount_cents": -250000, "category": null }
+    ],
+
+    "zeroRows": [
+      { "transaction_id": "q1", "date": "2024-04-01", "description": "ZERO VALUE CORRECTION", "amount_cents": 0, "category": null },
+      { "transaction_id": "q2", "date": "2024-04-02", "description": "SMALL CREDIT", "amount_cents": 500, "category": null },
+      { "transaction_id": "q3", "date": "2024-04-03", "description": "SMALL DEBIT", "amount_cents": -200, "category": null }
+    ],
+
+    "driftTxns": [
+      { "transaction_id": "d1", "date": "2024-05-01", "description": "TEN CENTS", "amount_cents": 10, "category": null },
+      { "transaction_id": "d2", "date": "2024-05-01", "description": "TWENTY CENTS", "amount_cents": 20, "category": null },
+      { "transaction_id": "d3", "date": "2024-05-01", "description": "THIRTY CENTS", "amount_cents": 30, "category": null },
+      { "transaction_id": "d4", "date": "2024-05-01", "description": "SEVENTY OUT", "amount_cents": -70, "category": null },
+      { "transaction_id": "d5", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d6", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d7", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d8", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d9", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d10", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d11", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d12", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d13", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null },
+      { "transaction_id": "d14", "date": "2024-05-01", "description": "SEVEN CENTS", "amount_cents": 7, "category": null }
+    ],
+
+    "monthRows": [
+      { "transaction_id": "m-jan23-31", "date": "2023-01-31", "description": "JAN 31 2023", "amount_cents": -1000, "category": null },
+      { "transaction_id": "m-feb23-01", "date": "2023-02-01", "description": "FEB 1 2023", "amount_cents": -2000, "category": null },
+      { "transaction_id": "m-feb23-28", "date": "2023-02-28", "description": "FEB 28 2023 LAST DAY", "amount_cents": 3000, "category": null },
+      { "transaction_id": "m-mar23-01", "date": "2023-03-01", "description": "MAR 1 2023", "amount_cents": -4000, "category": null },
+      { "transaction_id": "m-dec23-31", "date": "2023-12-31", "description": "DEC 31 2023", "amount_cents": -5000, "category": null },
+      { "transaction_id": "m-jan24-01", "date": "2024-01-01", "description": "JAN 1 2024", "amount_cents": 6000, "category": null },
+      { "transaction_id": "m-jan24-31", "date": "2024-01-31", "description": "JAN 31 2024 LAST DAY", "amount_cents": -7000, "category": null },
+      { "transaction_id": "m-feb24-01", "date": "2024-02-01", "description": "FEB 1 2024", "amount_cents": -8000, "category": null },
+      { "transaction_id": "m-feb24-29", "date": "2024-02-29", "description": "LEAP DAY 2024", "amount_cents": 9000, "category": null },
+      { "transaction_id": "m-mar24-01", "date": "2024-03-01", "description": "MAR 1 2024", "amount_cents": -10000, "category": null },
+      { "transaction_id": "m-apr24-01", "date": "2024-04-01", "description": "APR 1 2024", "amount_cents": -11000, "category": null },
+      { "transaction_id": "m-apr24-30", "date": "2024-04-30", "description": "APR 30 2024 LAST DAY", "amount_cents": 12000, "category": null },
+      { "transaction_id": "m-may24-01", "date": "2024-05-01", "description": "MAY 1 2024", "amount_cents": -13000, "category": null }
+    ],
+
+    "transferRows": [
+      { "transaction_id": "tr-out", "date": "2024-06-01", "description": "TRANSFER TO SAVINGS", "amount_cents": -50000, "account": "cheque", "category": "ec8e0085-8408-43a2-953f-ebba24549d96", "transfer_account": "savings" },
+      { "transaction_id": "tr-in", "date": "2024-06-01", "description": "TRANSFER FROM CHEQUE", "amount_cents": 50000, "account": "savings", "category": "ec8e0085-8408-43a2-953f-ebba24549d96", "transfer_account": "cheque" },
+      { "transaction_id": "tr-groc", "date": "2024-06-02", "description": "SPAR TOP OP", "amount_cents": -9900, "account": "cheque", "category": "sub-groceries", "transfer_account": "" },
+      { "transaction_id": "tr-sal", "date": "2024-06-25", "description": "SALARY", "amount_cents": 120000, "account": "cheque", "category": "sub-salary", "transfer_account": "" }
+    ],
+
+    "subCats": [
+      { "sub_category_id": "sub-groceries", "name": "Groceries", "belongs_to": "cat-living", "order": 1, "roll_over": false },
+      { "sub_category_id": "sub-salary", "name": "Salary", "belongs_to": "cat-income", "order": 1, "roll_over": false },
+      { "sub_category_id": "sub-fuel", "name": "Fuel", "belongs_to": "cat-living", "order": 2, "roll_over": false },
+      { "sub_category_id": "sub-orphan", "name": "Orphan", "belongs_to": "", "order": 3, "roll_over": false }
+    ],
+
+    "twoSubsOneCat": [
+      { "transaction_id": "g1", "date": "2024-07-01", "description": "GROCERIES", "amount_cents": -20000, "category": "sub-groceries" },
+      { "transaction_id": "g2", "date": "2024-07-02", "description": "FUEL", "amount_cents": -70000, "category": "sub-fuel" },
+      { "transaction_id": "g3", "date": "2024-07-25", "description": "SALARY", "amount_cents": 3000000, "category": "sub-salary" }
+    ],
+
+    "unknownSub": [
+      { "transaction_id": "u1", "date": "2024-07-01", "description": "NOT IN SUBCATS", "amount_cents": -1000, "category": "sub-unknown" },
+      { "transaction_id": "u2", "date": "2024-07-02", "description": "GROCERIES", "amount_cents": -2000, "category": "sub-groceries" },
+      { "transaction_id": "u3", "date": "2024-07-03", "description": "ORPHANED SUB", "amount_cents": -3000, "category": "sub-orphan" }
+    ],
+
+    "allUncategorised": [
+      { "transaction_id": "x1", "date": "2024-08-01", "description": "UNKNOWN ONE", "amount_cents": -1500, "category": null },
+      { "transaction_id": "x2", "date": "2024-08-02", "description": "UNKNOWN TWO", "amount_cents": -2500, "category": "" }
+    ],
+
+    "smartShapeTxns": [
+      { "transaction_id": "si1", "date": "2024-02-01", "description": "AB CDE FGHI", "amount_cents": -100, "category": "sub-x" },
+      { "transaction_id": "si2", "date": "2024-01-15", "description": "cde extra", "amount_cents": -200, "category": "sub-x" },
+      { "transaction_id": "si3", "date": "2024-12-31", "description": "IGNORED ROW", "amount_cents": -300, "category": null },
+      { "transaction_id": "si4", "date": "2024-12-30", "description": "ALSO IGNORED", "amount_cents": -400, "category": "" }
+    ],
+
+    "tieTxns": [
+      { "transaction_id": "tie1", "date": "2024-01-05", "description": "ENGEN GARAGE MIDRAND", "amount_cents": -85000, "category": "sub-aaa-fuel" },
+      { "transaction_id": "tie2", "date": "2024-01-06", "description": "WOOLWORTHS FOOD MIDRAND MALL", "amount_cents": -42000, "category": "sub-bbb-groceries" },
+      { "transaction_id": "tie3", "date": "2024-02-10", "description": "WOOLWORTHS FOOD SANDTON", "amount_cents": -38000, "category": "sub-bbb-groceries" }
+    ],
+
+    "dateTieTxns": [
+      { "transaction_id": "dt1", "date": "2024-01-05", "description": "SPAR MARKET", "amount_cents": -12000, "category": "sub-aaa" },
+      { "transaction_id": "dt2", "date": "2024-06-20", "description": "SPAR CENTRAL", "amount_cents": -13000, "category": "sub-bbb" }
+    ],
+
+    "idTieTxns": [
+      { "transaction_id": "it1", "date": "2024-03-03", "description": "KWIKSPAR NORTH", "amount_cents": -5000, "category": "sub-zzz" },
+      { "transaction_id": "it2", "date": "2024-03-03", "description": "KWIKSPAR SOUTH", "amount_cents": -6000, "category": "sub-mmm" }
+    ],
+
+    "caseTxns": [
+      { "transaction_id": "ci1", "date": "2024-05-01", "description": "Vida e Caffe Rosebank", "amount_cents": -4500, "category": "sub-cafe" }
+    ]
+  },
+
+  "cases": [
+    { "name": "sum_empty_array_is_zero", "fn": "bxSum", "args": [[]], "expect": 0 },
+    { "name": "sum_single_value", "fn": "bxSum", "args": [[-45678]], "expect": -45678 },
+    { "name": "sum_positive_only_set", "fn": "bxSum", "args": [[4200000, 1234, 99]], "expect": 4201333 },
+    { "name": "sum_negative_only_set", "fn": "bxSum", "args": [[-1500000, -99900, -1]], "expect": -1599901 },
+    { "name": "sum_mixed_set_cancelling_to_zero", "fn": "bxSum", "args": [[250000, -250000]], "expect": 0 },
+    { "name": "sum_float_drift_guard_ten_plus_twenty_cents_is_exactly_30_not_30.000000000000004", "fn": "bxSum", "args": [[10, 20]], "expect": 30 },
+    { "name": "sum_float_drift_guard_ten_twenty_thirty_cents_is_exactly_60_not_60.00000000000001", "fn": "bxSum", "args": [[10, 20, 30]], "expect": 60 },
+    { "name": "sum_float_drift_guard_one_to_ten_cents_is_exactly_55_not_55.00000000000001", "fn": "bxSum", "args": [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]], "expect": 55 },
+    { "name": "sum_large_values_stay_exact_inside_safe_integer_range", "fn": "bxSum", "args": [[9007199254740000, 740]], "expect": 9007199254740740 },
+    { "name": "sum_rejects_a_non_integer_cent_value_instead_of_averaging_it_away", "fn": "bxSum", "args": [[100, 12.5]], "throws": "non-integer cents at index 1" },
+
+    { "name": "inflow_of_empty_is_zero", "fn": "bxInflow", "args": [{ "$ref": "empty" }], "expect": 0 },
+    { "name": "outflow_of_empty_is_zero", "fn": "bxOutflow", "args": [{ "$ref": "empty" }], "expect": 0 },
+    { "name": "net_of_empty_is_zero", "fn": "bxNet", "args": [{ "$ref": "empty" }], "expect": 0 },
+    { "name": "inflow_of_a_single_negative_row_is_zero", "fn": "bxInflow", "args": [{ "$ref": "singleRow" }], "expect": 0 },
+    { "name": "outflow_of_a_single_negative_row", "fn": "bxOutflow", "args": [{ "$ref": "singleRow" }], "expect": -45678 },
+    { "name": "inflow_of_mixed_set", "fn": "bxInflow", "args": [{ "$ref": "mixed" }], "expect": 5504500 },
+    { "name": "outflow_of_mixed_set_is_a_negative_integer", "fn": "bxOutflow", "args": [{ "$ref": "mixed" }], "expect": -221335 },
+    { "name": "net_of_mixed_set_equals_inflow_plus_outflow", "fn": "bxNet", "args": [{ "$ref": "mixed" }], "expect": 5283165 },
+    { "name": "inflow_of_a_negative_only_set_is_zero", "fn": "bxInflow", "args": [{ "$ref": "negOnly" }], "expect": 0 },
+    { "name": "outflow_of_a_positive_only_set_is_zero", "fn": "bxOutflow", "args": [{ "$ref": "posOnly" }], "expect": 0 },
+    { "name": "net_of_a_positive_only_set", "fn": "bxNet", "args": [{ "$ref": "posOnly" }], "expect": 4201234 },
+    { "name": "net_of_a_set_that_cancels_is_zero", "fn": "bxNet", "args": [{ "$ref": "cancelsToZero" }], "expect": 0 },
+    { "name": "a_zero_amount_row_is_neither_inflow_nor_outflow", "fn": "bxInflow", "args": [{ "$ref": "zeroRows" }], "expect": 500 },
+    { "name": "a_zero_amount_row_is_not_counted_as_outflow_either", "fn": "bxOutflow", "args": [{ "$ref": "zeroRows" }], "expect": -200 },
+    { "name": "inflow_float_drift_guard_over_transaction_rows_is_exactly_130", "fn": "bxInflow", "args": [{ "$ref": "driftTxns" }], "expect": 130 },
+    { "name": "net_float_drift_guard_over_transaction_rows_is_exactly_60", "fn": "bxNet", "args": [{ "$ref": "driftTxns" }], "expect": 60 },
+
+    { "name": "by_month_of_empty_is_empty", "fn": "bxByMonth", "args": [{ "$ref": "empty" }, 2024, 3], "pluck": "transaction_id", "expect": [] },
+    { "name": "by_month_28_day_february_includes_day_1_and_day_28_and_nothing_either_side", "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2023, 2], "pluck": "transaction_id", "expect": ["m-feb23-01", "m-feb23-28"] },
+    { "name": "by_month_leap_february_includes_the_29th", "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2024, 2], "pluck": "transaction_id", "expect": ["m-feb24-01", "m-feb24-29"] },
+    { "name": "by_month_30_day_april_includes_day_1_and_day_30_and_excludes_may_1", "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2024, 4], "pluck": "transaction_id", "expect": ["m-apr24-01", "m-apr24-30"] },
+    { "name": "by_month_31_day_january_includes_day_31_and_excludes_the_prior_dec_31", "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2024, 1], "pluck": "transaction_id", "expect": ["m-jan24-01", "m-jan24-31"] },
+    { "name": "by_month_year_boundary_december_excludes_the_next_january", "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2023, 12], "pluck": "transaction_id", "expect": ["m-dec23-31"] },
+    { "name": "by_month_month_argument_is_1_based_so_3_is_march", "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2024, 3], "pluck": "transaction_id", "expect": ["m-mar24-01"] },
+    { "name": "by_month_with_no_rows_in_that_month_is_empty", "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2024, 7], "pluck": "transaction_id", "expect": [] },
+    { "name": "by_month_then_outflow_over_leap_february", "fn": "bxOutflow", "args": [{ "$call": { "fn": "bxByMonth", "args": [{ "$ref": "monthRows" }, 2024, 2] } }], "expect": -8000 },
+
+    { "name": "days_in_month_non_leap_february_is_28", "fn": "bxDaysInMonth", "args": [2023, 2], "expect": 28 },
+    { "name": "days_in_month_leap_february_is_29", "fn": "bxDaysInMonth", "args": [2024, 2], "expect": 29 },
+    { "name": "days_in_month_century_1900_february_is_28", "fn": "bxDaysInMonth", "args": [1900, 2], "expect": 28 },
+    { "name": "days_in_month_400_year_2000_february_is_29", "fn": "bxDaysInMonth", "args": [2000, 2], "expect": 29 },
+    { "name": "days_in_month_april_is_30", "fn": "bxDaysInMonth", "args": [2024, 4], "expect": 30 },
+    { "name": "days_in_month_january_is_31", "fn": "bxDaysInMonth", "args": [2024, 1], "expect": 31 },
+
+    { "name": "group_by_sub_of_empty_is_an_empty_object", "fn": "bxGroupBySub", "args": [{ "$ref": "empty" }], "expect": {} },
+    { "name": "group_by_sub_of_a_single_row", "fn": "bxGroupBySub", "args": [{ "$ref": "singleRow" }], "expect": { "sub-groceries": -45678 } },
+    { "name": "group_by_sub_puts_uncategorised_under_the_null_key", "fn": "bxGroupBySub", "args": [{ "$ref": "mixed" }], "expect": { "sub-groceries": -21335, "sub-salary": 5500000, "null": -195500 } },
+    { "name": "group_by_sub_treats_an_empty_string_category_as_uncategorised", "fn": "bxGroupBySub", "args": [{ "$ref": "allUncategorised" }], "expect": { "null": -4000 } },
+    { "name": "group_by_sub_rolls_two_rows_of_the_same_sub_together", "fn": "bxGroupBySub", "args": [{ "$ref": "twoSubsOneCat" }], "expect": { "sub-groceries": -20000, "sub-fuel": -70000, "sub-salary": 3000000 } },
+
+    { "name": "group_by_cat_of_empty_is_an_empty_object", "fn": "bxGroupByCat", "args": [{ "$ref": "empty" }, { "$ref": "subCats" }], "expect": {} },
+    { "name": "group_by_cat_rolls_two_sub_categories_into_one_category", "fn": "bxGroupByCat", "args": [{ "$ref": "twoSubsOneCat" }, { "$ref": "subCats" }], "expect": { "cat-living": -90000, "cat-income": 3000000 } },
+    { "name": "group_by_cat_keeps_uncategorised_rows_in_the_null_bucket", "fn": "bxGroupByCat", "args": [{ "$ref": "mixed" }, { "$ref": "subCats" }], "expect": { "cat-living": -21335, "cat-income": 5500000, "null": -195500 } },
+    { "name": "group_by_cat_never_drops_money_from_an_unknown_or_orphaned_sub_category", "fn": "bxGroupByCat", "args": [{ "$ref": "unknownSub" }, { "$ref": "subCats" }], "expect": { "null": -4000, "cat-living": -2000 } },
+    { "name": "group_by_cat_with_no_sub_categories_at_all_buckets_everything_under_null", "fn": "bxGroupByCat", "args": [{ "$ref": "twoSubsOneCat" }, []], "expect": { "null": 2910000 } },
+
+    { "name": "exclude_transfers_drops_both_sentinel_rows", "fn": "bxExcludeTransfers", "args": [{ "$ref": "transferRows" }, "ec8e0085-8408-43a2-953f-ebba24549d96"], "pluck": "transaction_id", "expect": ["tr-groc", "tr-sal"] },
+    { "name": "exclude_transfers_with_a_null_sentinel_keeps_everything", "fn": "bxExcludeTransfers", "args": [{ "$ref": "transferRows" }, null], "pluck": "transaction_id", "expect": ["tr-out", "tr-in", "tr-groc", "tr-sal"] },
+    { "name": "exclude_transfers_of_empty_is_empty", "fn": "bxExcludeTransfers", "args": [{ "$ref": "empty" }, "ec8e0085-8408-43a2-953f-ebba24549d96"], "pluck": "transaction_id", "expect": [] },
+    { "name": "transfers_INCLUDED_inflate_inflow", "fn": "bxInflow", "args": [{ "$ref": "transferRows" }], "expect": 170000 },
+    { "name": "transfers_EXCLUDED_give_the_true_inflow", "fn": "bxInflow", "args": [{ "$call": { "fn": "bxExcludeTransfers", "args": [{ "$ref": "transferRows" }, "ec8e0085-8408-43a2-953f-ebba24549d96"] } }], "expect": 120000 },
+    { "name": "transfers_INCLUDED_inflate_outflow", "fn": "bxOutflow", "args": [{ "$ref": "transferRows" }], "expect": -59900 },
+    { "name": "transfers_EXCLUDED_give_the_true_outflow", "fn": "bxOutflow", "args": [{ "$call": { "fn": "bxExcludeTransfers", "args": [{ "$ref": "transferRows" }, "ec8e0085-8408-43a2-953f-ebba24549d96"] } }], "expect": -9900 },
+    { "name": "net_is_unchanged_by_excluding_a_matched_transfer_pair", "fn": "bxNet", "args": [{ "$call": { "fn": "bxExcludeTransfers", "args": [{ "$ref": "transferRows" }, "ec8e0085-8408-43a2-953f-ebba24549d96"] } }], "expect": 110100 },
+    { "name": "group_by_sub_after_excluding_transfers_has_no_sentinel_bucket", "fn": "bxGroupBySub", "args": [{ "$call": { "fn": "bxExcludeTransfers", "args": [{ "$ref": "transferRows" }, "ec8e0085-8408-43a2-953f-ebba24549d96"] } }], "expect": { "sub-groceries": -9900, "sub-salary": 120000 } },
+
+    { "name": "fmt_zero", "fn": "bxFmtCents", "args": [0], "expect": "R0.00" },
+    { "name": "fmt_one_cent", "fn": "bxFmtCents", "args": [1], "expect": "R0.01" },
+    { "name": "fmt_negative_one_cent_uses_parentheses", "fn": "bxFmtCents", "args": [-1], "expect": "(R0.01)" },
+    { "name": "fmt_ninety_nine_cents", "fn": "bxFmtCents", "args": [99], "expect": "R0.99" },
+    { "name": "fmt_one_rand", "fn": "bxFmtCents", "args": [100], "expect": "R1.00" },
+    { "name": "fmt_nine_rand_ninety_nine", "fn": "bxFmtCents", "args": [999], "expect": "R9.99" },
+    { "name": "fmt_ten_rand_exact", "fn": "bxFmtCents", "args": [1000], "expect": "R10.00" },
+    { "name": "fmt_thousands_separator", "fn": "bxFmtCents", "args": [123456], "expect": "R1,234.56" },
+    { "name": "fmt_negative_thousands_separator", "fn": "bxFmtCents", "args": [-123456], "expect": "(R1,234.56)" },
+    { "name": "fmt_millions_separator", "fn": "bxFmtCents", "args": [123456789], "expect": "R1,234,567.89" },
+    { "name": "fmt_large_negative_value", "fn": "bxFmtCents", "args": [-123456789012], "expect": "(R1,234,567,890.12)" },
+    { "name": "fmt_rejects_a_rand_float_instead_of_silently_rendering_it", "fn": "bxFmtCents", "args": [1234.56], "throws": "expects integer cents" },
+
+    { "name": "smart_index_of_empty_has_no_categories", "fn": "bxSmartIndex", "args": [{ "$ref": "empty" }], "expect": { "version": 1, "categories": {} } },
+    { "name": "smart_index_shape_words_last_date_and_txn_count", "fn": "bxSmartIndex", "args": [{ "$ref": "smartShapeTxns" }], "expect": { "version": 1, "categories": { "sub-x": { "words": { "cde": true, "fghi": true, "extra": true }, "last_date": "2024-02-01", "txn_count": 2 } } } },
+    { "name": "smart_index_lowercases_every_indexed_word", "fn": "bxSmartIndex", "args": [{ "$ref": "caseTxns" }], "expect": { "version": 1, "categories": { "sub-cafe": { "words": { "vida": true, "caffe": true, "rosebank": true }, "last_date": "2024-05-01", "txn_count": 1 } } } },
+    { "name": "smart_index_keeps_the_latest_date_across_two_rows_of_one_category", "fn": "bxSmartIndex", "args": [{ "$ref": "dateTieTxns" }], "expect": { "version": 1, "categories": { "sub-aaa": { "words": { "spar": true, "market": true }, "last_date": "2024-01-05", "txn_count": 1 }, "sub-bbb": { "words": { "spar": true, "central": true }, "last_date": "2024-06-20", "txn_count": 1 } } } },
+
+    {
+      "name": "suggest_beats_the_legacy_tie_bug_by_scoring_match_COUNT",
+      "fn": "bxSuggest",
+      "args": [{ "$index": "tieTxns" }, "WOOLWORTHS FOOD MIDRAND"],
+      "expect": { "sub_category_id": "sub-bbb-groceries", "score": 3 },
+      "legacy_compare": {
+        "fixture": "tieTxns",
+        "description": "WOOLWORTHS FOOD MIDRAND",
+        "legacy_expect": "sub-aaa-fuel",
+        "_why": "Legacy scores every matching category as exactly 1 and max() returns the first inserted, so it answers sub-aaa-fuel on the strength of the single word MIDRAND. bxSuggest matches WOOLWORTHS, FOOD and MIDRAND against sub-bbb-groceries for a score of 3. Note that sub-aaa-fuel also sorts FIRST by id, so the id tiebreak would give the legacy answer too — only the count-based score reaches the right one."
+      }
+    },
+    {
+      "name": "suggest_is_case_insensitive_where_the_legacy_finds_nothing",
+      "fn": "bxSuggest",
+      "args": [{ "$index": "caseTxns" }, "VIDA E CAFFE"],
+      "expect": { "sub_category_id": "sub-cafe", "score": 2 },
+      "legacy_compare": {
+        "fixture": "caseTxns",
+        "description": "VIDA E CAFFE",
+        "legacy_expect": null,
+        "_why": "The index was built from 'Vida e Caffe Rosebank'. The legacy match is case-sensitive so it returns None; bxSuggest lowercases both sides and scores 2 (vida, caffe — the one-letter 'e' is below the length-3 floor)."
+      }
+    },
+    { "name": "suggest_returns_null_when_nothing_matches", "fn": "bxSuggest", "args": [{ "$index": "mixed" }, "AIRPORT PARKING FEE"], "expect": null },
+    { "name": "suggest_returns_null_when_every_word_is_shorter_than_three_characters", "fn": "bxSuggest", "args": [{ "$index": "mixed" }, "a b cd"], "expect": null },
+    { "name": "suggest_returns_null_against_an_empty_index", "fn": "bxSuggest", "args": [{ "$index": "empty" }, "WOOLWORTHS SANDTON"], "expect": null },
+    { "name": "suggest_tiebreak_on_equal_score_prefers_the_most_recent_transaction", "fn": "bxSuggest", "args": [{ "$index": "dateTieTxns" }, "SPAR"], "expect": { "sub_category_id": "sub-bbb", "score": 1 } },
+    { "name": "suggest_tiebreak_on_equal_score_and_equal_date_prefers_sub_category_id_ascending", "fn": "bxSuggest", "args": [{ "$index": "idTieTxns" }, "KWIKSPAR"], "expect": { "sub_category_id": "sub-mmm", "score": 1 } },
+    { "name": "suggest_counts_a_repeated_word_once_so_it_cannot_inflate_a_score", "fn": "bxSuggest", "args": [{ "$index": "dateTieTxns" }, "SPAR SPAR SPAR"], "expect": { "sub_category_id": "sub-bbb", "score": 1 } },
+    { "name": "suggest_leads_with_a_strong_score_when_two_words_match", "fn": "bxSuggest", "args": [{ "$index": "mixed" }, "WOOLWORTHS SANDTON CITY"], "expect": { "sub_category_id": "sub-groceries", "score": 2 } }
+  ]
+}

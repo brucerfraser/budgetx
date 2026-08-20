@@ -1100,4 +1100,47 @@ Recorded so the round does not relitigate them.
 
 ## 12. ADDENDA
 
-*(none yet — corrections found during the build go here, dated, never edited into the text above)*
+**Addendum 1 — 2026-08-20 — §3.8.4's `accounts` count check is written against a stale reading.**
+§3.8.4 has the orchestrator verify that "`GET /build/counts` shows `accounts` at **9**, up by
+exactly two" after Bruce's park. Both `ZZ` rows were **already present at round start** — Bruce
+created them before the round opened — so the round-start reading is already **9** and this
+round's delta is **0, not +2**. The substance of AC-11.3 is unchanged and is judged as written:
+`accounts` must read **9 at round start and 9 at round end**, the two `ZZ` rows must match §3.8's
+field values exactly, and every pre-existing account row must be unchanged on every field the
+payload exposes. Only the arithmetic of the check changes, not what it proves.
+
+**Addendum 2 — 2026-08-20 — AC-1.6 cannot be satisfied without editing `ServerBuildTools.py`,
+which §3.0 assigns to nobody and AC-10.4 does not permit.**
+AC-1.6 requires `/build/version` to report `ServerTxn` at `v1`. But
+`ServerBuildTools._module_versions()` enumerates modules **explicitly**, one `try/import` branch
+per module — a new module is invisible to the endpoint until it is named there. `ServerTxn` is a
+new module, so with `ServerBuildTools` untouched the endpoint reports only `ServerBuildTools`,
+`ServerApi` and `ServerAppData`, and **AC-1.6 fails no matter what Builder S writes**. The file is
+not one of the five original server modules frozen by §2.3, and §2.4 freezes only `ServerApi`, so
+editing it breaks no stated prohibition — but AC-10.4's path list omits it.
+
+**Resolution:** the orchestrator adds the one `ServerTxn` branch (mirroring the existing
+`ServerAppData` one exactly, imported inside the function, never at module level) and bumps the
+module to **v3** with a history line. **AC-10.4's permitted path list gains
+`server_code/ServerBuildTools.py`.** This is the S02 Addendum 6 pattern repeating: a
+"the diff touches only" list written without noticing a file the round's own criteria require.
+
+**Addendum 3 — 2026-08-20 — `bx_calc.js` carries two deliberate additions beyond §3.3.**
+Recorded so neither looks like drift at review:
+1. **A 12th export, `bxDaysInMonth(y, m)`.** §3.3's table names 11. The month boundary is the
+   thing `bxByMonth` must get right, and a directly testable day count is how that is proven;
+   it is additive and golden-tested.
+2. **`bxSuggest` matching is case-insensitive.** §3.3 mandates three fixes to the legacy
+   `is_it_smart`; this is a fourth. The legacy is case-**sensitive**, so it misses `WOOLWORTHS`
+   against an index built from `Woolworths`, and bank descriptions arrive in inconsistent case.
+   The `length >= 3` test is applied to the word as written, before lowercasing. Golden case
+   `suggest_is_case_insensitive_where_the_legacy_finds_nothing` proves the improvement against
+   the legacy algorithm's own answer.
+
+**Addendum 4 — 2026-08-20 — `bxFmtCents` throws on non-integer input, by design.**
+Not a spec change; a behavioural contract worth recording because it binds every later round.
+`bxFmtCents(1234.56)`, `bxFmtCents(null)`, `bxFmtCents(undefined)` and `bxFmtCents("1234")` all
+raise `TypeError` rather than rendering. It is the tripwire for the 100× defect §0.1 and §11.1
+exist to prevent: a page that accidentally passes rands fails loudly instead of silently
+rendering every figure 100× too small. **The cost is that a page must guard its own missing
+values before formatting them**, which both client builders were told.

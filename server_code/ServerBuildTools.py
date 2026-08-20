@@ -1,10 +1,13 @@
-# ServerBuildTools — v2
+# ServerBuildTools — v3
 # Budget X build pipeline: upload/promote/list of app_versions, the /x serving route, and the
 # read-back instruments (/build/session, /build/counts) that prove a write actually landed.
 # History:
 #   v1  2026-08-19  Session 01 — created. upload/promote/list/version/session/counts and /x.
 #   v2  2026-08-20  Session 02 — upload stamps uploaded_by server-side; /build/list reports it;
 #                   /build/version also reports ServerAppData.
+#   v3  2026-08-20  Session 03 — /build/version also reports ServerTxn. Required by spec_03
+#                   AC-1.6; _module_versions() enumerates modules explicitly, so a new module
+#                   is invisible to the endpoint until it is named here. See spec_03 Addendum 2.
 #
 # DESIGN NOTES (read before editing)
 # - Self-contained: this module declares its own ApiError / api_http rather than importing
@@ -39,7 +42,7 @@ import traceback
 import uuid
 from datetime import datetime, timezone
 
-MODULE_VERSION = "v2"
+MODULE_VERSION = "v3"
 
 DEFAULT_SLUG = "x"
 DEFAULT_KIND = "html"
@@ -161,6 +164,12 @@ def _module_versions():
     except Exception:
         traceback.print_exc()
         versions["ServerAppData"] = "unavailable"
+    try:
+        import ServerTxn
+        versions["ServerTxn"] = ServerTxn.MODULE_VERSION
+    except Exception:
+        traceback.print_exc()
+        versions["ServerTxn"] = "unavailable"
     return versions
 
 

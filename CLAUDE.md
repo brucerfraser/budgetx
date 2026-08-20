@@ -151,6 +151,36 @@ must say which.
   must be byte-identical to the canon in the same commit, compared by hash — that is what stops
   two clients per screen drifting into two design languages.
 
+*(Session 03 — money, writes, and the client contract)*
+
+- **Money is integer cents everywhere.** The tables already store cents (`csv_handler.py` writes
+  `int(math.trunc(amount*100))` on import; every Forms screen divides by 100 to display), the wire
+  carries `amount_cents`, and `bx_calc.js` computes in cents. **Never multiply by 100 at a
+  boundary — the value is already scaled**; the conversion is a type cast, `int(round(amount))`.
+  A stray `*100` inflates every figure in the app 100×. **Never do float arithmetic on money.**
+- **`client_src/bx_calc.js` is the money core.** Every money figure in every client comes from it.
+  It is golden-tested under node and embedded byte-identically in every client. A round that needs
+  new arithmetic **adds a function and a golden case** — it does not compute money in a page.
+- **The four write rules**, binding on every endpoint that writes:
+  1. **The server owns identity and derived fields.** A caller-supplied id or hash is ignored,
+     never stored.
+  2. **Whitelist inputs, never blacklist.** Each endpoint accepts an exact key set; unknown keys
+     are ignored silently. There is no "update whatever you send".
+  3. **Every write returns the row it wrote, re-read from the table** — not the payload it was
+     given, and not the handle it wrote through. Anvil Row handles cache per handle.
+  4. **No hard deletes.** Soft-delete by preference; prove it by AST walk, not by grep.
+- **44 px minimum on every interactive control, on BOTH form factors** (Bruce, 2026-08-20). It is
+  a design-language rule, not a mobile-only one — desktop buttons and nav items included.
+- **The non-blocking fonts pattern is mandatory in every client** — `media="print"` +
+  `onload="this.media='all'"` + a `<noscript>` fallback. A render-blocking `<link rel="stylesheet">`
+  defers execution of every later `<script>`, including one at the end of `<body>`. **Measured on
+  this app in S02: 970 ms → 44 ms.**
+- **Embed checks compare by HASH, never containment.** S02 shipped `canon + "\n"` past a
+  containment check. Extract the block between exact delimiters and compare sha256.
+- **Any "the diff touches only these paths" criterion must name that round's `DEBRIEF_S<NN>.md`**
+  in its own path list. The debrief is written and committed as part of the round, so a list that
+  omits it fails against a tree that is correct (S02 Addendum 6).
+
 ---
 
 ## THE LOOP — how a build round runs

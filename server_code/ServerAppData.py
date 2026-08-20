@@ -1,7 +1,9 @@
-# ServerAppData — v1
+# ServerAppData — v2
 # Budget X app data for the HTML clients: one read-only bootstrap payload per page open.
 # History:
 #   v1  2026-08-20  Session 02 — created. GET /app/bootstrap (spec_02 §3.1, contract §4).
+#   v2  2026-08-20  Session 03 — GET /app/bootstrap gains the optional ?include=transactions
+#                   parameter and, only then, one new top-level key (spec_03 §3.2, §4.1–4.3).
 #
 # DESIGN NOTES (read before editing)
 # - Self-contained: this module declares its own ApiError / api_http / require_session /
@@ -29,7 +31,28 @@
 #   both index the same way), so the payload shape is testable off-platform against
 #   scratch/s02/fixtures/bootstrap.json without a database.
 # - The response key-set is the frozen contract of spec_02 §4. Future rounds may ADD keys;
-#   they may never rename or repurpose one. No amount appears in this payload.
+#   they may never rename or repurpose one.
+#
+# v2 — THE ONE ADDITIVE CHANGE (spec_03 §3.2, AC-1.1/1.2/1.3)
+# - GET /app/bootstrap gains ONE optional query parameter, `include`. Only the exact value
+#   "transactions" does anything; ANY other value, and no query string at all, returns a body
+#   whose key-set is EXACTLY v1's, with no `transactions` key present. AC-1.1 and AC-1.3 check
+#   that programmatically, and it is what keeps d-dash / m-dash honest.
+# - The extra key is added by rebuilding the payload as a NEW dict literal, never by assigning
+#   into the existing one — see the subscript-assignment ban above.
+# - The set returned is every row where `active` IS NOT FALSE (spec_03 §4.3). Bruce's schema
+#   click adds `active` without touching the ~1,300 existing rows, so they read None, and None
+#   means "predates soft-delete", which is to say ACTIVE. A `is True` test here would hide all
+#   ~1,300 of Bruce's transactions; it is the single most likely serious defect in round 03 and
+#   it has its own criterion. is_active() is the ONE place the test is written.
+# - There is no windowing: the whole history goes in one call, because the clients do all
+#   display maths locally and every later screen needs the same set (spec_03 §11.3).
+# - MONEY IS INTEGER CENTS. The `amount` column ALREADY holds cents (csv_handler.make_ready
+#   does int(math.trunc(x*100)) on import; the Forms UI divides by 100 to display), so the
+#   wire conversion is a TYPE cast — int(round(stored)) — and NEVER a multiply by 100. The
+#   legacy float name `amount` does not appear on the wire; the wire name is amount_cents.
+# - The transaction serialiser is DUPLICATED here and in ServerTxn rather than imported, per
+#   the self-contained-module rule. scratch/s03/shape_check.py asserts the two agree.
 
 import anvil.server
 from anvil.tables import app_tables
@@ -40,7 +63,7 @@ import re
 import traceback
 from datetime import date, datetime, timezone
 
-MODULE_VERSION = "v1"
+MODULE_VERSION = "v2"
 
 # The Transfer sentinel category. Hardcoded in six client_code files today; from here on the
 # clients read it from this one constant so it stops being a magic string (spec_02 §4).
@@ -292,6 +315,119 @@ def serialise_settings(row):
     }
 
 
+# ---------------------------------------------------------------------------------------------
+# v2 — the transaction object (spec_03 §4.2). Pure over plain mappings, like everything above.
+# ---------------------------------------------------------------------------------------------
+
+
+def _nullable_text(value):
+    """A JSON string or null, for `category` and `transfer_account` — the transaction object's
+    only nullable fields. An empty stored string normalises to null: the Forms app writes both
+    None and "" for "no category", and the contract has one spelling for absent."""
+    if value is None:
+        return None
+    text = value if isinstance(value, str) else str(value)
+    return text if text != "" else None
+
+
+def _iso_date_text(value):
+    """A date column as ISO YYYY-MM-DD, or "" — the transaction contract types `date` as a
+    string, so a null column must not emit null. datetime is a subclass of date and is tested
+    first."""
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.date().isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    text = str(value).strip()
+    return text[:10] if text else ""
+
+
+def _active_raw(row):
+    """The raw `active` column: True, False or None.
+
+    None covers BOTH "the column exists and this legacy row was never touched" and "the column
+    is not there yet" (before Bruce's click). Both mean active.
+    """
+    try:
+        value = row["active"]
+    except Exception:
+        return None
+    return value if value is True or value is False else None
+
+
+def is_active(row):
+    """The active test, in ONE place so it cannot drift: `is not False` — NEVER `is True`."""
+    return _active_raw(row) is not False
+
+
+def _amount_cents(value, anomalies=None, transaction_id=None):
+    """The stored `amount` column as the contract's integer cents.
+
+    A TYPE cast, not a SCALE conversion — the column already holds cents. NEVER multiply by
+    100 here. A non-integral stored value is a pre-existing data defect: it is rounded and the
+    row is collected so the round can list it, but no key is added to the payload for it.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        if anomalies is not None:
+            anomalies.append((transaction_id, value))
+        return 0
+    if isinstance(value, float):
+        if value.is_integer():
+            return int(value)
+        if anomalies is not None:
+            anomalies.append((transaction_id, value))
+        return int(round(value))
+    return int(value)
+
+
+def serialise_transaction(row, anomalies=None):
+    """The spec_03 §4.2 transaction object — exactly these ten keys, no extras, no omissions."""
+    transaction_id = _text(_get(row, "transaction_id"))
+    return {
+        "transaction_id": transaction_id,
+        "date": _iso_date_text(_get(row, "date")),
+        "description": _text(_get(row, "description")),
+        "amount_cents": _amount_cents(_get(row, "amount", 0), anomalies, transaction_id),
+        "account": _text(_get(row, "account")),
+        "category": _nullable_text(_get(row, "category")),
+        "transfer_account": _nullable_text(_get(row, "transfer_account")),
+        "notes": _text(_get(row, "notes")),
+        "hash": _text(_get(row, "hash")),
+        "active": is_active(row),
+    }
+
+
+def _transaction_sort_key(txn):
+    """Row order IS part of the contract (spec_03 §4.2): `date` descending, then
+    `transaction_id` ascending — a total order, so two calls are diffable. Dates compare as the
+    integer YYYYMMDD, negated for the descending leg; a blank date sorts last."""
+    iso = txn["date"]
+    if len(iso) == 10 and iso[4] == "-" and iso[7] == "-":
+        try:
+            return (0, -int(iso[0:4] + iso[5:7] + iso[8:10]), txn["transaction_id"])
+        except ValueError:
+            pass
+    return (1, 0, txn["transaction_id"])
+
+
+def build_transactions_payload(rows, anomalies=None):
+    """Every row where `active` is not False, serialised and sorted by the contract order."""
+    return sorted(
+        [serialise_transaction(r, anomalies) for r in rows if is_active(r)],
+        key=_transaction_sort_key,
+    )
+
+
+def wants_transactions(include):
+    """True only for the exact value "transactions". Any other value — and no query string at
+    all — leaves the v1 key-set untouched (spec_03 AC-1.1/1.3)."""
+    if not isinstance(include, str):
+        return False
+    return include.strip().lower() == "transactions"
+
+
 def build_bootstrap_payload(email, server_date, accounts, categories, sub_categories,
                             settings_row):
     """The frozen contract of spec_02 §4 — exactly these eight keys, no extras, no omissions.
@@ -352,15 +488,27 @@ def _settings_row():
     return rows[0] if len(rows) == 1 else None
 
 
+def _report_amount_anomalies(anomalies):
+    """Non-integral stored cents are a pre-existing data defect worth knowing about. They go to
+    the Anvil app log — never into the payload, whose key-set is frozen."""
+    for transaction_id, value in anomalies or []:
+        print("ServerAppData: non-integral stored amount on transaction_id=%s value=%r"
+              % (transaction_id, value))
+
+
 @api_http("/app/bootstrap", methods=["GET"])
-def api_app_bootstrap(**kwargs):
+def api_app_bootstrap(include=None, **kwargs):
     """Everything a client shell needs, in ONE call — the standing one-fetch-per-page-open rule.
 
     Read-only: search() and get() only. Nothing in this handler, or anywhere in this module,
-    creates, updates or deletes a row.
+    creates, changes or removes a row.
+
+    v2: with ?include=transactions the payload gains ONE extra top-level key. With any other
+    include value, or none, the key-set is exactly v1's. The extra key is added by building a
+    NEW dict from the old one, never by assigning into it.
     """
     user = require_auth()
-    return build_bootstrap_payload(
+    payload = build_bootstrap_payload(
         email=_text(_get(user, "email")),
         server_date=_now().date().isoformat(),
         accounts=list(app_tables.accounts.search()),
@@ -368,3 +516,10 @@ def api_app_bootstrap(**kwargs):
         sub_categories=list(app_tables.sub_categories.search()),
         settings_row=_settings_row(),
     )
+    if not wants_transactions(include):
+        return payload
+    anomalies = []
+    transactions = build_transactions_payload(
+        list(app_tables.transactions.search()), anomalies)
+    _report_amount_anomalies(anomalies)
+    return {**payload, "transactions": transactions}
