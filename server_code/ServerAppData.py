@@ -4,6 +4,11 @@
 #   v1  2026-08-20  Session 02 — created. GET /app/bootstrap (spec_02 §3.1, contract §4).
 #   v2  2026-08-20  Session 03 — GET /app/bootstrap gains the optional ?include=transactions
 #                   parameter and, only then, one new top-level key (spec_03 §3.2, §4.1–4.3).
+#   v2  2026-08-20  Session 03, in-round repair — every table read is prefetched with
+#                   q.fetch_only() instead of being resolved lazily one row at a time. No
+#                   behaviour, key, type or order change (spec_03 AC-13.6, the 1-second rule).
+#                   The stamp stays v2 ON PURPOSE: spec_03 AC-1.6 pins /build/version to
+#                   ServerAppData v2, so this repair is folded into v2 rather than bumping it.
 #
 # DESIGN NOTES (read before editing)
 # - Self-contained: this module declares its own ApiError / api_http / require_session /
@@ -53,9 +58,38 @@
 #   legacy float name `amount` does not appear on the wire; the wire name is amount_cents.
 # - The transaction serialiser is DUPLICATED here and in ServerTxn rather than imported, per
 #   the self-contained-module rule. scratch/s03/shape_check.py asserts the two agree.
+#
+# THE PREFETCH (spec_03 AC-13.6; no contract change of any kind) — added in the v2 repair
+# - A bare search() hands back rows whose column data is resolved LAZILY. The serialiser then
+#   touches ~10 columns on each of ~1,300 transactions, and the cost is paid per row, not per
+#   query: measured 2026-08-20 against live, ?include=transactions ran p50 10,457 ms
+#   (7,838–14,826) for a 404,192-byte body while the same call without it ran p50 829 ms. The
+#   body is small; the row walk is what costs. q.fetch_only() names the columns up front so the
+#   data arrives with the search instead of being chased row by row.
+# - fetch_only names columns, and NAMING A COLUMN THE LIVE SCHEMA DOES NOT HAVE IS AN ERROR.
+#   `active` is exactly that column until Bruce's schema click lands, so the prefetch is tried
+#   as a LADDER: the fullest column list first, then the same list without `active`, then a
+#   bare search(). Each rung is attempted inside list(), because a lazy fetch would otherwise
+#   escape the try during iteration. The endpoint therefore degrades to correct-but-slower, and
+#   never to broken, whatever the schema state — and it needs no edit on the day of the click.
+# - The prefetch is a READ optimisation only. is_active() still tests `is not False`, so a row
+#   fetched WITHOUT the active column reads None -> active, the same answer the pre-repair
+#   code gave. Nothing about the payload changes: same eight (or nine) keys, same ten
+#   transaction keys, same integer cents, same date-DESC/transaction_id-ASC order.
 
 import anvil.server
 from anvil.tables import app_tables
+
+# The query helpers are imported DEFENSIVELY. This module's standing guarantee is that it
+# imports cleanly in any environment — a module that fails to import takes its endpoint down
+# with it (spec_01 AC-1.4, learned in S01), and the off-platform shape gate imports it under
+# stub anvil modules that have no `query` submodule. If the import fails, `q` is None, every
+# fetch_only rung of the ladder below raises AttributeError, and _prefetched falls through to a
+# plain search() — the exact pre-repair behaviour. Slower, never broken.
+try:
+    from anvil.tables import query as q
+except Exception:
+    q = None
 
 import hashlib
 import json
@@ -465,6 +499,49 @@ def build_bootstrap_payload(email, server_date, accounts, categories, sub_catego
 # The endpoint. Table access lives here and nowhere above.
 # ---------------------------------------------------------------------------------------------
 
+# The prefetch column ladders. Each is the exact column set the matching serialiser reads,
+# most-complete first, ending in () which means "plain search(), no fetch_only". A rung naming a
+# column the live schema does not have simply fails and the next rung is tried, so this file
+# needs no edit on the day `transactions.active` lands. These are plain tuples of strings; a
+# module-level constant is not a table access (see the DESIGN NOTES).
+TRANSACTION_COLUMN_LADDER = (
+    ("transaction_id", "date", "description", "amount", "account", "category",
+     "transfer_account", "notes", "hash", "active"),
+    ("transaction_id", "date", "description", "amount", "account", "category",
+     "transfer_account", "notes", "hash"),
+    (),
+)
+ACCOUNT_COLUMN_LADDER = (("acc_id", "acc_name", "archived"), ())
+CATEGORY_COLUMN_LADDER = (("category_id", "name", "colour_back", "colour_text", "order"), ())
+SUB_CATEGORY_COLUMN_LADDER = (
+    ("sub_category_id", "name", "icon", "belongs_to", "order", "roll_over", "roll_over_date"),
+    (),
+)
+
+
+def _prefetched(table, ladder):
+    """Every row of `table`, with the columns the serialiser reads fetched in ONE pass instead of
+    being resolved lazily row by row.
+
+    Read-only — search() and nothing else. list() is inside the try on purpose: the fetch a bad
+    column set provokes happens during iteration, so a lazier form would let it escape.
+
+    The LAST rung is deliberately outside the try. Falling all the way through means the table
+    itself is unreadable, and that must surface as an error, not as an empty result that quietly
+    drops every row from the payload.
+    """
+    rungs = list(ladder)
+    for columns in rungs[:-1]:
+        try:
+            return list(table.search(q.fetch_only(*columns)))
+        except Exception as err:
+            print("ServerAppData: prefetch of (%s) unavailable — %s: %s; trying the next rung"
+                  % (", ".join(columns), type(err).__name__, err))
+    last = rungs[-1]
+    if last:
+        return list(table.search(q.fetch_only(*last)))
+    return list(table.search())
+
 
 def _settings_row():
     """The single settings row, or None.
@@ -506,20 +583,23 @@ def api_app_bootstrap(include=None, **kwargs):
     v2: with ?include=transactions the payload gains ONE extra top-level key. With any other
     include value, or none, the key-set is exactly v1's. The extra key is added by building a
     NEW dict from the old one, never by assigning into it.
+
+    The prefetch repair: every search goes through _prefetched(). Same rows, same order, same
+    keys — the columns simply arrive with the query instead of one row at a time.
     """
     user = require_auth()
     payload = build_bootstrap_payload(
         email=_text(_get(user, "email")),
         server_date=_now().date().isoformat(),
-        accounts=list(app_tables.accounts.search()),
-        categories=list(app_tables.categories.search()),
-        sub_categories=list(app_tables.sub_categories.search()),
+        accounts=_prefetched(app_tables.accounts, ACCOUNT_COLUMN_LADDER),
+        categories=_prefetched(app_tables.categories, CATEGORY_COLUMN_LADDER),
+        sub_categories=_prefetched(app_tables.sub_categories, SUB_CATEGORY_COLUMN_LADDER),
         settings_row=_settings_row(),
     )
     if not wants_transactions(include):
         return payload
     anomalies = []
     transactions = build_transactions_payload(
-        list(app_tables.transactions.search()), anomalies)
+        _prefetched(app_tables.transactions, TRANSACTION_COLUMN_LADDER), anomalies)
     _report_amount_anomalies(anomalies)
     return {**payload, "transactions": transactions}
