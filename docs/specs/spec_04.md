@@ -2363,3 +2363,183 @@ hazard the spec had budgeted for**:
   sub-categories**. This is what names the drive month in Addendum 3, and it means the
   absent-chip case must be proven on §3.13 row 9's far-future pair as the spec already designed
   (or on any month whose predecessor is one of the eight zero months).
+
+### Addenda 5–10 — 2026-08-21 (Orchestrator, on findings from Builders C and S) — six ambiguities ruled, so two independent implementations converge
+
+Builder C (`bx_calc.js`) and Builder S (`/budget/summary`) are deliberately written from the spec
+text without reference to each other — that independence is what makes AC-5.4's agreement
+evidence. It only works if the spec text is decidable. Six clauses were not. Each is ruled below
+and both builders were given the ruling, so they converge on **the spec's** reading rather than
+each picking a defensible side.
+
+**Addendum 5 — `over_fraction` is clamped to `[0, 1]`; `over_ratio` stays uncapped.**
+§4.6 states that `fraction` and `over_fraction` are "capped at 1 for layout" and that `over_ratio`
+is the uncapped one. Read literally, the **income** table's row 7 with an anomalous **negative**
+target yields `over_fraction = min((E − T) / T, 1) = −1` — not a cap, and a value that would drive
+a meter fill backwards. So `over_fraction` is `max(0, min(ratio, 1))` on **both** tables.
+`over_ratio` is unchanged: uncapped, and free to be negative on such an input, because it is the
+diagnostic value and `data-over` carries it. §3.1 measurement 11 found **zero** sign anomalies
+live, so nothing reachable hits this path today; it is fixed because `neg_pos` only ever ran on a
+legacy *save*, so the state remains representable.
+
+**Addendum 6 — archived CATEGORIES are excluded from `totals`, but still reported in
+`categories[]`.** §4.4 names archived sub-categories, transfers and orphans, and is silent on
+archived *categories*. §3.9 is not silent: *"Archived categories and sub-categories are hidden by
+default and excluded from every total (fact 5)."* So an archived category's still-`active`
+sub-categories contribute **nothing** to `totals.income` / `totals.expense`. This is a
+live-reachable state and not a fixture artefact — `/cat/archive` deliberately leaves the
+sub-categories `active: true` (§3.2), because cascading would not be reversible. The archived
+category is **still emitted in `categories[]`** with its own figures and `active: false`, because
+the "Archived (n)" affordance renders them.
+
+*Found by cross-checking `bxHeaderTotals` against the orchestrator's independent Python on fixture
+month 2025-10: −6,020,000 versus −5,745,000, a difference of exactly the archived category's
+−275,000.*
+
+**Addendum 7 — an ORPHAN reaches the pool, but not the category roll-ups.** §4.4 excludes orphans
+from `categories[]` and `totals` and counts them under `excluded.orphans`. §4.5A rule 3 enumerates
+its **own** exclusions — active, non-transfer, expense, and has-a-budget-row — and orphans are not
+among them. So a sub-category whose `belongs_to` matches no category is not income, is therefore
+an expense, and **does** contribute its `overspent` to `carried_overspend` and its absolute month
+budget to `assigned`. Builder C and the orchestrator derived this independently and agree.
+§3.1 measurement 9 found **zero** orphans live.
+
+**Addendum 8 — `bxSubTotals` omits the transfer sentinel.** §3.3 describes `bxSubTotals` as
+covering "every **active** sub-category", but §4.4 requires the category roll-up and the header
+totals to exclude transfer rows, and `bxCatTotals` takes no `transferCategoryId` argument. The
+exclusion is therefore in `bxSubTotals` or nowhere. It is in `bxSubTotals`.
+
+**Addendum 9 — `budget_present` carries the null/zero distinction; `budget_cents` is always an
+integer.** A sub-category with no budget row for the month serialises `budget_cents: 0` **and**
+`budget_present: false`, never `null`, in both `/budget/summary` and `bxSubTotals`. §4.4 already
+says so; it is restated because §3.3's `bxBudget` returns `null` for the same state and the two
+must not be confused. `bxBudget`'s `null` is unchanged — it is what §3.9 renders as "no budget
+set" rather than "R0.00".
+
+### Addendum 17 — 2026-08-21 (Orchestrator) — one leftover round-03 test row defeats §0 ruling 1, and is archived
+
+**The finding.** `bxDefaultMonth` on the **live** payload returns **2026-08** — a month holding
+**one** transaction and **zero** budget rows. The one transaction is
+`74f7a3a5-c7f9-4671-98c7-bf6781453b03`, **"ZZ S03 cents probe"**, `amount_cents` 12345, created by
+round 03 as AC-2.5's and AC-9.5's evidence and deliberately left `active` (DEBRIEF_S03, "Live rows
+left behind, declared": *"Bruce can archive the probe from the new Transactions screen whenever he
+likes"*).
+
+**The function is not wrong.** §0 ruling 1 defines the default month as the most recent month
+holding at least one transaction, and 2026-08 holds one. `bxDefaultMonth` is behaving exactly as
+specified, and AC-6.1 and AC-5.8 would pass against 2026-08.
+
+**But the outcome is precisely the one ruling 1 was written to prevent.** Round 03 shipped an app
+that opened on a month holding zero rows with 1,300 transactions six months behind it; that is
+quoted verbatim in §0 ruling 1 as the reason the rule exists. Shipping round 04 opening on a month
+holding a single stale test row is the same defect with a smaller number in it.
+
+**The resolution — archive the probe, do not weaken the definition.** This is a **data** problem,
+not a code problem, and the fix belongs in the data:
+
+- `POST /txn/archive` on that one row — **soft, reversible** (`/txn/restore`), and squarely inside
+  what §2.7 permits (*"`transactions`: writable, real rows included"*). It is a `ZZ`-prefixed test
+  row from a previous round, not one of Bruce's records.
+- It is **ledgered as a round-04 write** with its reason, and declared in the debrief, exactly as
+  §3.13 row 7 is archived at round close for the same kind of tidiness reason.
+- **It is done BEFORE the reviewers drive**, not after, so the verdicts describe the app as it
+  actually ships. Changing data underneath a running gate is forbidden (CLAUDE.md: freeze promotes
+  while a reviewer is running); changing it beforehand and declaring it is not.
+- **`bxDefaultMonth`'s definition is untouched.** After the archive the live default month is
+  **2026-02** — 10 transactions and 14 budget rows, a real month.
+
+**Not weakened, and recorded as the alternative that was rejected:** the round could have left the
+row and reported the behaviour as correct-by-definition. That would have been true and useless —
+the first thing Bruce sees on opening the app is the thing the round is judged on.
+
+### Addendum 16 — 2026-08-21 (Orchestrator, on a finding from Builder D) — the deep-link contract the spec assumes but never defines
+
+**The gap.** §3.9 requires `d-budget` and `m-budget` to link **into that month's transactions** in
+three places: the carried chip's sheet ("each linking to that month's transactions"), the detail
+rail ("a link to that sub-category's transactions for the month in `d-trans`"), and the
+uncategorised banner ("linking straight into `d-trans`'s triage inbox"). AC-6.12 judges the first.
+**But `d-trans` and `m-trans` accept no parameters at all** — they open on `bxDefaultMonth` and
+show everything — so a bare `?slug=d-trans` link cannot reach "that month", and §2.9 forbids
+changing the re-cut clients' behaviour beyond the §3.11 carry-fixes.
+
+Builder D was right not to invent a contract silently, and right to flag it rather than let the
+link quietly mean something weaker than the spec says.
+
+**The resolution.** §3.9's requirement is explicit and §2.9's freeze exists to prevent *regression*,
+not to prevent a named, specified addition. So the contract is defined here, once, for both
+transaction clients:
+
+```
+/_/api/x?slug=<d-trans|m-trans>[&month=YYYY-MM][&sub=<sub_category_id>][&filter=uncategorised]
+```
+
+- **Every parameter is optional, and an unrecognised or malformed one is ignored silently** — the
+  page must never fail to render because of a query string.
+- **`month`** — if it matches `^\d{4}-(0[1-9]|1[0-2])$`, the month selector initialises to it
+  **instead of** `bxDefaultMonth()`. Otherwise `bxDefaultMonth()` stands. §0 ruling 1 is unchanged:
+  it remains the default, and this is an explicit override, not a second definition.
+- **`sub`** — if it names a sub-category present in the payload, the list is filtered to that
+  sub-category and the active filter is **visible and clearable**. An unknown id is ignored.
+- **`filter=uncategorised`** — opens the triage inbox / uncategorised filter.
+- **No additional network request.** The page still makes exactly one bootstrap fetch; the
+  parameters only choose the initial view of a payload it was going to fetch anyway, so AC-13.1
+  is unaffected.
+
+**This is a behaviour addition to `d-trans` and `m-trans` beyond §3.11's carry-fixes**, and it is
+declared here for that reason. Spec_03's AC-6, AC-8 and AC-14 are re-run against the re-cut builds
+per AC-10.7 and must still pass **with no parameters present**, which is the state they were
+written against.
+
+### Addenda 11–15 — 2026-08-21 (Orchestrator, on findings from Builder S) — five more ruled
+
+**Addendum 11 — `roll_over_date` is accepted as `YYYY-MM` *or* `YYYY-MM-DD`, and always serialised
+as `YYYY-MM-DD`.** §3.2's `/subcat/create` and `/subcat/update` contract the input as
+`"YYYY-MM|null"`; §4.2 serialises the output as `"YYYY-MM-DD|null"`. As written, **a client that
+reads a sub-category and writes it straight back would be rejected by its own payload** — a
+round-trip the UI performs on every roll-over edit. Both forms are therefore accepted on input; a
+bare `YYYY-MM` stores the **first of that month**, which is what the legacy column already holds
+everywhere. Output is unchanged: always `YYYY-MM-DD`.
+
+**Addendum 12 — `excluded.transfers` counts SUB-CATEGORY rows, and on this app it is structurally
+always `0`.** §4.4 gives `excluded` three counters and states the unit for only one of them
+(`archived_sub_categories`). `transfers` counts the same unit as its siblings — sub-category rows
+dropped from the roll-ups. **The consequence must be stated rather than discovered:** §3.1
+measurement 3 established that the sentinel is a `categories` row with **no** `sub_categories`
+children, so no sub-category is ever excluded as a transfer and the counter reads `0` for ever —
+while **12 live transactions really are being dropped** from every `spent` figure and are not
+represented anywhere in `excluded`. §4.4's key-set is pinned by AC-5.12 and may not gain a key
+this round, so this is recorded as a **known gap in the instrument, not a defect in the
+arithmetic**. Round 05 should add a transaction-level counter when it is free to extend the shape.
+
+**Addendum 13 — "a month with no data" means no budget row AND no active, non-transfer
+transaction.** §3.2 and AC-5.12 require such a month to return `200` with zero-filled totals,
+**empty arrays**, and a full thirteen-field `available`. The predicate was unstated. It is: the
+month holds neither a `budgets` row nor an active transaction that survives transfer exclusion.
+A month holding transactions but no budget rows is **not** empty and lists every row — which is
+the §4.5A rule 3 state §5 deliberately includes. *(The orchestrator's independent Python had this
+wrong and was corrected to the spec text, not to Builder S's code.)*
+
+**Addendum 14 — `/budget/notes` refuses a duplicate `(belongs_to, period)` pair, exactly as
+`/budget/amount` does.** §3.2 gives the duplicate guard only to `/budget/amount`. Writing to one
+of two duplicate rows is the same hazard whichever column is being written, and picking one is
+precisely what the legacy does (fact 3). Both endpoints return
+`400 {"error": "bad_request", "detail": "duplicate budget rows for that sub-category and month"}`
+and write nothing.
+
+**Addendum 15 — the transfer sentinel cannot be archived or restored.** No criterion touches it
+and §3.2 does not mention it, but `/cat/restore` on `ec8e0085-…` would hand the Forms app a live
+spending category called `Transfer`, with a real `order`, on Bruce's own budget screen. Both
+operations return `400`. Recorded because it is a guard the spec did not ask for.
+
+**Also settled, without needing an addendum:** §4.5's branches are listed A, B, C, D, and an income
+sub-category with `roll_over: false` satisfies both A and C. **C wins** — §4.5's own rationale says
+the closing rule is defined for negative expense figures only, and AC-5.7 wants `supported: false`
+unconditionally. Builder C, Builder S and the orchestrator's Python all read it that way
+independently.
+
+**Addendum 10 — on a duplicate `(belongs_to, period)` pair, every READ takes the smallest cents
+value, deterministically.** `POST /budget/amount` refuses to write against a duplicate outright
+(§3.2), but §4.5's arithmetic has no rule and `/budget/summary`, `GET /build/budget-audit` and
+`bx_calc.js` must all still answer. All three take the **smallest** value — arbitrary, but
+deterministic, so two runs and three instruments agree — and never repair. §3.1 measurement 5
+found **zero** duplicates live, so this is a guard rather than a live path.

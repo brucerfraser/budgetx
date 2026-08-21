@@ -89,7 +89,7 @@ not the design.
 | `x` | Entry + login. One page, both form factors. The only login surface. | 01 placeholder · 02 real |
 | `d-dash` / `m-dash` | Dashboard shell — nav, auth, one bootstrap fetch | 02 |
 | `d-trans` / `m-trans` | Transactions | 03 |
-| `d-budget` / `m-budget` | Budget | 04–07 |
+| `d-budget` / `m-budget` | Budget | 04 |
 | `d-reports` / `m-reports` | Reports (`Reporting.py`, 1,046 lines — its own round) | 04–07 |
 | `d-settings` / `m-settings` | Settings | 04–07 |
 | `zz-*` | Throwaway build/review slugs. Never promoted to a real name. | any |
@@ -136,6 +136,18 @@ must say which.
   server-side**, and every money figure must remain reproducible by independent recomputation from
   the raw rows.
 
+*(Bruce, 2026-08-21 — the overspend model, and it is a PRODUCT rule)*
+
+- **Budget X is for an individual, not a set of corporate accounts.** **No budget category ever
+  carries a debt** — each month it starts from its own budget again. **An overspend is never
+  discarded either:** it is deducted **once** from the following month's available-to-budget pool,
+  **it does not chain** past that month, **underspend never nets it off**, and it is shown as one
+  quiet past-tense line that **stops being shown once the month is back in balance**. **Income
+  that was budgeted and did not arrive is treated the same way, one month later, and named
+  separately** — the current month always plans against **PLANNED** income in full, because late
+  money is not lost money. **Cumulative variance is a Reports question, not a Budget-screen one.**
+  Every later money round has to honour this. *(spec_04 §0 rulings 5 and 6, §4.5A.)*
+
 *(Bruce, 2026-08-20 — the beauty mandate)*
 
 - **The clients must be beautiful, not merely correct.** This app talks to a person about their
@@ -180,6 +192,32 @@ must say which.
 - **Any "the diff touches only these paths" criterion must name that round's `DEBRIEF_S<NN>.md`**
   in its own path list. The debrief is written and committed as part of the round, so a list that
   omits it fails against a tree that is correct (S02 Addendum 6).
+
+*(Session 04 — structural writes, the month a screen opens on, and a temporary shim)*
+
+- **The write rules gain two more, binding on every endpoint that writes the app's structure:**
+  5. **Order is written, never nudged.** No endpoint shifts a sibling's `order` by ±1. A reorder
+     submits the **complete desired sequence** and the server rewrites the whole set. This deletes
+     an entire class of defect rather than porting it.
+  6. **Archive and restore are symmetric, and both are proven.** Every archive endpoint has a
+     restore endpoint, and **no acceptance criterion may use an archive that cannot be undone.**
+- **`bxDefaultMonth` is the ONE definition of "the month a screen opens on"** — the most recent
+  calendar month at or before the server's date holding **at least one transaction**, computed
+  **from transactions only, never from budget rows**. It lives in `client_src/bx_calc.js` and
+  every screen uses it; no screen implements its own. Round 03 shipped an app that opened on a
+  month holding zero rows with 1,300 transactions sitting six months behind it. *(Bruce,
+  2026-08-21 — spec_04 §0 ruling 1.)*
+- **The named exception to the 1-second rule:** one `GET /app/bootstrap` fetch per page open,
+  currently ~404 KB and ~1.5 s reused / ~2.5 s fresh. The cause is on record — Anvil's
+  ~400–700 ms dispatch floor, of which the transactions leg is only ~130 ms — and windowing
+  cannot get below the platform. Everything after that fetch is computed locally from the payload
+  in memory. *(Bruce, 2026-08-21 — spec_04 §0 ruling 2.)*
+- **The archive mirror is TEMPORARY and round 08 deletes it.** `active` is the authority on
+  `categories` and `sub_categories`; the legacy `order = -1` sentinel is **mirrored** on every
+  archive and restore, by the server, in the same call, purely so the Forms app stays coherent
+  while it is still serving the root. **The new clients read `active` and never `order == -1`.**
+  When round 08 retires the Forms app the mirror goes with it. If a row is ever found with
+  `active` and `order` disagreeing, **report it and stop** — do not pick a winner.
 
 ---
 
@@ -296,6 +334,29 @@ fetch** — not from the handle you just wrote through. *(Anvil Row handles cach
 
 There is no mandatory audit log on Budget X, so read-back **is** the only proof of a write.
 
+### An agent reporting that it did nothing is not evidence that it wrote nothing
+
+The mirror of the `ok:true` rule, and it cost a live unledgered row on this app. Round 03
+dispatched an agent that reported an API failure and had **in fact written**. **Every dispatch
+that reports an error, or reports doing nothing, is reconciled against the data before the round
+closes** — `/build/counts` and a payload diff, checked and recorded. A report is a claim about
+what an agent believes it did; the table is the evidence.
+
+### `GET /budget/summary` is the money verification instrument
+
+Every money round from here proves itself against it. Three properties are what make it evidence
+rather than decoration, and a round that erodes any of them has lost its instrument:
+
+- It is a **server-side recomputation from raw rows**, written **independently of
+  `client_src/bx_calc.js`, in a different language**. It must never be implemented by porting the
+  client's arithmetic — a shared implementation agrees with itself while both halves are wrong.
+- It is on **no interactive path**. **No client may call it.**
+- It is **read-only**, proven by a function-scoped AST walk of the handler and everything it calls.
+
+A money figure is proven **three ways**: the DOM's `data-cents`, `/budget/summary`, and an
+independent recomputation in Python from the raw payload. **Two agreeing is not enough when one of
+them is the thing under test.**
+
 ### A default is not a default if something stored shadows it
 
 Registry and settings lookups that merge a stored override must **fill keys the stored entry
@@ -366,6 +427,26 @@ errored; the table still held all 1,300 rows.
   every field against a snapshot taken *before* the schema push. S03's check was "zero rows differ
   on any field except `active`, and `sum(amount_cents)` is identical".
 
+
+**THE STANDING SEQUENCE FOR ANY FUTURE BOOL COLUMN — five steps, and the order is the point.**
+Learned on `transactions.active` (S03) and re-run on `categories.active` / `sub_categories.active`
+(S04). **Treat the migration as leaving the column WRONG, not empty.**
+
+1. **Snapshot first**, before any push: a full independent fetch of every affected table, plus the
+   table counts, UTC-stamped, written to `scratch/`.
+2. **Push the schema edit and the migration tools ALONE** — nothing that reads the new column, and
+   **no client promoted** until step 5. A commit carrying the schema edit and no code at all
+   satisfies this by construction.
+3. **Bruce's approve-click.** RED / LEFT — *the source code is correct*.
+4. **Initialise every existing row FROM THE LEGACY SIGNAL, never blanket-`True`** — blanket-truthing
+   resurrects every archived row the moment the clients start filtering, which is the mirror image
+   of S03's failure and just as silent. The initialiser **returns id lists, not counts**, and
+   writes only where the value differs so a re-run is a no-op. Because the click writes a real
+   value into every row, the rows that were already correct come back **unchanged**, so the tool
+   must report **both** what it wrote and what each row now **is** (spec_04 Addendum 2).
+5. **Reconcile before reading:** the derived id sets equal the round-start sentinel sets exactly;
+   an independent re-fetch differs from the snapshot on **zero rows and zero fields**; counts
+   identical. **Only then** does anything that reads the new column ship.
 
 - **Therefore a round that touches schema CANNOT close unattended.** Say so in the debrief, hand
   Bruce the click, and mark any criterion that depends on the new schema as **BLOCKED** — never

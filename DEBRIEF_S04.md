@@ -20,26 +20,82 @@ whole lesson of round 03. Then say done.
 
 Nothing else is needed from you this round. Everything after the click runs unattended.
 
+**I have checked that the problem is not at my end.** `anvil/master` carries commit `7c6f2d5`, and
+its `anvil.yaml` really does declare `active` on both tables — so the ⚠ is genuinely sitting in the
+DATA tab waiting. `POST /build/init-active` has been polled **178 times over six hours** and returns
+`409 column_missing` every time, writing nothing. The round is built and stopped on this one action.
+
 ---
 
 ## Where the round is
 
-Commits 1a and 1b are pushed and live. Building continues while the click is outstanding —
-nothing that reads the new columns will be pushed or promoted until the initialisation and its
-reconciliation are on record (§3.7 steps 4–6).
+**Everything is built, gated and committed locally. Nothing downstream of the click can move.**
 
 | Step | State |
 |---|---|
-| AC-9.1 Forms baseline, before the first push | **done** — 1280×800 and 390×844, all five screens, `/build/counts` identical either side |
-| §3.1 round-start measurements | **done** — all twelve, `scratch/s04/measurements.json` |
+| AC-9.1 Forms baseline, before the first push | **done** — both widths, five screens, `/build/counts` identical either side |
+| §3.1 round-start measurements (all twelve) | **done** — `scratch/s04/measurements.json` |
 | §3.7 step 1 pre-schema snapshot | **done** — `scratch/s04/snapshot_pre_schema.json` |
 | Commit 1a — `ServerBuildTools` v4 (the two migration tools) | **pushed, live, `/build/version` reports v4** |
-| Commit 1b — the two-column `anvil.yaml` edit | **pushed** |
-| **Bruce's approve-click** | **← waiting here** |
+| Commit 1b — the two-column `anvil.yaml` edit, no Python | **pushed** |
+| §5 fixtures | **done** — self-verified by independent recomputation |
+| Builder C — `bx_calc.js` v2 + goldens | **done, gate green** |
+| Builder S — `ServerBudget` v1, `ServerAppData` v3, `ServerTxn` v2, `tools/api.py` | **done, gate green** |
+| Builder D — canon v3, `d-budget`, three re-cuts | **done, gate green** |
+| Builder M — `m-budget`, two re-cuts | **done, gate green** |
+| fixer — the Addendum 16 deep-link contract | **done, 50/50 checks** |
+| Integration: all seven clients built and checked | **done — 133 assertions, 0 failures** |
+| **Bruce's approve-click** | **← waiting here — 178 probes over 6 hours, all `409 column_missing`** |
 | `POST /build/init-active` + reconciliation | blocked on the click |
-| `ServerAppData` v3, `ServerBudget`, seven clients | blocked on the reconciliation |
+| Push + deploy + promote seven slugs · `ZZ` rows · basic test · both reviewers · cold start | blocked on the reconciliation |
 
----
+**Why nothing is pushed.** §3.7 step 6: `ServerAppData` v3 serialises `active` on `categories` and
+`sub_categories`, and `ServerBudget` writes them. Neither may be deployed, and no client may be
+promoted, until the initialisation has run and reconciled. The work is committed locally
+(`1975759`) so it is safe, and the local branch is deliberately ahead of `anvil/master`.
+
+## What the builders produced
+
+| Builder | Model | Result |
+|---|---|---|
+| **C** — calc | Opus | `bx_calc.js` v2, sixteen new exports. **220/220** golden cases (85 v1 + 135 new). Gate proven live by a corrupted expectation **and three mutation probes**. |
+| **S** — server | Opus | `ServerBudget.py` v1 (fourteen endpoints), `ServerAppData` v3, `ServerTxn` v2, `tools/api.py`. 441 conformance checks, 100 calc cases, **1,977 leaf comparisons against the summary fixtures — 0 mismatches**. |
+| **D** — desktop | Sonnet | canon v3, `d-budget` new, `x`/`d-dash`/`d-trans` re-cut. Three-way agreement driven on 2025-10, 2025-12, 2026-01. |
+| **M** — mobile | Sonnet | `m-budget` new, `m-dash`/`m-trans` re-cut. **89/89** driven checks at 390x844. |
+| **fixer** | Opus | the Addendum 16 deep-link contract. **50/50** driven checks. |
+
+**All seven clients build with all 21 canon extractions hash-equal**, every page ≤250 KB (largest
+205 KB), and pass 133 static integration assertions: no `<script src=`, no CDN, the non-blocking
+fonts pattern, zero native dialogs, `fmtR` absent everywhere including comments, all 19 design
+tokens present verbatim, `data-skeleton` on every client.
+
+### Independent verification the orchestrator ran itself
+
+- **`bx_calc.js` vs an independent Python recomputation** written from the spec text and from
+  nothing else — over both fixtures and every surface (`bxAvailableToBudget`'s 13 fields,
+  `bxRollover`'s 9, `bxProgress`'s 6, `bxOverspend`, `bxIncomeShortfall`, `bxSubTotals`,
+  `bxCatTotals`, `bxHeaderTotals`, `bxDefaultMonth`): **18,078 field comparisons, 0 mismatches.**
+- **AST walks, run again by the orchestrator rather than taken from Builder S**: `ServerBudget`
+  zero `.delete(` and zero subscript assignments; `ServerAppData` zero write calls; **zero write
+  calls across all 50 functions reachable from `api_budget_summary`.**
+- pyflakes clean on all five Python files; `node --check` clean on both canon JS files;
+  `repo_guard.py` exit 0; `core.hooksPath` = `tools/githooks`.
+
+### Three real defects the gates caught — each would have shipped
+
+1. **The optimistic-write rollback was a no-op.** `bxInlineEdit` snapshotted the budget array with
+   `.slice()` — a shallow copy — while the optimistic apply mutated the row object **in place**, so
+   the snapshot's rows were the same mutated references. A failed write left the wrong figure on
+   the row, the category total and the header. Found by Builder D driving a forced failure, not by
+   reading the code. AC-14.7 exists for exactly this.
+2. **The mobile edit sheet displayed a value the model had already rolled back.** The sheet lives
+   in a `bxSheet` overlay that the re-render never touches, so the data rolled back correctly and
+   the field went on showing the figure that did not save — fact 18 wearing a different hat. Found
+   by Builder M's own gate.
+3. **`bxHeaderTotals` summed an archived category into the header totals**, which §3.9 forbids.
+   Found by the orchestrator's independent Python disagreeing by exactly the archived category's
+   −275,000 on one fixture month. It was invisible to the first cross-check because that pass did
+   not cover the roll-ups — the second one does.
 
 ## The round-start measurement that changed a decision
 
