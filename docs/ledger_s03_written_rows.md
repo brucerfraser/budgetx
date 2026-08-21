@@ -4,12 +4,12 @@ Every row this round wrote, with what changed, before → after and the UTC time
 **Written as each write happened**, never reconstructed — the source is
 `scratch/s03/ledger/written_rows.jsonl`, appended by the driver at the moment of each call.
 
-**1357 entries across 1301 distinct `transaction_id`s.** Two populations:
+**1359 entries across 1301 distinct `transaction_id`s.** Two populations:
 
 1. **1300 restores** — the Addendum 6 remediation. Anvil's bool-column migration wrote a
    real `False` into every pre-existing row; none of them was archived, so all were
    returned to `active: true`. Grouped below by write batch.
-2. **57 individual writes across 27 rows** — the AC-2 write-path proofs, each reverted.
+2. **59 individual writes across 27 rows** — the AC-2 write-path proofs, each reverted.
 
 ---
 
@@ -1356,7 +1356,7 @@ ed3d33c5-3527-43f0-b31f-4ed6a195c1fc
 
 ---
 
-## 2 — individual writes (57 entries, 27 rows), each reverted
+## 2 — individual writes (59 entries, 27 rows), each reverted
 
 | `transaction_id` | op | field | before | after | UTC |
 |---|---|---|---|---|---|
@@ -1417,6 +1417,8 @@ ed3d33c5-3527-43f0-b31f-4ed6a195c1fc
 | `04f054bf-751c-4d7e-bb52-15d10dd3ab01` | categorise | category | "2462a1aa-cd9d-dcad-d961-497abf6daba5" | null | 2026-08-20T19:13:49Z |
 | `0505f9cc-12db-4f28-8fd9-03fe41774ebe` | categorise | category | "2462a1aa-cd9d-dcad-d961-497abf6daba5" | "ec8e0085-8408-43a2-953f-ebba24549d96" | 2026-08-20T19:13:49Z |
 | `74f7a3a5-c7f9-4671-98c7-bf6781453b03` | archive | active | true | false | 2026-08-20T19:13:53Z |
+| `74f7a3a5-c7f9-4671-98c7-bf6781453b03` | update | notes | "" | "" | 2026-08-21T02:25:45Z |
+| `74f7a3a5-c7f9-4671-98c7-bf6781453b03` | categorise | category | null | null | 2026-08-21T02:25:45Z |
 
 ---
 

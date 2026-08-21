@@ -421,16 +421,60 @@ stepping, search and totals with **zero** further requests, which is measured at
 per interaction. **The recommendation is to keep it and accept a named ~1.5 s page open.** The
 alternative worth considering is not windowing but the platform: the floor is Anvil's, not ours.
 
-**AC-13.7 — the remaining endpoint timings** (`/x?slug=d-trans`, `/txn/categorise`, `/txn/update`,
-fresh and reused, ≥20 each) are **still outstanding**. They cannot be taken while AC-13.8's
-cold-start sequence is running, because that requires the app to be genuinely idle.
+**AC-13.7 — the network, measured honestly.** n=22 per cell, warm, **fresh and reused
+connection for every endpoint**, because S02 showed the two differ by more than 2× and reporting
+only one of them misleads. The two write endpoints were timed with **idempotent no-op writes** on
+the round's own probe row — `notes` set to the value it already held, `category` to the category
+it already had — so nothing moved: the row's JSON is **byte-identical before and after all 88
+writes**, and both batches are in the ledger.
 
-**AC-13.8 — five cold-start readings, in progress.** Started 2026-08-21, each after a ≥10-minute
-idle (first 13 min, then four 30-minute gaps), spanning ~2h13m — the app must be untouched
-throughout, which is why it runs last. S02 Addendum 7's lesson is explicit: three readings once
-spread 661–2,957 ms and a single figure supported a conclusion that was false. **All five
-readings, the median and the range will be reported, and no conclusion will be drawn that the
-spread does not support.**
+| endpoint | conn | p50 | p95 | min | max | bytes |
+|---|---|---|---|---|---|---|
+| `GET /x?slug=d-trans` | reused | **804** | 1,775 | 689 | 2,259 | 102,844 |
+| `GET /x?slug=d-trans` | fresh | **1,692** | 1,821 | 1,629 | 1,910 | 102,844 |
+| `GET /app/bootstrap?include=transactions` | reused | **1,533** | 2,838 | 1,044 | 2,848 | 404,466 |
+| `GET /app/bootstrap?include=transactions` | fresh | **2,370** | 3,022 | 2,063 | 3,460 | 404,466 |
+| `POST /txn/update` | reused | **511** | 614 | 449 | 1,124 | 301 |
+| `POST /txn/update` | fresh | **1,082** | 1,126 | 996 | 1,229 | 301 |
+| `POST /txn/categorise` | reused | **924** | 2,336 | 704 | 3,686 | 299 |
+| `POST /txn/categorise` | fresh | **1,468** | 1,638 | 1,407 | 1,738 | 299 |
+
+**Fresh is consistently ~2× reused** — `/txn/update` 511 → 1,082 ms, `/txn/categorise` 924 →
+1,468 ms, `/x` 804 → 1,692 ms. S02's finding reproduces exactly.
+
+**The writes are inside the 1-second rule** — `/txn/update` at **511 ms** p50 on a warm
+connection, and every write in this app is optimistic anyway, so the user never waits on it. **The
+only thing over a second is the one big read**, which is the deliberate trade in §11.3.
+
+**AC-13.8 — five cold-start readings, spanning 2h00m18s.** Each after a ≥10-minute idle (first
+13 min, then four 30-minute gaps), with the app untouched throughout.
+
+| reading | UTC | idle before | `GET /build/version` | `GET /x?slug=d-trans` |
+|---|---|---|---|---|
+| 1 | 2026-08-21T00:20:19Z | 13 min | 2,886 ms | 1,810 ms |
+| 2 | 00:50:24Z | 30 min | 2,818 ms | 1,736 ms |
+| 3 | 01:20:28Z | 30 min | 2,270 ms | 1,723 ms |
+| 4 | 01:50:32Z | 30 min | 2,778 ms | 1,633 ms |
+| 5 | 02:20:37Z | 30 min | 1,958 ms | 1,671 ms |
+
+| | median | range | spread |
+|---|---|---|---|
+| `GET /build/version` | **2,778 ms** | 1,958 – 2,886 | 928 ms |
+| `GET /x?slug=d-trans` | **1,723 ms** | 1,633 – 1,810 | **177 ms** |
+
+**What the spread supports, and only that** (S02 Addendum 7: three readings once spread
+661–2,957 ms and a single figure carried a conclusion that was false):
+
+- **A cold first byte of the transactions page costs ~1.7 s, and that figure is solid.** Five
+  readings over two hours span just **177 ms** — tighter than any warm measurement in this round.
+  A user returning after idle waits about 1.7 s for the page, then ~1.5–2.4 s for its one data
+  call.
+- **`/build/version` is both slower and far more variable** (median 2,778 ms, spread 928 ms)
+  **despite touching no table.** It checks the App Secret and imports four modules; that, not data
+  volume, is what it measures. Worth knowing, since it is the round's own liveness instrument.
+- **What these readings do NOT support:** any claim about how much of the cost is container
+  spin-up versus steady dispatch. Separating those needs an instrument this round does not have,
+  and the honest answer is that it was not measured.
 
 ## Models actually used
 
