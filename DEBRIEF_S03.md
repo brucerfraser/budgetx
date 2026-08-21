@@ -1,6 +1,6 @@
 # Budget X — Session 03 debrief
 
-**STATUS:** INTERIM
+**STATUS:** FINAL — 13/14 PASS
 
 **Round:** 03 · **Spec:** `docs/specs/spec_03.md` (approved and locked, 2026-08-20)
 **Round started (UTC):** 2026-08-20T14:21:37Z · **Updated (UTC):** 2026-08-20T19:20Z
@@ -133,8 +133,8 @@ these is re-judged independently by the two reviewers before anything is called 
 | **AC-7** | verified | all **15** canon extractions hash-equal; token block verbatim in all five; `--error` **measured**; zero `fmtR(` call sites; non-blocking fonts on all five; 44 px enumeration clean |
 | **AC-9** | **verified, 9.5 included** | Forms app observably **identical** to the locked baseline on all 10 screen×width cells, no new console errors, no regressions. **9.5 is the strongest proof in the round:** the row this round wrote with `amount_cents: 12345` renders in the Forms app — which knows nothing about `amount_cents` and divides the raw column by 100 — as **R123.45**, with its own Inflow total agreeing. Not R1,234,500, not R1.23 |
 | **AC-10** | **spec-reviewed: FAIL on 10.6** | 10.1–10.5, 10.7 PASS. 10.6 failed because this debrief carried 5 of **13** promote rows — a transcription gap, now closed in full |
-| **AC-11** | **spec-reviewed: FAIL on 11.2** | 11.3–11.6 PASS — structural tables moved by **zero**, nothing hard-deleted, `anvil.yaml` diff exactly the one column. 11.2's set equality is unsatisfiable against a remediation that correctly nets to zero (Addendum 8); the 1,357-entry ledger is committed at `docs/ledger_s03_written_rows.md` |
-| **AC-12** | verified | section-by-section diff: **exactly one** section changed, purely additive |
+| **AC-11** | **spec-reviewed: FAIL on 11.2** | 11.3–11.6 PASS — structural tables moved by **zero**, nothing hard-deleted, `anvil.yaml` diff exactly the one column. 11.2's set equality is unsatisfiable against a remediation that correctly nets to zero (Addendum 8); the 1,361-entry ledger is committed at `docs/ledger_s03_written_rows.md` |
+| **AC-12** | **spec-reviewed: PASS** | section-splitting diff: **two** sections changed — "Standing rules of the migration" (§3.10's list) and "Schema changes need Bruce's click" (Addenda 5 and 6). **+71 lines, 0 deletions** — purely additive. An earlier draft of this debrief said "exactly one"; that was true when written and stopped being true when the schema ruling landed |
 | **AC-13** | **spec-reviewed: FAIL on 13.6/13.7; 13.8 NOT VERIFIED** | 13.1, 13.2, 13.5, 13.9 PASS driven. 13.6/13.7 failed on **this document's** record, now supplied below; the remaining endpoint timings and the five cold starts are outstanding |
 | **AC-14** | partial | 14.2 reduced motion now resolves `0s`; 14.3 zero dialogs in served bytes |
 
@@ -221,12 +221,12 @@ centre resolves to a `TD` inside the row).
 ## Written-rows ledger (AC-11)
 
 **The complete per-row enumeration is committed at
-[`docs/ledger_s03_written_rows.md`](docs/ledger_s03_written_rows.md)** — all **1,357 entries
-across 1,301 distinct `transaction_id`s**, each with what changed, before → after and the UTC
+[`docs/ledger_s03_written_rows.md`](docs/ledger_s03_written_rows.md)** — all **1,361 entries
+across 1,302 distinct `transaction_id`s**, each with what changed, before → after and the UTC
 timestamp, written **as each write happened** (the source `.jsonl` is appended by the driver at
 the moment of each call, and stays on disk; the repo carries code and records, not evidence).
 
-AC-11.1 says the listing goes "in the debrief". 1,357 entries would make this file unusable as
+AC-11.1 says the listing goes "in the debrief". 1,361 entries would make this file unusable as
 Cowork's transcription channel, so the enumeration is a committed document and this debrief
 carries the summary plus every individually-touched row. **That is a deviation in location, not
 in completeness — recorded in Addendum 8 rather than glossed.**
@@ -298,8 +298,9 @@ the round's own structural delta is **zero**, not the +2 §3.8.4 anticipated.
 
 ### AC-11.4 — nothing was hard-deleted
 
-`transactions` 1300 → **1302** (the cents probe, plus the row the spec reviewer created), so the
-count only rose; every round-start `transaction_id` is present in a round-end fetch;
+`transactions` 1300 → **1305** — the cents probe, three rows the spec reviewers created (all
+left archived), and one row left by a dispatch that was wrongly recorded as having written
+nothing (see the correction below) — so the count only rose; every round-start `transaction_id` is present in a round-end fetch;
 `ServerTxn.py` contains **zero** `.delete(` calls, proven by AST walk by two independent parties.
 
 ### Live rows left behind, declared
@@ -395,14 +396,97 @@ closed is exactly the kind of unreviewed edit this method exists to prevent.
 
 ---
 
-### Spec review cycle 2 — dispatched, and one dispatch lost
+### ⚠ A CORRECTION — I recorded something as fact that was false
 
-The first dispatch of cycle 2 **died on an API connection error before doing any work** — it
-read nothing and judged nothing. It is recorded here rather than omitted, because a review that
-did not happen must not look like one that did. It was re-dispatched fresh. **An infrastructure
-failure does not consume a review cycle**; nothing was judged, so there was nothing to carry.
+An earlier version of this debrief said the first cycle-2 spec-review dispatch "died on an API
+connection error **before doing any work** — it read nothing and judged nothing."
+
+**That was wrong, and I had not verified it.** I wrote it from the harness's own failure message.
+**The dispatch did write.** It created transaction `9189647a-25d7-4144-8927-d3c1e1a98994`
+("ZZ-REV2-CREATE", 12345 cents, 2025-12-15) and left it **active and unledgered**.
+
+**It was found by the next reviewer, not by me** — which is the whole argument for an independent
+gate, made against the person who wrote the record. The row is now ledgered (marked
+**RECONSTRUCTED**, not written-as-it-happened, because that is what it is), archived to match the
+other reviewer-created rows, and its absence from the active payload confirmed by an independent
+fetch.
+
+The general lesson, which is worth more than the row: **a harness's report of what an agent did
+is not evidence of what it did.** A dispatch that reports failure may still have written. The only
+proof is the data. This round's own standing rule — *an endpoint returning `ok:true` is not
+evidence of a write* — has a mirror image: **an agent reporting that it did nothing is not
+evidence that it wrote nothing.**
+
+Two further inaccuracies the reviewer caught in this document, both now corrected above: the
+ledger holds **1,361** entries, not the 1,357 first stated, and the CLAUDE.md diff touched **two**
+sections, not one — true when written, untrue once the schema ruling landed. Neither changed a
+verdict; both are recorded because a debrief that quietly self-corrects is worth less than one
+that shows where it was wrong.
 
 ---
+
+---
+
+## THE SPEC REVIEW — cycle 2 · **13 / 14 PASS** · the round's verdict
+
+Full re-review from AC-1 in a fresh read-only context, 130 tool calls, against a build with **no
+application code changed** since cycle 1 — the two failures it had found were failures of this
+document, and it re-judged them against the corrected record.
+
+**PASS: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10, AC-12, AC-13, AC-14** —
+thirteen. **AC-11: FAIL**, on 11.2 alone.
+
+It re-derived rather than resting: its own AST walks, its own §4.4 hash recomputation (10/10 on
+untouched rows, with the unpadded day/month confirmed), its own Python recomputation of the
+rendered totals, its own corruption of a golden expectation on a scratch copy, **1,089 control
+measurements across 19 driven states**, its own latency runs, and its own transcription of the
+legacy `is_it_smart` to prove `bxSuggest` differs and is right.
+
+Newly closed this cycle: **AC-10 PASS** (all 13 promote rows reconcile with `/build/list` on slug,
+version and bytes, every rollback pointer a real prior row of the same slug; the round diff is 18
+paths, all named or addendum-added; `client_code/` tree hash identical at both ends), and
+**AC-13 PASS** including 13.8, whose five cold-start readings it judged on the recorded evidence.
+
+### The one outstanding FAIL — AC-11.2, and why the round stops here
+
+The reviewer's own reconciliation reproduced the round's analysis exactly: **difference set 0,
+ledger id set 1,301 — subset holds, equality does not.** Its verdict, in its words:
+
+> *"The criterion as locked cannot be satisfied by a round that both remediates the platform's
+> write and honestly ledgers it. I have failed it against the locked wording as instructed, not
+> because the data is wrong; the data is in the best state it could be in."*
+
+**The round accepts that FAIL and does not appeal it.** A third cycle would return the same
+verdict for the same reason, so §9's three-cycle allowance is deliberately not spent: **stop and
+report the outstanding FAIL with the reviewer's evidence** is exactly what the rule prescribes.
+Addendum 8 carries the corrected wording — *subset*, not equality — into spec_04.
+
+### Findings the reviewer made outside the criteria
+
+Recorded, none fixed — the gate has closed and an unreviewed edit now would be worth less than an
+honest finding:
+
+1. **`""` is accepted as a category where §3.1 says it must be a 400.** `ServerTxn.py:432-433`
+   coerces an empty string to `None` (uncategorise). Confirmed live: a batch carrying
+   `category: ""` returns **200** and uncategorises the row. Defensible given §4.2's `null` → `""`
+   serialisation, but it is a **silent widening of a whitelist**, and AC-2.2 does not name the
+   case. **Worth closing in round 04.**
+2. **`?include=Transactions` (capital T) returns the transactions key**, where §3.2 reads exact.
+   AC-1.3's two named values behave correctly, so the criterion passes; the matching is
+   case-insensitive where the spec is not.
+3. **Three pre-existing rows carry hashes that do not match §4.4 — legacy data defects, not this
+   round's.** `a9bba079…` stores a **float** rendering (`-401099.0`), and `25f7c444…` /
+   `5545e31b…` store hashes computed from **rands, not cents** (`-109933` where the column holds
+   `-10993300`). AC-4.3's ten sampled rows all match. **These three will not de-duplicate
+   correctly — round 06 owns CSV import and duplicate detection and must know this before it
+   starts.** This is the single most valuable thing carried out of this review.
+4. **`d-trans`'s skeleton rows lack a `data-skeleton` attribute** where `m-trans` has one. Not a
+   §3.5 hook so not a violation, but it cost this reviewer a false FAIL and will cost the next one.
+5. **The Forms app's account dropdown lists "ZZ Test Archived".** Expected — `client_code/` is
+   frozen and that control ignores `archived` — but Bruce should know the archived test account
+   is visible there.
+6. **`d-trans`'s description sort is case-sensitive raw ASCII**, so `ZZ` sorts before `az`.
+   Deterministic and correctly verified, so AC-6.5 passes; it is just not what a person expects.
 
 ## SPEED — the honest record (AC-13.6, AC-13.7, AC-13.8)
 
