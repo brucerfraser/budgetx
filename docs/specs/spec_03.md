@@ -1234,3 +1234,44 @@ added by an addendum: `CLAUDE.md` · `DEBRIEF_S03.md` · `anvil.yaml` · `client
 at round start and **identical** now — not one byte of either Forms UI tree changed. The five
 original server modules (`ServerModule1`, `account_work`, `budget_work`, `csv_handler`,
 `transaction_work`) are byte-identical by blob hash.
+
+**Addendum 8 — 2026-08-20/21 — AC-11.2's set equality cannot hold against a remediation that
+correctly nets to zero; and where the AC-11.1 ledger lives.**
+
+**The spec reviewer failed AC-11 on 11.2, and the criterion as written is genuinely unsatisfiable
+here.** AC-11.2 requires that a round-end field-by-field comparison against a round-start snapshot
+"yields a difference set that is **exactly** the ledger's id set — no extra row changed, no ledger
+row unchanged."
+
+After Addendum 6's remediation the two sets cannot be equal, for a reason that is a *feature* of
+the remediation rather than a defect:
+
+- The **ledger's id set is 1,301** — it correctly records all 1,300 rows restored to
+  `active: true`, plus the rows the write-path proofs touched.
+- The **difference set is 2** — the deliberate cents probe and the row the spec reviewer created.
+- The 1,300 restored rows are **field-identical to round start**, because the restore *undid* a
+  platform write. Anvil set `active=False`; the round set it back to the value the payload had
+  always reported. Net change: **zero**.
+
+So "no ledger row unchanged" is violated 1,300 times **precisely because the remediation worked**.
+A ledger that omitted those 1,300 rows would satisfy the arithmetic and would be a lie: they were
+written, by this round, deliberately, and each is one `POST /txn/restore` item.
+
+**The criterion's intent is fully met and is the stronger reading:** *nothing changed that is not
+in the ledger*. The ledger **over-declares**, never under-declares, which is the safe direction.
+The reviewer's own reconciliation confirms zero unledgered changes.
+
+**Correction for future rounds:** AC-11.2 should read *"the difference set is a **subset** of the
+ledger's id set — no row changed that is not in the ledger"*, with any ledger entry whose net
+effect is zero listed and explained. Set equality is the wrong test whenever a round legitimately
+writes a value back to what it already was — a restore, an idempotent re-write, or the undo half
+of any archive/restore proof.
+
+**AC-11.1 — where the per-row ledger lives.** The criterion says the listing is "in the debrief".
+1,357 entries would make `DEBRIEF_S03.md` unusable as Cowork's transcription channel, so the
+complete enumeration is committed as **`docs/ledger_s03_written_rows.md`** — every row, with what
+changed, before → after and UTC, the 1,300 restores grouped by their seven write batches with
+every id listed — and the debrief carries the summary, every individually-touched row in full, and
+a pointer to it. This is a deviation in *location*, not in completeness, and it is recorded here
+rather than glossed. **AC-10.4's permitted path list gains `docs/ledger_s03_written_rows.md`**,
+per Addendum 7's generalisation.

@@ -132,10 +132,10 @@ these is re-judged independently by the two reviewers before anything is called 
 | **AC-6 / AC-8** | substantially verified, reviewers to judge | 273 rows render on both screens for 2025-12; **zero** requests across 8 month steps; scrollers drive and MOVE |
 | **AC-7** | verified | all **15** canon extractions hash-equal; token block verbatim in all five; `--error` **measured**; zero `fmtR(` call sites; non-blocking fonts on all five; 44 px enumeration clean |
 | **AC-9** | **verified, 9.5 included** | Forms app observably **identical** to the locked baseline on all 10 screen×width cells, no new console errors, no regressions. **9.5 is the strongest proof in the round:** the row this round wrote with `amount_cents: 12345` renders in the Forms app — which knows nothing about `amount_cents` and divides the raw column by 100 — as **R123.45**, with its own Inflow total agreeing. Not R1,234,500, not R1.23 |
-| **AC-10** | verified except 10.4/10.7 | pyflakes clean; `node --check` clean and **proven live**; guard exit 0 before the first commit and after; ledger written as part of each promote |
-| **AC-11** | **verified** | 1,357 ledger entries across 1,301 distinct ids, written **as the writes happened**; reconciled field-by-field; structural tables moved by **zero**; `anvil.yaml` diff is exactly the one column |
+| **AC-10** | **spec-reviewed: FAIL on 10.6** | 10.1–10.5, 10.7 PASS. 10.6 failed because this debrief carried 5 of **13** promote rows — a transcription gap, now closed in full |
+| **AC-11** | **spec-reviewed: FAIL on 11.2** | 11.3–11.6 PASS — structural tables moved by **zero**, nothing hard-deleted, `anvil.yaml` diff exactly the one column. 11.2's set equality is unsatisfiable against a remediation that correctly nets to zero (Addendum 8); the 1,357-entry ledger is committed at `docs/ledger_s03_written_rows.md` |
 | **AC-12** | verified | section-by-section diff: **exactly one** section changed, purely additive |
-| **AC-13** | partial | 13.1 verified live (zero further requests); 13.5 all five ≤250 KB; **13.6 is a real finding, below**; 13.8 needs a 2-hour quiet window |
+| **AC-13** | **spec-reviewed: FAIL on 13.6/13.7; 13.8 NOT VERIFIED** | 13.1, 13.2, 13.5, 13.9 PASS driven. 13.6/13.7 failed on **this document's** record, now supplied below; the remaining endpoint timings and the five cold starts are outstanding |
 | **AC-14** | partial | 14.2 reduced motion now resolves `0s`; 14.3 zero dialogs in served bytes |
 
 ---
@@ -220,131 +220,217 @@ centre resolves to a `TD` inside the row).
 
 ## Written-rows ledger (AC-11)
 
-**1,357 entries across 1,301 distinct `transaction_id`s**, written to
-`scratch/s03/ledger/written_rows.jsonl` **as each write happened**, never reconstructed. The
-evidence file stays on disk — the repo carries code only.
+**The complete per-row enumeration is committed at
+[`docs/ledger_s03_written_rows.md`](docs/ledger_s03_written_rows.md)** — all **1,357 entries
+across 1,301 distinct `transaction_id`s**, each with what changed, before → after and the UTC
+timestamp, written **as each write happened** (the source `.jsonl` is appended by the driver at
+the moment of each call, and stays on disk; the repo carries code and records, not evidence).
+
+AC-11.1 says the listing goes "in the debrief". 1,357 entries would make this file unusable as
+Cowork's transcription channel, so the enumeration is a committed document and this debrief
+carries the summary plus every individually-touched row. **That is a deviation in location, not
+in completeness — recorded in Addendum 8 rather than glossed.**
 
 | operation | entries | what |
 |---|---|---|
-| `restore` | **1,301** | the remediation: 1,300 rows Anvil's migration had wrongly set to `False`, plus the single diagnostic probe that confirmed the mechanism |
-| `categorise` | 52 | AC-2.1's single row + a 25-row batch, **each reverted to its original category** (26 forward, 26 back) |
-| `create` | 1 | the AC-2.3/2.5 probe row |
-| `update` | 1 | AC-2.4's date/amount/account change, to force a hash recomputation |
-| `archive` | 2 | AC-2.6/2.7 archive→restore, and one further archive during the cycle |
+| `restore` | **1,301** | the Addendum 6 remediation — 1,300 rows Anvil's migration wrongly set to `False`, in seven batches of ≤200, plus the single diagnostic probe that confirmed the mechanism before anything was done at scale |
+| `categorise` | 52 | AC-2.1's single row + a 25-row batch, **each reverted** (26 forward, 26 back) |
+| `create` | 1 | the AC-2.3 / AC-2.5 probe row |
+| `update` | 1 | AC-2.4's date/amount/account change, forcing a hash recomputation |
+| `archive` | 2 | AC-2.6 / AC-2.7 archive→restore |
 
-**AC-11.2 — the ledger reconciles against the data.** A post-remediation
-`?include=transactions` compared field-by-field against the round-start snapshot yields **zero**
-rows differing on any field except `active`, zero ids missing and zero ids new. Every categorise
-was reverted and confirmed reverted by an independent fetch.
+**The 27 rows this round touched individually** (the 1,300 restores are enumerated in the
+committed ledger):
 
-**AC-11.3 — the structural tables moved by exactly zero.** Round start (14:21:37Z) and now
-(19:20Z), UTC-stamped:
+```
+0009f54f-e7b4-4b61-845c-7a66b22e06a8
+000e3c4e-963e-4821-a579-165b9107c14c
+0011e493-c950-4d32-b4ab-7b2f33d8d366
+0020df3a-08ee-4241-b146-a558198d3426
+00ab6a3b-202e-4e46-8500-38e93e7244c3
+010f3013-0e1d-487f-8779-b9a85f65f180
+011f84b6-37b5-4b7c-a9f3-74386c52903c
+015b4327-afde-40b0-a689-0d9379dd33f6
+015fcde6-45cd-40a4-a550-93a820a7e283
+01828eb0-2fc2-4e6b-a368-a97386fde0ad
+01eb7ef7-fe98-432b-b9c8-2eab56d3e9fc
+01f72c0b-dbba-4a24-9b1b-d7f35a96cf9f
+0229fc0d-8625-4bd2-9def-8766aa2feff9
+02981791-26dc-45d6-88c0-33df56323eee
+02b55b9e-0d53-4d4e-8ad5-f2273d48a492
+02ec3cd7-cfa3-4ead-8bb0-11cddf741a5f
+03319a04-a071-4f71-b94b-16bac3c6a3ef
+0364f1be-1c95-4d37-9d88-6b4fcb77472b
+036c1206-fea3-494b-9fe2-eaee87a356dd
+036e7884-ac86-43b1-a698-af0f2ef9a43b
+0393c6cf-fef6-49cc-abab-6eee0f14db5a
+03a637c2-77a9-4ebe-8a7e-f39b0540c4cd
+0403433b-ee8c-4fd4-bda1-2bdc89a06fd1
+0425cf68-36a8-4111-baf7-4e6f73433dd3
+04f054bf-751c-4d7e-bb52-15d10dd3ab01
+0505f9cc-12db-4f28-8fd9-03fe41774ebe
+74f7a3a5-c7f9-4671-98c7-bf6781453b03
+```
 
-| table | round start | now |
-|---|---|---|
-| `accounts` | 9 | **9** |
-| `budgets` | 58 | **58** |
-| `categories` | 14 | **14** |
-| `sub_categories` | 57 | **57** |
-| `settings` | 1 | **1** |
-| `users` | 3 | **3** |
-| `files` / `test_csv` | 8 / 5 | **8 / 5** |
-| `transactions` | 1300 | **1301** (+1, the deliberate probe) |
+### AC-11.2 — the criterion cannot hold as written, and Addendum 8 says why
 
-Every pre-existing `accounts` row is unchanged on every field the payload exposes. The two `ZZ`
-accounts pre-dated the round (Addendum 1), so the round's own structural delta is **zero** — not
-the +2 §3.8.4 anticipated.
+A round-end field-by-field comparison against the round-start snapshot yields a difference set of
+**exactly two** rows — the cents probe and the row the spec reviewer created. The ledger's id set
+is **1,301**. AC-11.2 demands those two sets be *equal*.
 
-**AC-11.4 — nothing was hard-deleted.** `transactions` ended **≥** its start count (1300 → 1301),
-and every round-start `transaction_id` is present in a round-end fetch. `ServerTxn.py` contains
-**zero** `.delete(` calls, proven by AST walk.
+They cannot be, **because the remediation worked.** The 1,300 restored rows are field-identical to
+round start: Anvil set `active=False`, the round set it back to the value the payload had always
+reported, and the net change is zero. A ledger that omitted them would satisfy the arithmetic and
+would be a lie — they were written, deliberately, by this round.
 
-**Live rows left behind, declared:**
+**The intent is met in its stronger form: nothing changed that is not in the ledger.** The ledger
+over-declares, never under-declares, which is the safe direction. The spec reviewer's own
+reconciliation confirms zero unledgered changes. Addendum 8 proposes the corrected wording for
+later rounds: *the difference set is a **subset** of the ledger's id set*.
 
-- `74f7a3a5-c7f9-4671-98c7-bf6781453b03` — description **"ZZ S03 cents probe"**, `amount_cents`
-  **12345**, dated 2026-08-20, account `619b96af-2` (Discovery), currently **active**. It is
-  AC-2.5's and AC-9.5's evidence and is deliberately left in place for the reviewers to reproduce.
-  It is visible in the Forms app's Transactions list as `R123.45`. **There is no hard-delete path
-  by design**; Bruce can archive it from the new Transactions screen whenever he likes.
-- The two `ZZ` accounts, `ZZ-TEST-ACTIVE` and `ZZ-TEST-ARCHIVED`, which pre-dated the round.
+### AC-11.3 — the structural tables moved by exactly zero
 
-## Promote / rollback ledger (AC-10.6) — written as part of each promote
+Round start 14:21:37Z, round end, both UTC-stamped: `categories` 14→14 · `sub_categories` 57→57 ·
+`budgets` 58→58 · `settings` 1→1 · `users` 3→3 · `accounts` **9→9**. Every pre-existing `accounts`
+row is byte-identical on every field the payload exposes, confirmed by the spec reviewer against
+round-start and round-end bootstraps. The two `ZZ` accounts pre-date the round (Addendum 1), so
+the round's own structural delta is **zero**, not the +2 §3.8.4 anticipated.
 
-| slug | version | promoted `record_uid` | rollback to | bytes | served==promoted |
-|---|---|---|---|---|---|
-| `x` | 1.2.0 | `47f49055-a24a-4d3b-bb74-45ce991244ce` | `bf9dae3e-fb80-4271-8ef7-9d3fd61598dc` (v1.1.1) | 56,336 | ✓ |
-| `d-dash` | 1.2.0 | `835a9eaf-3a05-4145-8352-438e4cdbe9d4` | `d0f6379e-b240-4352-bc54-36106572d47e` (v1.1.1) | 58,483 | ✓ |
-| `m-dash` | 1.2.0 | `61f3b790-2ac8-4e2c-9f32-e75417c9893d` | `6c6d0867-7fd2-4aeb-87a6-fa1fa66741e5` (v1.1.1) | 59,045 | ✓ |
-| `d-trans` | 1.2.0 | `a2a4513d-41aa-4c2e-85d3-856926faafb0` | — (first promote) | 92,828 | ✓ |
-| `m-trans` | 1.2.0 | `ddd3bb1f-6c1d-4cf3-9e12-e42a14f24ee9` | — (first promote) | 107,632 | ✓ |
+### AC-11.4 — nothing was hard-deleted
 
-Served bytes were re-fetched from `/x?slug=…` and sha256-compared against the uploaded bytes for
-all five. All five are ≤250 KB (AC-13.5).
+`transactions` 1300 → **1302** (the cents probe, plus the row the spec reviewer created), so the
+count only rose; every round-start `transaction_id` is present in a round-end fetch;
+`ServerTxn.py` contains **zero** `.delete(` calls, proven by AST walk by two independent parties.
+
+### Live rows left behind, declared
+
+- `74f7a3a5-c7f9-4671-98c7-bf6781453b03` — **"ZZ S03 cents probe"**, `amount_cents` **12345**,
+  2026-08-20, account `619b96af-2` (Discovery), **active**. AC-2.5's and AC-9.5's evidence, left
+  in place so the verdicts stay reproducible. Visible in the Forms app as `R123.45`.
+- `92d058be-7f7f-4e0c-aa94-8039daaaeb4b` — created by the **spec reviewer** for its own
+  write-path proofs and left **archived** (`active: false`), −77777, `ZZ-TEST-ACTIVE`, 2025-12-25.
+  Invisible to all five new clients; visible in the Forms app, which ignores `active`.
+- The two `ZZ` accounts, `ZZ-TEST-ACTIVE` and `ZZ-TEST-ARCHIVED`, which pre-date the round.
+
+**There is no hard-delete path by design.** Bruce can archive the probe from the new Transactions
+screen whenever he likes; round 06 owns `accounts` writes and can retire the `ZZ` pair.
+
+## Promote / rollback ledger (AC-10.6) — all 13 promotes, written as part of each promote
+
+**The spec reviewer failed AC-10 on this and was right to:** the earlier draft of this debrief
+carried only the first five rows. Thirteen promotes happened. The complete ledger was written by
+the promote tool at the moment of each promote — timestamps run ~5 s ahead of the server's own
+`promoted_at`, which is what proves it was not reconstructed — and every `record_uid`, version and
+rollback pointer matches `/build/list`. Here it is in full.
+
+| slug | version | promoted `record_uid` | rollback to (previous current) | bytes | UTC | served-bytes |
+|---|---|---|---|---|---|---|
+| `x` | 1.2.0 | `47f49055-a24a-4d3b-bb74-45ce991244ce` | `bf9dae3e-fb80-4271-8ef7-9d3fd61598dc` | 56,336 | 18:16:34Z | served==promoted |
+| `d-dash` | 1.2.0 | `835a9eaf-3a05-4145-8352-438e4cdbe9d4` | `d0f6379e-b240-4352-bc54-36106572d47e` | 58,483 | 18:16:40Z | served==promoted |
+| `m-dash` | 1.2.0 | `61f3b790-2ac8-4e2c-9f32-e75417c9893d` | `6c6d0867-7fd2-4aeb-87a6-fa1fa66741e5` | 59,045 | 18:16:45Z | served==promoted |
+| `d-trans` | 1.2.0 | `a2a4513d-41aa-4c2e-85d3-856926faafb0` | — (first promote) | 92,828 | 18:16:55Z | served==promoted |
+| `m-trans` | 1.2.0 | `ddd3bb1f-6c1d-4cf3-9e12-e42a14f24ee9` | — (first promote) | 107,632 | 18:17:02Z | served==promoted |
+| `d-trans` | 1.2.1 | `f5b865ef-dbe7-4469-ae7f-4eface149be4` | `a2a4513d-41aa-4c2e-85d3-856926faafb0` | 93,891 | 20:11:19Z | served==promoted |
+| `m-trans` | 1.2.1 | `d54bb86d-421f-45e8-924e-f16d66785111` | `ddd3bb1f-6c1d-4cf3-9e12-e42a14f24ee9` | 111,340 | 20:11:26Z | served==promoted |
+| `x` | 1.2.2 | `66bf92c3-e342-47a1-87bc-205a8b96805a` | `47f49055-a24a-4d3b-bb74-45ce991244ce` | 57,405 | 21:40:33Z | served==promoted |
+| `d-dash` | 1.2.2 | `be1c8c3e-c104-44fb-a130-7c0b8646dbc5` | `835a9eaf-3a05-4145-8352-438e4cdbe9d4` | 59,552 | 21:40:40Z | served==promoted |
+| `m-dash` | 1.2.2 | `f1cb63d1-e4f0-4133-b389-ce4159466bdd` | `61f3b790-2ac8-4e2c-9f32-e75417c9893d` | 60,114 | 21:40:45Z | served==promoted |
+| `d-trans` | 1.2.2 | `25b9b73c-7b74-4844-932a-513539a7c702` | `f5b865ef-dbe7-4469-ae7f-4eface149be4` | 97,677 | 21:40:51Z | served==promoted |
+| `m-trans` | 1.2.2 | `731e2b29-7573-49a0-8d4d-173aa6dfbb67` | `d54bb86d-421f-45e8-924e-f16d66785111` | 115,137 | 21:40:58Z | served==promoted |
+| `d-trans` | **1.2.3** | `3eff7bcb-77ff-47ad-8cbb-402b42003d3a` | `25b9b73c-7b74-4844-932a-513539a7c702` | 102,844 | 22:49:36Z | served==promoted |
+
+All UTC 2026-08-20. **Currently live:** `x` / `d-dash` / `m-dash` / `m-trans` at **1.2.2**,
+`d-trans` at **1.2.3**. Served bytes were re-fetched from `/x?slug=…` and sha256-compared to the
+uploaded bytes on every one of the thirteen. All five are ≤250 KB (AC-13.5).
+
+**To roll any slug back**, promote its "rollback to" `record_uid` — that is the row that was
+`is_current` immediately before, recorded before the new one went live.
+
+## THE SPEC REVIEW — cycle 1 · **11 / 14 PASS**
+
+Dispatched after the visual gate's three cycles were committed, per §9. Fresh read-only context,
+full AC-1…AC-14, 145 tool calls, its own instruments. It re-derived rather than trusting: its own
+AST walks, its own hash recomputation (int-form **10/10**, float-form **0/10**), its own Python
+recomputation of the rendered totals, its own corruption of a golden expectation to prove that
+gate live, its own 1,192-control 44 px enumeration, its own timing runs.
+
+**PASS: AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, AC-12, AC-14** — eleven.
+
+Two of its findings are worth carrying on their own merits:
+
+- **It judged the AC-6.1 overflow repair that no visual cycle had seen** (it landed after the
+  three-cycle limit). Verified independently on live December at 1280/1440/1920: document, body,
+  table-wrap and scroller horizontal overflow all **0**, amount cells past the rail **0**,
+  truncated amounts **0**, before *and* after a driven scroll at every width.
+- **AC-9.5 proved behaviourally, not by inspection:** with a row set `active: false`, the API
+  returned 273 December rows while the Forms app still showed 274 with unchanged totals — so
+  `active` demonstrably does not reach the Forms app.
+
+### The three FAILs, and what each actually is
+
+**AC-10 — FAIL, on 10.6 alone.** 10.1–10.5 and 10.7 all hold. The debrief carried only 5 promote
+rows; there were **13**. The complete ledger existed and was accurate — every `record_uid`,
+version and rollback pointer matching `/build/list`, timestamps ~5 s ahead of the server's
+`promoted_at`, so demonstrably written *as part of* each promote — but it lived in a gitignored
+file and AC-10.6 requires it **in the debrief**. **A transcription failure in this document, not a
+build defect.** Closed above: all thirteen rows are now here.
+
+**AC-11 — FAIL, on 11.2 and the location of 11.1.** 11.3–11.6 hold. 11.2's set equality is
+**unsatisfiable against a remediation that correctly nets to zero** — see the section above and
+Addendum 8. 11.1's per-row listing is now committed at `docs/ledger_s03_written_rows.md` and
+pointed to from here. **The reviewer was right that the criterion as written does not pass; the
+correction is to the criterion, and it is recorded rather than argued away.**
+
+**AC-13 — FAIL, on 13.6/13.7 as recorded; 13.8 NOT VERIFIED.** 13.1, 13.2, 13.5 and 13.9 hold and
+were driven. The reviewer's objection was to *this document*: it named the cause and the
+trade-off but carried a single stale p50 of 1,286 ms, **no p95 at all**, and no fresh/reused split
+for the four endpoints §13.7 names. Closed in the speed section below.
+
+**Not a criterion, but a real finding it made:** `d-trans`'s **description sort is case-sensitive
+raw ASCII** — `comparatorFor` lowercases neither side for `description`, unlike `account` and
+`category` which sort on resolved labels. `"Apple Watch Benefit"` therefore sorts before every
+lower-case description. Deterministic and correctly verified, so not an AC failure, but it will
+read as a bug to a user. **Carried forward, not fixed** — a sort-order change after the gate has
+closed is exactly the kind of unreviewed edit this method exists to prevent.
 
 ---
 
-## THE REVIEW — visual gate, two cycles so far
+## SPEED — the honest record (AC-13.6, AC-13.7, AC-13.8)
 
-Spec §9: **visual reviewer first, its verdict committed, then the spec reviewer.** Both verdicts
-are committed as small `.md` files **before** any repair, so the record cannot be tidied after the
-fact. Evidence stays on disk.
+**AC-13.6 — the transactions payload, measured.** `?include=transactions` is **404,787 bytes**
+over 1,301 rows. Measured by the spec reviewer, warm, n=22, confirmed by a second run at n=25:
 
-### Cycle 1 — 26 PASS / 2 FAIL · `docs/review_s03_visual_cycle1.md`
+| connection | p50 | p95 |
+|---|---|---|
+| **reused** | **1,496 ms** | 1,733 ms |
+| **fresh** | **2,495 ms** | 3,060 ms |
 
-**The reviewer earned the round.** It found a **data-corrupting defect** no local drive had
-caught: on `m-trans`, opening *any* transfer transaction and tapping Save wrote `category: null`,
-destroying the transfer flag on a real row. It proved it on a live row and restored it.
+Second run n=25: p50 **1,479 ms**, minimum **1,128 ms** — **it never went under a second.**
 
-Root cause, confirmed independently by the orchestrator: the transfer sentinel is **not** one of
-the 57 `sub_categories` — it is published separately as the payload's `transfer_category_id` —
-and `m-trans` built its category select from `sub_categories` alone. **12 live transactions carry
-that sentinel.** The same hole made the category pill render the raw UUID.
+**This exceeds the 1-second rule, and here is the cause and the option, which is what §11.3 asked
+for rather than a guess.** The cost is *not* the payload. Measured on this app: an Anvil HTTP
+dispatch floor of **~400–700 ms** on a 106-byte `/me` response, and after the schema migration the
+transactions leg adds only **~130 ms** over the base bootstrap call (p50 1,375 ms vs 1,249 ms in
+the orchestrator's own run). The earlier 10.5 s figure was entirely the missing-column round trips
+of Addendum 6 and is gone.
 
-**Why no local drive caught it — an orchestrator error.** The round's §5 fixture published the
-sentinel **both** as the top-level key **and** as a `sub_categories` row. Live does only the
-former. So against that fixture the option was present by accident and the failing path never
-ran. **A fixture that does not mirror the live payload's shape guards nothing.** Corrected, and
-the corrected fixture reproduces the defect against the pre-fix build — which is what makes the
-green re-run non-vacuous.
+**→ Bruce's decision, put plainly: windowing would recover at most ~130–600 ms and cannot get
+below Anvil's dispatch floor.** Shipping the whole history in one call — §11.3's deliberate choice
+— costs roughly a tenth of a second more than shipping one month, and buys instant month
+stepping, search and totals with **zero** further requests, which is measured at **0.3–8.9 ms**
+per interaction. **The recommendation is to keep it and accept a named ~1.5 s page open.** The
+alternative worth considering is not windowing but the platform: the floor is Anvil's, not ours.
 
-Second FAIL: the `d-trans` detail rail computed `border-radius: 0px` against AC-14.4's ≥12 px.
+**AC-13.7 — the remaining endpoint timings** (`/x?slug=d-trans`, `/txn/categorise`, `/txn/update`,
+fresh and reused, ≥20 each) are **still outstanding**. They cannot be taken while AC-13.8's
+cold-start sequence is running, because that requires the app to be genuinely idle.
 
-The repair went beyond the reported bug: the edit sheet now **refuses to write a `category` or
-`account` the select never actually offered**, so any unrepresentable stored value is preserved
-rather than silently nulled. That closes the general shape — an archived sub-category, a future
-sentinel, a removed account — not just transfers. An explicit "Uncategorised" still writes `null`.
-
-### Cycle 2 — 37 PASS / 1 FAIL · `docs/review_s03_visual_cycle2.md`
-
-Re-run **in full from the first criterion**, not just the two failures, because repairs regress
-neighbours. Both cycle-1 FAILs re-proven fixed on the promoted 1.2.1 builds.
-
-One new FAIL, **AC-7.7**: `.bx-sort-btn` carries `min-height: 44px` but no `min-width`, so the
-DATE header collapses to **40×44** once the sort arrow moves to another column. It survived
-cycle 1's enumeration of **288 controls** because that enumeration measured every control in
-**one state only** — the control breaches the rule only *after a state change*. Confirmed
-independently by the orchestrator (53×44 → 40×44).
-
-Fixed in the canon, and the fix was followed by a **multi-state** sweep — 208 measurements across
-five pages × two widths × two motion modes × up to 24 driven states each, including zero-result
-searches, empty months, open sheets, pickers, decks, toasts and reduced-motion fallbacks. **No
-further breach found**, 0 states unreached, 0 elements never measured. The instrument was proven
-able to fail by reverting the fix and watching it report `40.4×44.0`.
-
-### Reviewer honesty, recorded because it is what makes the verdicts worth having
-
-Across the two cycles the reviewer caught and re-drove **eight of its own instrument errors before
-writing any verdict** — a blocking route handler, a zero-hit search term that would have passed a
-criterion vacuously, trimmed and stale sort keys, measuring a sheet's child instead of the sheet,
-and a swipe on a card that had no suggestion. It also correctly refused to call
-"right-swipe does nothing without a suggestion" a defect: that is §3.6's specified behaviour.
-
-**The orchestrator's instruments were wrong five times** — a dialog regex that matched the English
-word "confirm (" in prose, a stale element handle that read as a click interception, a `.tap()`
-that does not fire the pointer pair `m-trans` listens for, an `fmtR` scan that sliced only one of
-three canon blocks, and a first latency hypothesis that was simply wrong. Each was caught by
-checking the artefact rather than trusting the reading. **Recorded because a gate is only as
-honest as its instruments, and this round's instruments were wrong more often than its code.**
+**AC-13.8 — five cold-start readings, in progress.** Started 2026-08-21, each after a ≥10-minute
+idle (first 13 min, then four 30-minute gaps), spanning ~2h13m — the app must be untouched
+throughout, which is why it runs last. S02 Addendum 7's lesson is explicit: three readings once
+spread 661–2,957 ms and a single figure supported a conclusion that was false. **All five
+readings, the median and the range will be reported, and no conclusion will be drawn that the
+spread does not support.**
 
 ## Models actually used
 
