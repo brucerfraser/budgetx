@@ -395,6 +395,15 @@ closed is exactly the kind of unreviewed edit this method exists to prevent.
 
 ---
 
+### Spec review cycle 2 — dispatched, and one dispatch lost
+
+The first dispatch of cycle 2 **died on an API connection error before doing any work** — it
+read nothing and judged nothing. It is recorded here rather than omitted, because a review that
+did not happen must not look like one that did. It was re-dispatched fresh. **An infrastructure
+failure does not consume a review cycle**; nothing was judged, so there was nothing to carry.
+
+---
+
 ## SPEED — the honest record (AC-13.6, AC-13.7, AC-13.8)
 
 **AC-13.6 — the transactions payload, measured.** `?include=transactions` is **404,787 bytes**
