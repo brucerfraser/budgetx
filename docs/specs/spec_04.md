@@ -2291,3 +2291,75 @@ partition:
 hazard state), and its union clause against `derived_true_ids ∪ derived_false_ids`.
 **AC-4.5's idempotence is judged against `set_true_ids` / `set_false_ids`.** Both artefacts go in
 the debrief, as AC-4.4 already requires.
+
+### Addendum 3 — 2026-08-21 (Orchestrator) — no live month has 20 budget rows; the drive months are named and the threshold is restated
+
+**The §3.1 measurement that changed a decision.** §7 trap 11 and AC-5.4 require the reviewers to
+drive **three** months each holding **≥ 20 budget rows and ≥ 40 transactions**, chosen from §3.1
+measurement 6. Measurement 6, taken 2026-08-21 against the live tables through
+`GET /build/budget-audit`, says **no such month exists** — and none can be made to exist by this
+round, because §2.7 forbids writing budget rows on real sub-categories and §3.13's `ZZ` rows add
+only five per month.
+
+| month | budget rows | transactions | non-transfer |
+|---|---|---|---|
+| 2025-07 | 1 | 98 | 98 |
+| 2025-08 | 1 | 190 | 190 |
+| 2025-09 | 2 | 163 | 163 |
+| 2025-10 | 6 | 205 | 205 |
+| 2025-11 | 10 | 219 | 219 |
+| **2025-12** | **12** | **273** | **261** |
+| **2026-01** | **12** | **142** | **142** |
+| 2026-02 | 14 | 10 | 10 |
+| 2026-08 | 0 | 1 | 1 |
+
+`budgets` holds **58 rows in total** across 57 sub-categories and nine months. The spec was written
+expecting a fully-budgeted table; the real one is sparse.
+
+**The resolution.** The threshold existed to stop a **vacuous** month passing a money criterion —
+`∅ == ∅` passes everything (§7 trap 11). That intent is served by density, not by the number 20. So:
+
+- **The threshold is restated as ≥ 10 budget rows and ≥ 40 non-transfer transactions.**
+- **The three months named in both reviewer dispatches are `2025-11`, `2025-12` and `2026-01`.**
+  They are the three densest live months and each clears the restated bar comfortably.
+- **The primary drive month for AC-6, AC-8, AC-13 and AC-14 is `2025-12`.** It is chosen on
+  evidence, not convenience: measurement 12 reports it is the **only** live month carrying a
+  non-zero overspend (**1,101,913 cents across two sub-categories**), which makes **2026-01** a
+  live month with a genuinely non-zero `carried_overspend` — so AC-6.12's chip is provable on
+  Bruce's own data as well as on the `ZZ` rows.
+- After §3.13's `ZZ` budget rows land, 2025-12 carries **17** budget rows and 2025-11 **15**.
+- **Every verdict must name the month it drove**, exactly as §7 trap 11 already requires.
+
+### Addendum 4 — 2026-08-21 (Orchestrator) — the other nine measurements, and what they settle
+
+Measurement 6 was the only surprise. The rest came back clean, and several of them **retire a
+hazard the spec had budgeted for**:
+
+- **M2 — income.** Exactly one category named `Income`, byte-exact, **zero near-misses**. The
+  widening from the legacy case-sensitive test (fact 6) to `bxIncomeCategoryId`'s
+  case-insensitive one is proven safe: no live row collides.
+- **M3 — the transfer sentinel `ec8e0085-…` IS a `categories` row** (name `Transfer`,
+  `order == -1`, so legacy-archived) and is **not** a `sub_categories` row. 12 transactions point
+  at it. Consequences: it is **excluded from `/cat/reorder`'s "complete set of non-archived
+  categories"** by virtue of being archived, and because it has no sub-category rows the exclusion
+  must happen **on the transaction side** — exactly the case §3.3 wrote `transferCategoryId` as an
+  argument for.
+- **M4 — `order == -1`:** exactly one category (the transfer sentinel) and one sub-category
+  (`8b7038de-…`, `Tester2`). These two ids are what AC-4.4 compares `derived_false_ids` against.
+- **M5 — zero duplicate `(belongs_to, period)` pairs.** Fact 3's breeding ground is empty today.
+  **AC-2.7 is therefore judged N/A on the measurement as evidence**, and the duplicate guard is
+  proven instead by the off-platform unit test AC-2.7 itself prescribes.
+- **M7 — zero non-integral `budget_amount` values.** Fact 11's float cents are not present in the
+  live table. §4.3's rounding path is still implemented and still golden-tested; it simply has no
+  live row to list.
+- **M8 — zero `roll_over == True` rows with a null date.** Fact 14's crash state does not exist
+  live. §4.5 branch B is still implemented and golden-tested.
+- **M9 — zero orphans**, in either direction.
+- **M10 — the order sequences are captured verbatim** in `scratch/s04/measurements.json` under
+  `order_sequences`. This is the artefact AC-11.3 restores against.
+- **M11 — zero sign anomalies.** No income budget row is negative and no expense budget row is
+  positive, so §4.5A's `max(0, …)` on `income_planned` has no live row to defend against. It stays.
+- **M12 — overspend by month:** every month is `0` except **2025-12 → 1,101,913 cents over two
+  sub-categories**. This is what names the drive month in Addendum 3, and it means the
+  absent-chip case must be proven on §3.13 row 9's far-future pair as the spec already designed
+  (or on any month whose predecessor is one of the eight zero months).
