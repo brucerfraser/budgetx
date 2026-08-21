@@ -17,16 +17,38 @@ Logins default to TEST2 (spec_02 §6 — TEST2 is the account everything is driv
   build-promote <record_uid> | build-list [--slug S] [--kind K] | session <token_hash>
 
 Round 03 verification commands (spec_03 §3.1, §4):
-  bootstrap [--include transactions] [--out FILE]
+  bootstrap [--include transactions,budgets] [--out FILE]
   txn-categorise (--id ID --category CAT | --batch FILE)     CAT may be the literal `null`
   txn-update --id ID --field K=V [--field K=V ...]           amount_cents is cast to int
   txn-create --date D --amount-cents N --account A [--description X] [--category C]
              [--notes N] [--transfer-account A]
   txn-archive --id ID [--id ID ...] | txn-restore --id ID [--id ID ...]
 
+Round 04 verification commands (spec_04 §3.2, §4):
+  budget-summary --month YYYY-MM [--out FILE]
+  budget-amount --sub S --month M --amount-cents N
+  budget-notes  --sub S --month M --notes TEXT
+  budget-open-month --month M --copy-from M
+  cat-create --name N --colour-back #RRGGBB --colour-text #RRGGBB
+  cat-update --id C --field K=V [...]          | cat-reorder --id C [--id C ...]
+  cat-archive --id C                           | cat-restore --id C
+  subcat-create --name N --belongs-to C [--icon I] [--roll-over] [--roll-over-date YYYY-MM]
+  subcat-update --id S --field K=V [...]       | subcat-reorder --belongs-to C --id S [--id S..]
+  subcat-archive --id S                        | subcat-restore --id S
+  budget-audit [--out FILE]                    | init-active
+
+EVERY round-04 write command accepts `--raw K=JSON` (repeatable). The value is parsed as JSON
+and merged into the body LAST, so a reviewer can post a float, a string or a null where an
+integer is contracted, or a forged `category_id` / `order`, without a second tool. That is what
+AC-2.1, AC-2.8 and AC-3.1 need to drive.
+
 Every one prints the PARSED response, routed through emit() so the redaction that covers the
 older commands covers these too — including their error paths. --out writes the raw response
 body to a file (a file is not stdout); the bootstrap payload carries no secret, only app data.
+
+BUILD_SECRET (spec_04 §3.11 fix 8, AC-12.6): an environment variable of that name OVERRIDES the
+value in .secrets/budgetx.env. Which source was used is announced on stderr — by NAME, never by
+value — so an override is demonstrable without a secret reaching captured output.
 """
 import argparse
 import hashlib
@@ -47,6 +69,10 @@ TOKEN_PATH = os.path.join(ROOT, ".secrets", ".token")
 # no business on stderr. `session` puts a token_hash in a query string, and some urllib failures
 # stringify the URL — so the failure path is redacted rather than trusted (spec_02 AC-3.1).
 _HEXISH = re.compile(r"[0-9a-f]{32,}")
+
+# A bare integer in a --field value. Money never passes through here (budget amounts have their
+# own typed flag), so this only ever coerces things like an `order` a reviewer is forging.
+_INTISH = re.compile(r"^-?\d+$")
 
 
 def die(msg, code=1):
@@ -99,6 +125,77 @@ def api_base(cfg):
     return cfg.get("APP_BASE", "").rstrip("/") + "/_/api"
 
 
+def build_secret_from(cfg):
+    """(secret, source-name). The ENVIRONMENT WINS (spec_04 §3.11 fix 8, AC-12.6).
+
+    An override in the environment lets a reviewer drive a build endpoint with a deliberately
+    wrong secret — AC-4.3 needs exactly that — without editing the gitignored env file. The
+    source is a NAME, never a value; nothing here returns or prints the secret itself.
+    """
+    env_value = os.environ.get("BUILD_SECRET")
+    if env_value:
+        return env_value, "environment override (BUILD_SECRET)"
+    return cfg.get("BUILD_SECRET"), ".secrets/budgetx.env"
+
+
+def parse_raw(pairs):
+    """`--raw K=JSON` -> {K: parsed}. A value that is not valid JSON is kept as a plain string,
+    so `--raw name=hello` works as well as `--raw amount_cents=null`."""
+    out = {}
+    for pair in pairs or []:
+        if "=" not in pair:
+            die("--raw expects K=JSON")
+        key, value = pair.split("=", 1)
+        try:
+            out[key.strip()] = json.loads(value)
+        except ValueError:
+            out[key.strip()] = value
+    return out
+
+
+def parse_fields(pairs, field="--field"):
+    """`K=V` -> {K: V}, with the JSON literals `null`, `true` and `false` and a bare integer
+    recognised. Anything else stays a string, which is what a name or a colour wants."""
+    out = {}
+    for pair in pairs or []:
+        if "=" not in pair:
+            die("%s expects K=V" % field)
+        key, value = pair.split("=", 1)
+        key = key.strip()
+        if value in ("null", "true", "false") or _INTISH.match(value):
+            out[key] = json.loads(value)
+        else:
+            out[key] = value
+    return out
+
+
+def with_raw(body, args):
+    """Merge --raw overrides in LAST, so they win over the typed flags."""
+    return {**body, **parse_raw(getattr(args, "raw", []))}
+
+
+def add_raw(parser):
+    parser.add_argument("--raw", dest="raw", action="append", default=[], metavar="K=JSON",
+                        help="repeatable; parsed as JSON and merged into the body last — the "
+                             "escape hatch for negative tests (a float where an int is "
+                             "contracted, a forged id, an unknown key)")
+    return parser
+
+
+def report(status, payload, out=None):
+    """The round-03/04 house style: HTTP status, the parsed body through emit(), exit 2 on a
+    non-2xx so a shell loop can tell a refusal from a success."""
+    if out:
+        with open(out, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=1, sort_keys=True)
+        print("wrote %s" % out)
+    print("HTTP %s" % status)
+    emit(payload)
+    if not (200 <= status < 300):
+        sys.exit(2)
+    return payload
+
+
 def call(cfg, method, path, body=None, params=None, token=None, build_secret=False):
     """Returns (status, parsed_or_text). Raises nothing that would print a secret."""
     url = api_base(cfg) + path
@@ -110,9 +207,13 @@ def call(cfg, method, path, body=None, params=None, token=None, build_secret=Fal
     if token:
         req.add_header("Authorization", "Bearer %s" % token)
     if build_secret:
-        secret = cfg.get("BUILD_SECRET")
+        secret, source = build_secret_from(cfg)
         if not secret:
-            die("BUILD_SECRET missing from .secrets/budgetx.env")
+            die("BUILD_SECRET missing from the environment and from .secrets/budgetx.env")
+        # The SOURCE is announced, never the value — that is what makes AC-12.6's override
+        # demonstrable without a secret reaching captured output. stderr, so --out and every
+        # JSON-parsing caller are unaffected.
+        sys.stderr.write("build secret: %s\n" % source)
         req.add_header("X-Build-Secret", secret)
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
@@ -208,6 +309,72 @@ def main():
     for name in ("txn-archive", "txn-restore"):
         pr = sub.add_parser(name)
         pr.add_argument("--id", dest="ids", action="append", default=[], required=True)
+
+    # ---- round 04 --------------------------------------------------------------------------
+    bsum = sub.add_parser("budget-summary")
+    bsum.add_argument("--month", required=True, help="YYYY-MM")
+    bsum.add_argument("--out", default=None, help="write the RAW response JSON to this file")
+
+    bam = add_raw(sub.add_parser("budget-amount"))
+    bam.add_argument("--sub", dest="sub_category_id", required=True)
+    bam.add_argument("--month", required=True, help="YYYY-MM")
+    bam.add_argument("--amount-cents", type=int, default=None,
+                     help="INTEGER CENTS — the column already holds cents; never multiply by "
+                          "100. Omit and use --raw amount_cents=<json> to send a bad type.")
+
+    bno = add_raw(sub.add_parser("budget-notes"))
+    bno.add_argument("--sub", dest="sub_category_id", required=True)
+    bno.add_argument("--month", required=True, help="YYYY-MM")
+    bno.add_argument("--notes", default="", help="an EMPTY string clears the note (fact 10)")
+
+    bom = add_raw(sub.add_parser("budget-open-month"))
+    bom.add_argument("--month", default=None, help="YYYY-MM — the month being opened")
+    bom.add_argument("--copy-from", dest="copy_from", default=None, help="YYYY-MM")
+
+    cc = add_raw(sub.add_parser("cat-create"))
+    cc.add_argument("--name", default=None)
+    cc.add_argument("--colour-back", dest="colour_back", default=None, help="#RRGGBB")
+    cc.add_argument("--colour-text", dest="colour_text", default=None, help="#RRGGBB")
+
+    cu = add_raw(sub.add_parser("cat-update"))
+    cu.add_argument("--id", dest="category_id", required=True)
+    cu.add_argument("--field", dest="fields", action="append", default=[], metavar="K=V",
+                    help="repeatable; a value of `null` means JSON null")
+
+    cr = add_raw(sub.add_parser("cat-reorder"))
+    cr.add_argument("--id", dest="ids", action="append", default=[],
+                    help="repeatable, in the DESIRED order — the COMPLETE non-archived set")
+
+    for name in ("cat-archive", "cat-restore"):
+        pr = add_raw(sub.add_parser(name))
+        pr.add_argument("--id", dest="category_id", required=True)
+
+    sc = add_raw(sub.add_parser("subcat-create"))
+    sc.add_argument("--name", default=None)
+    sc.add_argument("--belongs-to", dest="belongs_to", default=None)
+    sc.add_argument("--icon", default=None)
+    sc.add_argument("--roll-over", dest="roll_over", action="store_true")
+    sc.add_argument("--roll-over-date", dest="roll_over_date", default=None,
+                    help="YYYY-MM (or YYYY-MM-DD)")
+
+    su = add_raw(sub.add_parser("subcat-update"))
+    su.add_argument("--id", dest="sub_category_id", required=True)
+    su.add_argument("--field", dest="fields", action="append", default=[], metavar="K=V",
+                    help="repeatable; `null` means JSON null, `true`/`false` mean booleans")
+
+    sr = add_raw(sub.add_parser("subcat-reorder"))
+    sr.add_argument("--belongs-to", dest="belongs_to", required=True)
+    sr.add_argument("--id", dest="ids", action="append", default=[],
+                    help="repeatable, in the DESIRED order — the COMPLETE non-archived set")
+
+    for name in ("subcat-archive", "subcat-restore"):
+        pr = add_raw(sub.add_parser(name))
+        pr.add_argument("--id", dest="sub_category_id", required=True)
+
+    ba = sub.add_parser("budget-audit")
+    ba.add_argument("--out", default=None, help="write the RAW response JSON to this file")
+    ia = sub.add_parser("init-active")
+    ia.add_argument("--out", default=None, help="write the RAW response JSON to this file")
 
     args = ap.parse_args()
     if not args.cmd:
@@ -396,11 +563,121 @@ def main():
         if not (200 <= status < 300):
             sys.exit(2)
 
+    # ---- round 04 ----------------------------------------------------------------------------
+
+    elif args.cmd == "budget-summary":
+        status, payload = call(cfg, "GET", "/budget/summary",
+                               params={"month": args.month}, token=read_token())
+        report(status, payload, out=args.out)
+
+    elif args.cmd == "budget-amount":
+        body = {"sub_category_id": args.sub_category_id, "month": args.month}
+        if args.amount_cents is not None:
+            # Straight over the wire as typed. NO multiply by 100 anywhere in this tool: the
+            # column already holds cents, and a multiply here would inflate the figure 100x
+            # just as surely as one on the server.
+            body = {**body, "amount_cents": args.amount_cents}
+        status, payload = call(cfg, "POST", "/budget/amount", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "budget-notes":
+        body = {"sub_category_id": args.sub_category_id, "month": args.month,
+                "notes": args.notes}
+        status, payload = call(cfg, "POST", "/budget/notes", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "budget-open-month":
+        # Neither key is defaulted here either: an omitted flag sends no key at all, so the
+        # server's "both are required" rule is drivable from the CLI.
+        body = {}
+        if args.month is not None:
+            body = {**body, "month": args.month}
+        if args.copy_from is not None:
+            body = {**body, "copy_from": args.copy_from}
+        status, payload = call(cfg, "POST", "/budget/open-month", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "cat-create":
+        body = {}
+        for key, value in (("name", args.name), ("colour_back", args.colour_back),
+                           ("colour_text", args.colour_text)):
+            if value is not None:
+                body = {**body, key: value}
+        status, payload = call(cfg, "POST", "/cat/create", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "cat-update":
+        body = {"category_id": args.category_id, "fields": parse_fields(args.fields)}
+        status, payload = call(cfg, "POST", "/cat/update", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "cat-reorder":
+        status, payload = call(cfg, "POST", "/cat/reorder",
+                               body=with_raw({"order": args.ids}, args), token=read_token())
+        report(status, payload)
+
+    elif args.cmd in ("cat-archive", "cat-restore"):
+        path = "/cat/archive" if args.cmd == "cat-archive" else "/cat/restore"
+        status, payload = call(cfg, "POST", path,
+                               body=with_raw({"category_id": args.category_id}, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "subcat-create":
+        body = {"roll_over": bool(args.roll_over)}
+        for key, value in (("name", args.name), ("belongs_to", args.belongs_to),
+                           ("icon", args.icon), ("roll_over_date", args.roll_over_date)):
+            if value is not None:
+                body = {**body, key: None if value == "null" else value}
+        status, payload = call(cfg, "POST", "/subcat/create", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "subcat-update":
+        body = {"sub_category_id": args.sub_category_id, "fields": parse_fields(args.fields)}
+        status, payload = call(cfg, "POST", "/subcat/update", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "subcat-reorder":
+        body = {"belongs_to": args.belongs_to, "order": args.ids}
+        status, payload = call(cfg, "POST", "/subcat/reorder", body=with_raw(body, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd in ("subcat-archive", "subcat-restore"):
+        path = "/subcat/archive" if args.cmd == "subcat-archive" else "/subcat/restore"
+        status, payload = call(cfg, "POST", path,
+                               body=with_raw({"sub_category_id": args.sub_category_id}, args),
+                               token=read_token())
+        report(status, payload)
+
+    elif args.cmd == "budget-audit":
+        status, payload = call(cfg, "GET", "/build/budget-audit", build_secret=True)
+        report(status, payload, out=args.out)
+
+    elif args.cmd == "init-active":
+        # The one bounded write in the migration scaffolding. It takes NO input: the two table
+        # names are literals in the server's source (spec_04 §3.7).
+        status, payload = call(cfg, "POST", "/build/init-active", body={}, build_secret=True)
+        report(status, payload, out=args.out)
+
     elif args.cmd == "session":
         status, payload = call(cfg, "GET", "/build/session", build_secret=True,
                                params={"token_hash": args.token_hash})
         require_ok(status, payload)
-        print(json.dumps(payload.get("session"), indent=1, sort_keys=True))
+        session = payload.get("session")
+        if session is None:
+            # spec_04 §3.11 fix 8 / AC-12.6: v1 printed `null` and exited 0, so a typo in a
+            # token_hash was indistinguishable from a genuine lookup. The message names the
+            # outcome and the exit code differs from both success (0) and an HTTP failure (2).
+            die("no session found for that token_hash", 4)
+        print(json.dumps(session, indent=1, sort_keys=True))
 
 
 if __name__ == "__main__":

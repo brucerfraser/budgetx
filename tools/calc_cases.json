@@ -15,7 +15,33 @@
     "\"throws\": \"substring\" expects a throw; \"legacy_compare\" additionally runs the ported",
     "legacy is_it_smart and REQUIRES its answer to differ (spec_03 AC-5.5).",
     "",
-    "The transfer sentinel category id is ec8e0085-8408-43a2-953f-ebba24549d96 (spec_03 §3.2)."
+    "The transfer sentinel category id is ec8e0085-8408-43a2-953f-ebba24549d96 (spec_03 §3.2).",
+    "",
+    "v2 (Round 04, Builder C) adds the cases for spec_04 §3.3's sixteen new exports.",
+    "Every expectation below is HAND-COMPUTED from §4.5 (rollover), §4.5A (the month",
+    "pool) and §4.6 (the progress meter) — never recorded from a run of bx_calc.js.",
+    "Fixtures are deliberately small and use round cent values so any figure here can",
+    "be re-derived with mental arithmetic from the fixture rows.",
+    "",
+    "Two further case options the v2 runner understands:",
+    "  \"legacy_rollover\": {...}   also runs the ported legacy BUDGET.py roll_over_calc",
+    "                            on the same fixtures and REQUIRES its answer to equal",
+    "                            the month's own actual (variance 0, \"exactly on",
+    "                            budget\") while bxRollover reports overspent > 0 and",
+    "                            remaining == 0 — spec_04 AC-5.5, fact 12.",
+    "  {\"$sort\": {\"fn\": ..., \"of\": ...}}  sorts an array THROUGH an exported",
+    "                            comparator, which is the only way to show bxCompare",
+    "                            is a total order (§3.11 carry-fix 3).",
+    "A case may carry \"value\" (a resolved expression) instead of \"fn\"/\"args\".",
+    "",
+    "Sign convention: expense budgets and actuals are NEGATIVE, income POSITIVE. The",
+    "sole exception is §4.5A's pool, whose figures are positive magnitudes and whose",
+    "`unassigned` alone may be negative.",
+    "",
+    "Two round-04 integration corrections are pinned here rather than only described:",
+    "an ARCHIVED CATEGORY keeps its bxCatTotals entry but contributes nothing to",
+    "bxHeaderTotals (§3.9, \"excluded from every total\"), and bxProgress clamps",
+    "`over_fraction` to [0,1] while leaving `over_ratio` uncapped (spec Addendum 5)."
   ],
 
   "fixtures": {
@@ -143,6 +169,394 @@
 
     "caseTxns": [
       { "transaction_id": "ci1", "date": "2024-05-01", "description": "Vida e Caffe Rosebank", "amount_cents": -4500, "category": "sub-cafe" }
+    ],
+
+    "catsStd": [
+      {"category_id": "cat-income", "name": "Income", "colour_back": "#101820", "colour_text": "#ffffff", "order": 0, "active": true},
+      {"category_id": "cat-home", "name": "Home", "colour_back": "#101820", "colour_text": "#ffffff", "order": 1, "active": true},
+      {"category_id": "cat-food", "name": "Food", "colour_back": "#101820", "colour_text": "#ffffff", "order": 2, "active": true},
+      {"category_id": "cat-old", "name": "Old Stuff", "colour_back": "#101820", "colour_text": "#ffffff", "order": -1, "active": false}
+    ],
+
+    "catsNoIncome": [
+      {"category_id": "cat-home", "name": "Home", "colour_back": "#101820", "colour_text": "#ffffff", "order": 0, "active": true},
+      {"category_id": "cat-food", "name": "Food", "colour_back": "#101820", "colour_text": "#ffffff", "order": 1, "active": true}
+    ],
+
+    "catsIncomeLower": [
+      {"category_id": "cat-home", "name": "Home", "colour_back": "#101820", "colour_text": "#ffffff", "order": 0, "active": true},
+      {"category_id": "cat-inc-2", "name": "  income  ", "colour_back": "#101820", "colour_text": "#ffffff", "order": 1, "active": true}
+    ],
+
+    "subsStd": [
+      {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-bonus", "name": "Bonus", "icon": null, "belongs_to": "cat-income", "order": 1, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-rent", "name": "Rent", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 1, "roll_over": true, "roll_over_date": "2025-01-01", "active": true},
+      {"sub_category_id": "sub-food", "name": "Food", "icon": null, "belongs_to": "cat-food", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-arch", "name": "Archived Treats", "icon": null, "belongs_to": "cat-food", "order": -1, "roll_over": false, "roll_over_date": null, "active": false},
+      {"sub_category_id": "sub-orphan", "name": "Orphan", "icon": null, "belongs_to": "cat-gone", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "name": "Transfers", "icon": null, "belongs_to": "cat-home", "order": 2, "roll_over": false, "roll_over_date": null, "active": true}
+    ],
+
+    "roBudgets": [
+      {"sub_category_id": "sub-fuel", "month": "2025-01", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-02", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-03", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-04", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-05", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-06", "amount_cents": -100000, "notes": ""}
+    ],
+
+    "roTxns": [
+      {"transaction_id": "ro1", "date": "2025-01-14", "description": "ZZ ROW", "amount_cents": -60000, "category": "sub-fuel"},
+      {"transaction_id": "ro2", "date": "2025-02-14", "description": "ZZ ROW", "amount_cents": -50000, "category": "sub-fuel"},
+      {"transaction_id": "ro3", "date": "2025-03-14", "description": "ZZ ROW", "amount_cents": -80000, "category": "sub-fuel"},
+      {"transaction_id": "ro4", "date": "2025-04-14", "description": "ZZ ROW", "amount_cents": -120000, "category": "sub-fuel"},
+      {"transaction_id": "ro5", "date": "2025-05-14", "description": "ZZ ROW", "amount_cents": -300000, "category": "sub-fuel"},
+      {"transaction_id": "ro6", "date": "2025-06-14", "description": "ZZ ROW", "amount_cents": -70000, "category": "sub-fuel"}
+    ],
+
+    "roSubs": [
+      {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2025-01-01", "active": true}
+    ],
+
+    "roGapBudgets": [
+      {"sub_category_id": "sub-fuel", "month": "2025-01", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-03", "amount_cents": -100000, "notes": ""}
+    ],
+
+    "roGapTxns": [
+      {"transaction_id": "rg1", "date": "2025-01-10", "description": "ZZ ROW", "amount_cents": -40000, "category": "sub-fuel"},
+      {"transaction_id": "rg2", "date": "2025-02-10", "description": "ZZ ROW", "amount_cents": -30000, "category": "sub-fuel"},
+      {"transaction_id": "rg3", "date": "2025-03-10", "description": "ZZ ROW", "amount_cents": -20000, "category": "sub-fuel"},
+      {"transaction_id": "rg4", "date": "2025-04-10", "description": "ZZ ROW", "amount_cents": -10000, "category": "sub-fuel"}
+    ],
+
+    "ro13Budgets": [
+      {"sub_category_id": "sub-fuel", "month": "2024-06", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2024-07", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2024-08", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2024-09", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2024-10", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2024-11", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2024-12", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-01", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-02", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-03", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-04", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-05", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-06", "amount_cents": -10000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-07", "amount_cents": -10000, "notes": ""}
+    ],
+
+    "ro13Txns": [
+      {"transaction_id": "r13", "date": "2025-07-02", "description": "ZZ ROW", "amount_cents": -5000, "category": "sub-fuel"}
+    ],
+
+    "xferBudgets": [
+      {"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "month": "2025-05", "amount_cents": -50000, "notes": ""}
+    ],
+
+    "xferTxns": [
+      {"transaction_id": "x1", "date": "2025-05-03", "description": "ZZ ROW", "amount_cents": -30000, "category": "ec8e0085-8408-43a2-953f-ebba24549d96"},
+      {"transaction_id": "x2", "date": "2025-05-04", "description": "ZZ ROW", "amount_cents": -70000, "category": "ec8e0085-8408-43a2-953f-ebba24549d96"}
+    ],
+
+    "roDriftBudgets": [
+      {"sub_category_id": "sub-drift", "month": "2024-01", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-02", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-03", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-04", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-05", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-06", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-07", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-08", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-09", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-10", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-11", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2024-12", "amount_cents": -1013, "notes": ""},
+      {"sub_category_id": "sub-drift", "month": "2025-01", "amount_cents": -1013, "notes": ""}
+    ],
+
+    "roDriftTxns": [
+      {"transaction_id": "dr1", "date": "2024-01-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr2", "date": "2024-02-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr3", "date": "2024-03-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr4", "date": "2024-04-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr5", "date": "2024-05-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr6", "date": "2024-06-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr7", "date": "2024-07-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr8", "date": "2024-08-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr9", "date": "2024-09-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr10", "date": "2024-10-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr11", "date": "2024-11-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr12", "date": "2024-12-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"},
+      {"transaction_id": "dr13", "date": "2025-01-15", "description": "ZZ ROW", "amount_cents": -337, "category": "sub-drift"}
+    ],
+
+    "incBudgets": [
+      {"sub_category_id": "sub-salary", "month": "2025-05", "amount_cents": 5000000, "notes": ""}
+    ],
+
+    "incTxns": [
+      {"transaction_id": "i1", "date": "2025-05-25", "description": "ZZ ROW", "amount_cents": 4200000, "category": "sub-salary"}
+    ],
+
+    "stBudgets": [
+      {"sub_category_id": "sub-salary", "month": "2025-05", "amount_cents": 5000000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2025-05", "amount_cents": -1500000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2025-05", "amount_cents": -400000, "notes": ""},
+      {"sub_category_id": "sub-fuel", "month": "2025-05", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-arch", "month": "2025-05", "amount_cents": -200000, "notes": ""},
+      {"sub_category_id": "sub-orphan", "month": "2025-05", "amount_cents": -50000, "notes": ""},
+      {"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "month": "2025-05", "amount_cents": -30000, "notes": ""}
+    ],
+
+    "stTxns": [
+      {"transaction_id": "st1", "date": "2025-05-25", "description": "ZZ ROW", "amount_cents": 4800000, "category": "sub-salary"},
+      {"transaction_id": "st2", "date": "2025-05-01", "description": "ZZ ROW", "amount_cents": -1500000, "category": "sub-rent"},
+      {"transaction_id": "st3", "date": "2025-05-08", "description": "ZZ ROW", "amount_cents": -450000, "category": "sub-food"},
+      {"transaction_id": "st4", "date": "2025-05-09", "description": "ZZ ROW", "amount_cents": -90000, "category": "sub-fuel"},
+      {"transaction_id": "st5", "date": "2025-05-10", "description": "ZZ ROW", "amount_cents": -180000, "category": "sub-arch"},
+      {"transaction_id": "st6", "date": "2025-05-11", "description": "ZZ ROW", "amount_cents": -20000, "category": "sub-orphan"},
+      {"transaction_id": "st7", "date": "2025-05-12", "description": "ZZ ROW", "amount_cents": -250000, "category": "ec8e0085-8408-43a2-953f-ebba24549d96"}
+    ],
+
+    "poolSubs": [
+      {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-side", "name": "Side Income", "icon": null, "belongs_to": "cat-income", "order": 1, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-rent", "name": "Rent", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-save", "name": "Saving", "icon": null, "belongs_to": "cat-home", "order": 1, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-food", "name": "Food", "icon": null, "belongs_to": "cat-food", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-fun", "name": "Fun", "icon": null, "belongs_to": "cat-food", "order": 1, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-arch", "name": "Archived", "icon": null, "belongs_to": "cat-food", "order": -1, "roll_over": false, "roll_over_date": null, "active": false},
+      {"sub_category_id": "sub-nobud", "name": "Unbudgeted", "icon": null, "belongs_to": "cat-home", "order": 2, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "name": "Transfers", "icon": null, "belongs_to": "cat-home", "order": 3, "roll_over": false, "roll_over_date": null, "active": true}
+    ],
+
+    "poolBudgets": [
+      {"sub_category_id": "sub-salary", "month": "2026-01", "amount_cents": 5000000, "notes": ""},
+      {"sub_category_id": "sub-side", "month": "2026-01", "amount_cents": 500000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-01", "amount_cents": -1500000, "notes": ""},
+      {"sub_category_id": "sub-save", "month": "2026-01", "amount_cents": -300000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-01", "amount_cents": -400000, "notes": ""},
+      {"sub_category_id": "sub-fun", "month": "2026-01", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-arch", "month": "2026-01", "amount_cents": -200000, "notes": ""},
+      {"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "month": "2026-01", "amount_cents": -50000, "notes": ""},
+      {"sub_category_id": "sub-salary", "month": "2026-02", "amount_cents": 5000000, "notes": ""},
+      {"sub_category_id": "sub-side", "month": "2026-02", "amount_cents": 500000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-02", "amount_cents": -1500000, "notes": ""},
+      {"sub_category_id": "sub-save", "month": "2026-02", "amount_cents": -300000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-02", "amount_cents": -400000, "notes": ""},
+      {"sub_category_id": "sub-fun", "month": "2026-02", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-salary", "month": "2026-03", "amount_cents": 5000000, "notes": ""},
+      {"sub_category_id": "sub-side", "month": "2026-03", "amount_cents": 500000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-03", "amount_cents": -1500000, "notes": ""},
+      {"sub_category_id": "sub-save", "month": "2026-03", "amount_cents": -300000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-03", "amount_cents": -400000, "notes": ""},
+      {"sub_category_id": "sub-fun", "month": "2026-03", "amount_cents": -100000, "notes": ""}
+    ],
+
+    "poolTxns": [
+      {"transaction_id": "p01", "date": "2026-01-25", "description": "ZZ ROW", "amount_cents": 5000000, "category": "sub-salary"},
+      {"transaction_id": "p02", "date": "2026-01-26", "description": "ZZ ROW", "amount_cents": 200000, "category": "sub-side"},
+      {"transaction_id": "p03", "date": "2026-01-01", "description": "ZZ ROW", "amount_cents": -1500000, "category": "sub-rent"},
+      {"transaction_id": "p04", "date": "2026-01-05", "description": "ZZ ROW", "amount_cents": -100000, "category": "sub-save"},
+      {"transaction_id": "p05", "date": "2026-01-08", "description": "ZZ ROW", "amount_cents": -450000, "category": "sub-food"},
+      {"transaction_id": "p06", "date": "2026-01-09", "description": "ZZ ROW", "amount_cents": -180000, "category": "sub-fun"},
+      {"transaction_id": "p07", "date": "2026-01-10", "description": "ZZ ROW", "amount_cents": -500000, "category": "sub-arch"},
+      {"transaction_id": "p08", "date": "2026-01-11", "description": "ZZ ROW", "amount_cents": -400000, "category": "ec8e0085-8408-43a2-953f-ebba24549d96"},
+      {"transaction_id": "p09", "date": "2026-01-12", "description": "ZZ ROW", "amount_cents": -700000, "category": "sub-nobud"},
+      {"transaction_id": "p10", "date": "2026-02-25", "description": "ZZ ROW", "amount_cents": 5000000, "category": "sub-salary"},
+      {"transaction_id": "p11", "date": "2026-02-26", "description": "ZZ ROW", "amount_cents": 500000, "category": "sub-side"},
+      {"transaction_id": "p12", "date": "2026-02-01", "description": "ZZ ROW", "amount_cents": -1500000, "category": "sub-rent"},
+      {"transaction_id": "p13", "date": "2026-02-05", "description": "ZZ ROW", "amount_cents": -250000, "category": "sub-save"},
+      {"transaction_id": "p14", "date": "2026-02-08", "description": "ZZ ROW", "amount_cents": -350000, "category": "sub-food"},
+      {"transaction_id": "p15", "date": "2026-02-09", "description": "ZZ ROW", "amount_cents": -90000, "category": "sub-fun"},
+      {"transaction_id": "p16", "date": "2026-03-25", "description": "ZZ ROW", "amount_cents": 5000000, "category": "sub-salary"},
+      {"transaction_id": "p17", "date": "2026-03-26", "description": "ZZ ROW", "amount_cents": 500000, "category": "sub-side"},
+      {"transaction_id": "p18", "date": "2026-03-01", "description": "ZZ ROW", "amount_cents": -1400000, "category": "sub-rent"},
+      {"transaction_id": "p19", "date": "2026-03-05", "description": "ZZ ROW", "amount_cents": -290000, "category": "sub-save"},
+      {"transaction_id": "p20", "date": "2026-03-08", "description": "ZZ ROW", "amount_cents": -390000, "category": "sub-food"},
+      {"transaction_id": "p21", "date": "2026-03-09", "description": "ZZ ROW", "amount_cents": -95000, "category": "sub-fun"}
+    ],
+
+    "negSubs": [
+      {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-rent", "name": "Rent", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-food", "name": "Food", "icon": null, "belongs_to": "cat-food", "order": 1, "roll_over": false, "roll_over_date": null, "active": true}
+    ],
+
+    "negBudgets": [
+      {"sub_category_id": "sub-salary", "month": "2026-03", "amount_cents": 100000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-03", "amount_cents": -50000, "notes": ""},
+      {"sub_category_id": "sub-salary", "month": "2026-04", "amount_cents": 100000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-04", "amount_cents": -80000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-04", "amount_cents": -50000, "notes": ""}
+    ],
+
+    "negTxns": [
+      {"transaction_id": "n01", "date": "2026-03-25", "description": "ZZ ROW", "amount_cents": 100000, "category": "sub-salary"},
+      {"transaction_id": "n02", "date": "2026-03-08", "description": "ZZ ROW", "amount_cents": -200000, "category": "sub-food"},
+      {"transaction_id": "n03", "date": "2026-04-25", "description": "ZZ ROW", "amount_cents": 100000, "category": "sub-salary"}
+    ],
+
+    "noBudSubs": [
+      {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-food", "name": "Food", "icon": null, "belongs_to": "cat-food", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}
+    ],
+
+    "noBudBudgets": [
+      {"sub_category_id": "sub-salary", "month": "2026-06", "amount_cents": 200000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-06", "amount_cents": -100000, "notes": ""}
+    ],
+
+    "noBudTxns": [
+      {"transaction_id": "nb1", "date": "2026-05-08", "description": "ZZ ROW", "amount_cents": -900000, "category": "sub-food"},
+      {"transaction_id": "nb2", "date": "2026-06-08", "description": "ZZ ROW", "amount_cents": -80000, "category": "sub-food"}
+    ],
+
+    "lateIncSubs": [
+      {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-side", "name": "Side Income", "icon": null, "belongs_to": "cat-income", "order": 1, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-rent", "name": "Rent", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}
+    ],
+
+    "lateIncBudgets": [
+      {"sub_category_id": "sub-salary", "month": "2026-07", "amount_cents": 1000000, "notes": ""},
+      {"sub_category_id": "sub-salary", "month": "2026-08", "amount_cents": 1000000, "notes": ""},
+      {"sub_category_id": "sub-salary", "month": "2026-09", "amount_cents": 1000000, "notes": ""},
+      {"sub_category_id": "sub-side", "month": "2026-07", "amount_cents": 400000, "notes": ""},
+      {"sub_category_id": "sub-side", "month": "2026-08", "amount_cents": 400000, "notes": ""},
+      {"sub_category_id": "sub-side", "month": "2026-09", "amount_cents": 400000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-07", "amount_cents": -600000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-08", "amount_cents": -600000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-09", "amount_cents": -600000, "notes": ""}
+    ],
+
+    "lateIncTxns": [
+      {"transaction_id": "l01", "date": "2026-07-25", "description": "ZZ ROW", "amount_cents": 1500000, "category": "sub-salary"},
+      {"transaction_id": "l02", "date": "2026-07-26", "description": "ZZ ROW", "amount_cents": 100000, "category": "sub-side"},
+      {"transaction_id": "l03", "date": "2026-07-01", "description": "ZZ ROW", "amount_cents": -600000, "category": "sub-rent"},
+      {"transaction_id": "l04", "date": "2026-08-25", "description": "ZZ ROW", "amount_cents": 1000000, "category": "sub-salary"},
+      {"transaction_id": "l05", "date": "2026-08-26", "description": "ZZ ROW", "amount_cents": 700000, "category": "sub-side"},
+      {"transaction_id": "l06", "date": "2026-08-01", "description": "ZZ ROW", "amount_cents": -600000, "category": "sub-rent"},
+      {"transaction_id": "l07", "date": "2026-09-25", "description": "ZZ ROW", "amount_cents": 1000000, "category": "sub-salary"},
+      {"transaction_id": "l08", "date": "2026-09-26", "description": "ZZ ROW", "amount_cents": 400000, "category": "sub-side"},
+      {"transaction_id": "l09", "date": "2026-09-01", "description": "ZZ ROW", "amount_cents": -600000, "category": "sub-rent"}
+    ],
+
+    "lateIncTxnsNoAugustIncome": [
+      {"transaction_id": "l01", "date": "2026-07-25", "description": "ZZ ROW", "amount_cents": 1500000, "category": "sub-salary"},
+      {"transaction_id": "l02", "date": "2026-07-26", "description": "ZZ ROW", "amount_cents": 100000, "category": "sub-side"},
+      {"transaction_id": "l03", "date": "2026-07-01", "description": "ZZ ROW", "amount_cents": -600000, "category": "sub-rent"},
+      {"transaction_id": "l06", "date": "2026-08-01", "description": "ZZ ROW", "amount_cents": -600000, "category": "sub-rent"},
+      {"transaction_id": "l07", "date": "2026-09-25", "description": "ZZ ROW", "amount_cents": 1000000, "category": "sub-salary"},
+      {"transaction_id": "l08", "date": "2026-09-26", "description": "ZZ ROW", "amount_cents": 400000, "category": "sub-side"},
+      {"transaction_id": "l09", "date": "2026-09-01", "description": "ZZ ROW", "amount_cents": -600000, "category": "sub-rent"}
+    ],
+
+    "plainSubs": [
+      {"sub_category_id": "sub-rent", "name": "Rent", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-food", "name": "Food", "icon": null, "belongs_to": "cat-food", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}
+    ],
+
+    "plainBudgets": [
+      {"sub_category_id": "sub-rent", "month": "2026-01", "amount_cents": -500000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-01", "amount_cents": -200000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-02", "amount_cents": -500000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-02", "amount_cents": -200000, "notes": ""}
+    ],
+
+    "plainTxns": [
+      {"transaction_id": "q1", "date": "2026-01-01", "description": "ZZ ROW", "amount_cents": -500000, "category": "sub-rent"},
+      {"transaction_id": "q2", "date": "2026-01-08", "description": "ZZ ROW", "amount_cents": -300000, "category": "sub-food"},
+      {"transaction_id": "q3", "date": "2026-02-01", "description": "ZZ ROW", "amount_cents": -400000, "category": "sub-rent"},
+      {"transaction_id": "q4", "date": "2026-02-08", "description": "ZZ ROW", "amount_cents": -150000, "category": "sub-food"}
+    ],
+
+    "ompBudgets": [
+      {"sub_category_id": "sub-rent", "month": "2026-01", "amount_cents": -500000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-01", "amount_cents": -200000, "notes": ""},
+      {"sub_category_id": "sub-arch", "month": "2026-01", "amount_cents": -100000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-02", "amount_cents": -500000, "notes": ""}
+    ],
+
+    "dmTxns": [
+      {"transaction_id": "dm1", "date": "2026-01-15", "description": "ZZ ROW", "amount_cents": -1000, "category": "sub-food"},
+      {"transaction_id": "dm2", "date": "2026-03-02", "description": "ZZ ROW", "amount_cents": -2000, "category": "sub-food"},
+      {"transaction_id": "dm3", "date": "2026-03-27", "description": "ZZ ROW", "amount_cents": -3000, "category": "sub-rent"}
+    ],
+
+    "dmBudgets": [
+      {"sub_category_id": "sub-rent", "month": "2026-03", "amount_cents": -500000, "notes": ""},
+      {"sub_category_id": "sub-rent", "month": "2026-08", "amount_cents": -500000, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2026-08", "amount_cents": -200000, "notes": ""}
+    ],
+
+    "dmFuture": [
+      {"transaction_id": "df1", "date": "2027-01-15", "description": "ZZ ROW", "amount_cents": -1000, "category": "sub-food"}
+    ],
+
+    "dmOne": [
+      {"transaction_id": "do1", "date": "2025-11-05", "description": "ZZ ROW", "amount_cents": -1000, "category": "sub-food"}
+    ],
+
+    "dmBadDates": [
+      {"transaction_id": "db1", "date": "not-a-date", "description": "ZZ ROW", "amount_cents": -1000, "category": "sub-food"},
+      {"transaction_id": "db2", "date": "", "description": "ZZ ROW", "amount_cents": -2000, "category": "sub-food"}
+    ],
+
+    "driftManyTxns": [
+      {"transaction_id": "dm1", "date": "2025-02-01", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm2", "date": "2025-02-02", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm3", "date": "2025-02-03", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm4", "date": "2025-02-04", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm5", "date": "2025-02-05", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm6", "date": "2025-02-06", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm7", "date": "2025-02-07", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm8", "date": "2025-02-08", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm9", "date": "2025-02-09", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm10", "date": "2025-02-10", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm11", "date": "2025-02-11", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm12", "date": "2025-02-12", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"},
+      {"transaction_id": "dm13", "date": "2025-02-13", "description": "ZZ ROW", "amount_cents": -1013, "category": "sub-drift"}
+    ],
+
+    "zeroBudget": [
+      {"sub_category_id": "sub-food", "month": "2025-05", "amount_cents": 0, "notes": ""}
+    ],
+
+    "dupBudgets": [
+      {"sub_category_id": "sub-food", "month": "2025-05", "amount_cents": -111, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2025-05", "amount_cents": -222, "notes": ""}
+    ],
+
+    "catsArchived": [
+      {"category_id": "cat-income", "name": "Income", "colour_back": "#101820", "colour_text": "#ffffff", "order": 0, "active": true},
+      {"category_id": "cat-home", "name": "Home", "colour_back": "#101820", "colour_text": "#ffffff", "order": 1, "active": true},
+      {"category_id": "cat-archived", "name": "Archived Cat", "colour_back": "#101820", "colour_text": "#ffffff", "order": -1, "active": false}
+    ],
+
+    "archCatSubs": [
+      {"sub_category_id": "sub-rent", "name": "Rent", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-gone1", "name": "Gone One", "icon": null, "belongs_to": "cat-archived", "order": 0, "roll_over": false, "roll_over_date": null, "active": true},
+      {"sub_category_id": "sub-gone2", "name": "Gone Two", "icon": null, "belongs_to": "cat-archived", "order": 1, "roll_over": false, "roll_over_date": null, "active": true}
+    ],
+
+    "dupBudgetsReversed": [
+      {"sub_category_id": "sub-food", "month": "2025-05", "amount_cents": -222, "notes": ""},
+      {"sub_category_id": "sub-food", "month": "2025-05", "amount_cents": -111, "notes": ""}
+    ],
+
+    "sortNames": [
+      "banana",
+      "Apple Watch",
+      "apple",
+      "Apple",
+      "cherry",
+      "Banana"
     ]
   },
 
@@ -262,6 +676,141 @@
     { "name": "suggest_tiebreak_on_equal_score_prefers_the_most_recent_transaction", "fn": "bxSuggest", "args": [{ "$index": "dateTieTxns" }, "SPAR"], "expect": { "sub_category_id": "sub-bbb", "score": 1 } },
     { "name": "suggest_tiebreak_on_equal_score_and_equal_date_prefers_sub_category_id_ascending", "fn": "bxSuggest", "args": [{ "$index": "idTieTxns" }, "KWIKSPAR"], "expect": { "sub_category_id": "sub-mmm", "score": 1 } },
     { "name": "suggest_counts_a_repeated_word_once_so_it_cannot_inflate_a_score", "fn": "bxSuggest", "args": [{ "$index": "dateTieTxns" }, "SPAR SPAR SPAR"], "expect": { "sub_category_id": "sub-bbb", "score": 1 } },
-    { "name": "suggest_leads_with_a_strong_score_when_two_words_match", "fn": "bxSuggest", "args": [{ "$index": "mixed" }, "WOOLWORTHS SANDTON CITY"], "expect": { "sub_category_id": "sub-groceries", "score": 2 } }
+    { "name": "suggest_leads_with_a_strong_score_when_two_words_match", "fn": "bxSuggest", "args": [{ "$index": "mixed" }, "WOOLWORTHS SANDTON CITY"], "expect": { "sub_category_id": "sub-groceries", "score": 2 } },
+    {"name": "compare_orders_case_insensitively", "fn": "bxCompare", "args": ["apple", "Banana"], "expect": -1},
+    {"name": "compare_puts_Apple_Watch_beside_apple_not_before_every_lowercase_word", "fn": "bxCompare", "args": ["Apple Watch", "banana juice"], "expect": -1},
+    {"name": "compare_reverses_correctly", "fn": "bxCompare", "args": ["Zebra", "apple"], "expect": 1},
+    {"name": "compare_tiebreaks_on_code_point_so_it_is_a_total_order", "fn": "bxCompare", "args": ["Apple", "apple"], "expect": -1},
+    {"name": "compare_equal_strings_are_zero", "fn": "bxCompare", "args": ["apple", "apple"], "expect": 0},
+    {"name": "compare_treats_null_as_empty_string", "fn": "bxCompare", "args": [null, ""], "expect": 0},
+    {"name": "compare_uses_code_points_not_utf16_code_units", "fn": "bxCompare", "args": ["😀", ""], "expect": 1},
+    {"name": "compare_sorts_a_mixed_case_list_into_one_total_order", "value": {"$sort": {"fn": "bxCompare", "of": {"$ref": "sortNames"}}}, "expect": ["Apple", "apple", "Apple Watch", "Banana", "banana", "cherry"]},
+    {"name": "default_month_is_the_latest_month_holding_a_transaction", "fn": "bxDefaultMonth", "args": [{"$ref": "dmTxns"}, "2026-08-21"], "expect": {"y": 2026, "m": 3}},
+    {"name": "default_month_with_no_transactions_at_all_is_the_server_month", "fn": "bxDefaultMonth", "args": [{"$ref": "empty"}, "2026-08-21"], "expect": {"y": 2026, "m": 8}},
+    {"name": "default_month_ignores_transactions_after_the_server_date", "fn": "bxDefaultMonth", "args": [{"$ref": "dmFuture"}, "2026-08-21"], "expect": {"y": 2026, "m": 8}},
+    {"name": "default_month_from_a_single_transaction", "fn": "bxDefaultMonth", "args": [{"$ref": "dmOne"}, "2026-08-21"], "expect": {"y": 2025, "m": 11}},
+    {"name": "default_month_ignores_a_later_month_that_holds_budget_rows_but_no_transactions", "fn": "bxDefaultMonth", "args": [{"$ref": "dmTxns"}, "2026-08-21"], "expect": {"y": 2026, "m": 3}},
+    {"name": "default_month_companion_the_ignored_later_month_really_does_hold_budget_rows", "fn": "bxBudget", "args": [{"$ref": "dmBudgets"}, "sub-rent", 2026, 8], "expect": -500000},
+    {"name": "default_month_when_the_server_date_is_inside_the_latest_transaction_month", "fn": "bxDefaultMonth", "args": [{"$ref": "dmTxns"}, "2026-03-10"], "expect": {"y": 2026, "m": 3}},
+    {"name": "default_month_respects_a_server_date_earlier_than_the_latest_transaction", "fn": "bxDefaultMonth", "args": [{"$ref": "dmTxns"}, "2026-02-15"], "expect": {"y": 2026, "m": 1}},
+    {"name": "default_month_falls_back_to_the_latest_transaction_when_the_server_date_is_unusable", "fn": "bxDefaultMonth", "args": [{"$ref": "dmTxns"}, "junk"], "expect": {"y": 2026, "m": 3}},
+    {"name": "default_month_skips_unparseable_transaction_dates", "fn": "bxDefaultMonth", "args": [{"$ref": "dmBadDates"}, "2026-08-21"], "expect": {"y": 2026, "m": 8}},
+    {"name": "default_month_is_null_only_when_there_is_nothing_to_answer_from", "fn": "bxDefaultMonth", "args": [{"$ref": "empty"}, "junk"], "expect": null},
+    {"name": "income_category_id_matches_the_exact_name", "fn": "bxIncomeCategoryId", "args": [{"$ref": "catsStd"}], "expect": "cat-income"},
+    {"name": "income_category_id_is_case_insensitive_and_trims", "fn": "bxIncomeCategoryId", "args": [{"$ref": "catsIncomeLower"}], "expect": "cat-inc-2"},
+    {"name": "income_category_id_is_null_when_there_is_no_income_category", "fn": "bxIncomeCategoryId", "args": [{"$ref": "catsNoIncome"}], "expect": null},
+    {"name": "income_category_id_is_null_for_an_empty_category_list", "fn": "bxIncomeCategoryId", "args": [{"$ref": "empty"}], "expect": null},
+    {"name": "sign_for_income_forces_positive_from_a_negative", "fn": "bxSignFor", "args": [{"$ref": "catsStd"}, "cat-income", -5000000], "expect": 5000000},
+    {"name": "sign_for_income_leaves_a_positive_positive", "fn": "bxSignFor", "args": [{"$ref": "catsStd"}, "cat-income", 5000000], "expect": 5000000},
+    {"name": "sign_for_expense_forces_negative_from_a_positive", "fn": "bxSignFor", "args": [{"$ref": "catsStd"}, "cat-home", 150000], "expect": -150000},
+    {"name": "sign_for_expense_leaves_a_negative_negative", "fn": "bxSignFor", "args": [{"$ref": "catsStd"}, "cat-home", -150000], "expect": -150000},
+    {"name": "sign_for_zero_is_zero_on_either_side", "fn": "bxSignFor", "args": [{"$ref": "catsStd"}, "cat-income", 0], "expect": 0},
+    {"name": "sign_for_treats_every_category_as_an_expense_when_there_is_no_income_category", "fn": "bxSignFor", "args": [{"$ref": "catsNoIncome"}, "cat-home", 150000], "expect": -150000},
+    {"name": "sign_for_an_unknown_category_is_an_expense", "fn": "bxSignFor", "args": [{"$ref": "catsStd"}, "cat-nope", 150000], "expect": -150000},
+    {"name": "actual_sums_one_sub_category_in_one_month", "fn": "bxActual", "args": [{"$ref": "stTxns"}, "sub-food", 2025, 5], "expect": -450000},
+    {"name": "actual_is_zero_in_a_month_with_no_rows", "fn": "bxActual", "args": [{"$ref": "stTxns"}, "sub-food", 2025, 4], "expect": 0},
+    {"name": "actual_is_zero_for_an_unknown_sub_category", "fn": "bxActual", "args": [{"$ref": "stTxns"}, "sub-nope", 2025, 5], "expect": 0},
+    {"name": "actual_carries_income_positive", "fn": "bxActual", "args": [{"$ref": "stTxns"}, "sub-salary", 2025, 5], "expect": 4800000},
+    {"name": "actual_over_thirteen_drift_prone_rows_is_an_exact_integer", "fn": "bxActual", "args": [{"$ref": "driftManyTxns"}, "sub-drift", 2025, 2], "expect": -13169},
+    {"name": "budget_returns_the_stored_cents", "fn": "bxBudget", "args": [{"$ref": "stBudgets"}, "sub-rent", 2025, 5], "expect": -1500000},
+    {"name": "budget_is_null_when_no_row_exists", "fn": "bxBudget", "args": [{"$ref": "stBudgets"}, "sub-bonus", 2025, 5], "expect": null},
+    {"name": "budget_is_null_in_the_wrong_month", "fn": "bxBudget", "args": [{"$ref": "stBudgets"}, "sub-rent", 2025, 4], "expect": null},
+    {"name": "budget_of_zero_is_zero_and_not_null", "fn": "bxBudget", "args": [{"$ref": "zeroBudget"}, "sub-food", 2025, 5], "expect": 0},
+    {"name": "budget_takes_the_smallest_value_on_a_fact_3_duplicate_not_the_first_row", "fn": "bxBudget", "args": [{"$ref": "dupBudgets"}, "sub-food", 2025, 5], "expect": -222},
+    {"name": "budget_takes_the_smallest_value_whichever_order_the_duplicates_arrive_in", "fn": "bxBudget", "args": [{"$ref": "dupBudgetsReversed"}, "sub-food", 2025, 5], "expect": -222},
+    {"name": "rollover_branch_A_roll_over_off_and_under_budget", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}, {"$ref": "catsStd"}, 2025, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -100000, "available": -100000, "spent": -50000, "remaining": -50000, "overspent": 0}},
+    {"name": "rollover_branch_A_roll_over_off_and_over_budget_captures_the_overspend", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -100000, "available": -100000, "spent": -300000, "remaining": 0, "overspent": 200000}},
+    {"name": "rollover_branch_A_with_no_budget_row_and_no_spend", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}, {"$ref": "catsStd"}, 2025, 12, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 0, "available": 0, "spent": 0, "remaining": 0, "overspent": 0}},
+    {"name": "rollover_branch_B_roll_over_on_with_a_null_start_date_is_defined_not_a_crash", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": null, "active": true}, {"$ref": "catsStd"}, 2025, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": true, "months": 0, "carried_in": 0, "month_budget": -100000, "available": -100000, "spent": -50000, "remaining": -50000, "overspent": 0}},
+    {"name": "rollover_branch_D_a_one_month_span", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2025-01-01", "active": true}, {"$ref": "catsStd"}, 2025, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 1, "carried_in": -40000, "month_budget": -100000, "available": -140000, "spent": -50000, "remaining": -90000, "overspent": 0}},
+    {"name": "rollover_branch_D_a_four_month_span", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2025-01-01", "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 4, "carried_in": -90000, "month_budget": -100000, "available": -190000, "spent": -300000, "remaining": 0, "overspent": 110000}, "legacy_rollover": {"budgets": "roBudgets", "txns": "roTxns", "sub_category_id": "sub-fuel", "roll_over_date": "2025-01-01", "y": 2025, "m": 5, "legacy_expect_cents": -300000}},
+    {"name": "rollover_the_month_after_an_overspend_carries_in_zero_never_a_debt", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2025-01-01", "active": true}, {"$ref": "catsStd"}, 2025, 6, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 5, "carried_in": 0, "month_budget": -100000, "available": -100000, "spent": -70000, "remaining": -30000, "overspent": 0}},
+    {"name": "rollover_a_start_date_equal_to_the_target_month_gives_months_zero", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2025-05-01", "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -100000, "available": -100000, "spent": -300000, "remaining": 0, "overspent": 200000}},
+    {"name": "rollover_a_start_date_after_the_target_month_gives_months_zero_and_does_not_crash", "fn": "bxRollover", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2025-09-01", "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -100000, "available": -100000, "spent": -300000, "remaining": 0, "overspent": 200000}},
+    {"name": "rollover_a_month_with_no_budget_row_inside_the_span_contributes_zero_budget", "fn": "bxRollover", "args": [{"$ref": "roGapBudgets"}, {"$ref": "roGapTxns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2025-01-01", "active": true}, {"$ref": "catsStd"}, 2025, 4, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 3, "carried_in": -110000, "month_budget": 0, "available": -110000, "spent": -10000, "remaining": -100000, "overspent": 0}},
+    {"name": "rollover_a_thirteen_month_span_crossing_a_year_boundary", "fn": "bxRollover", "args": [{"$ref": "ro13Budgets"}, {"$ref": "ro13Txns"}, {"sub_category_id": "sub-fuel", "name": "Fuel", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2024-06-01", "active": true}, {"$ref": "catsStd"}, 2025, 7, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 13, "carried_in": -130000, "month_budget": -10000, "available": -140000, "spent": -5000, "remaining": -135000, "overspent": 0}},
+    {"name": "rollover_income_is_declared_unsupported_and_invents_no_number", "fn": "bxRollover", "args": [{"$ref": "incBudgets"}, {"$ref": "incTxns"}, {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": false, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 5000000, "available": 5000000, "spent": 4200000, "remaining": 800000, "overspent": 0}},
+    {"name": "rollover_income_stays_unsupported_even_with_roll_over_switched_on", "fn": "bxRollover", "args": [{"$ref": "incBudgets"}, {"$ref": "incTxns"}, {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": true, "roll_over_date": "2024-01-01", "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": false, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 5000000, "available": 5000000, "spent": 4200000, "remaining": 800000, "overspent": 0}},
+    {"name": "rollover_an_under_earning_income_line_is_never_reported_as_overspent", "fn": "bxRollover", "args": [{"$ref": "incBudgets"}, {"$ref": "empty"}, {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": false, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 5000000, "available": 5000000, "spent": 0, "remaining": 5000000, "overspent": 0}},
+    {"name": "rollover_excludes_transfer_rows_from_spent", "fn": "bxRollover", "args": [{"$ref": "xferBudgets"}, {"$ref": "xferTxns"}, {"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "name": "Transfers", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -50000, "available": -50000, "spent": 0, "remaining": -50000, "overspent": 0}},
+    {"name": "rollover_over_a_drift_prone_thirteen_month_span_is_exact_integer_cents", "fn": "bxRollover", "args": [{"$ref": "roDriftBudgets"}, {"$ref": "roDriftTxns"}, {"sub_category_id": "sub-drift", "name": "Drift", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": true, "roll_over_date": "2024-01-01", "active": true}, {"$ref": "catsStd"}, 2025, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 12, "carried_in": -8112, "month_budget": -1013, "available": -9125, "spent": -337, "remaining": -8788, "overspent": 0}},
+    {"name": "rollover_degrades_when_there_is_no_income_category", "fn": "bxRollover", "args": [{"$ref": "incBudgets"}, {"$ref": "incTxns"}, {"sub_category_id": "sub-salary", "name": "Salary", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}, {"$ref": "catsNoIncome"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 5000000, "available": 5000000, "spent": 4200000, "remaining": 0, "overspent": 800000}},
+    {"name": "sub_totals_covers_every_active_non_transfer_sub_category", "fn": "bxSubTotals", "args": [{"$ref": "stTxns"}, {"$ref": "stBudgets"}, {"$ref": "subsStd"}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"sub-salary": {"budget": 5000000, "budget_present": true, "actual": 4800000, "rollover": {"supported": false, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 5000000, "available": 5000000, "spent": 4800000, "remaining": 200000, "overspent": 0}}, "sub-bonus": {"budget": 0, "budget_present": false, "actual": 0, "rollover": {"supported": false, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 0, "available": 0, "spent": 0, "remaining": 0, "overspent": 0}}, "sub-rent": {"budget": -1500000, "budget_present": true, "actual": -1500000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -1500000, "available": -1500000, "spent": -1500000, "remaining": 0, "overspent": 0}}, "sub-fuel": {"budget": -100000, "budget_present": true, "actual": -90000, "rollover": {"supported": true, "start_missing": false, "months": 4, "carried_in": 0, "month_budget": -100000, "available": -100000, "spent": -90000, "remaining": -10000, "overspent": 0}}, "sub-food": {"budget": -400000, "budget_present": true, "actual": -450000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -400000, "available": -400000, "spent": -450000, "remaining": 0, "overspent": 50000}}, "sub-orphan": {"budget": -50000, "budget_present": true, "actual": -20000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -50000, "available": -50000, "spent": -20000, "remaining": -30000, "overspent": 0}}}},
+    {"name": "sub_totals_is_empty_for_an_empty_sub_category_list", "fn": "bxSubTotals", "args": [{"$ref": "stTxns"}, {"$ref": "stBudgets"}, {"$ref": "empty"}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {}},
+    {"name": "sub_totals_reports_budget_present_false_with_budget_zero", "fn": "bxSubTotals", "args": [{"$ref": "empty"}, {"$ref": "empty"}, [{"sub_category_id": "sub-rent", "name": "Rent", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}], {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"sub-rent": {"budget": 0, "budget_present": false, "actual": 0, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": 0, "available": 0, "spent": 0, "remaining": 0, "overspent": 0}}}},
+    {"name": "sub_totals_excludes_the_transfer_sentinel_sub_category", "fn": "bxSubTotals", "args": [{"$ref": "xferTxns"}, {"$ref": "xferBudgets"}, [{"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "name": "Transfers", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}], {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {}},
+    {"name": "cat_totals_rolls_sub_categories_to_their_parent_on_the_month_budget", "fn": "bxCatTotals", "args": [{"$call": {"fn": "bxSubTotals", "args": [{"$ref": "stTxns"}, {"$ref": "stBudgets"}, {"$ref": "subsStd"}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"]}}, {"$ref": "subsStd"}, {"$ref": "catsStd"}], "expect": {"cat-income": {"budget": 5000000, "actual": 4800000, "variance": -200000}, "cat-home": {"budget": -1600000, "actual": -1590000, "variance": 10000}, "cat-food": {"budget": -400000, "actual": -450000, "variance": -50000}, "cat-old": {"budget": 0, "actual": 0, "variance": 0}}},
+    {"name": "cat_totals_excludes_an_archived_sub_category_with_budget_and_spend", "fn": "bxCatTotals", "args": [{"sub-arch": {"budget": -200000, "budget_present": true, "actual": -180000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -200000, "available": -200000, "spent": -180000, "remaining": -20000, "overspent": 0}}}, {"$ref": "subsStd"}, {"$ref": "catsStd"}], "expect": {"cat-income": {"budget": 0, "actual": 0, "variance": 0}, "cat-home": {"budget": 0, "actual": 0, "variance": 0}, "cat-food": {"budget": 0, "actual": 0, "variance": 0}, "cat-old": {"budget": 0, "actual": 0, "variance": 0}}},
+    {"name": "cat_totals_excludes_an_orphan_whose_parent_does_not_exist", "fn": "bxCatTotals", "args": [{"sub-orphan": {"budget": -50000, "budget_present": true, "actual": -20000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -50000, "available": -50000, "spent": -20000, "remaining": -30000, "overspent": 0}}}, {"$ref": "subsStd"}, {"$ref": "catsStd"}], "expect": {"cat-income": {"budget": 0, "actual": 0, "variance": 0}, "cat-home": {"budget": 0, "actual": 0, "variance": 0}, "cat-food": {"budget": 0, "actual": 0, "variance": 0}, "cat-old": {"budget": 0, "actual": 0, "variance": 0}}},
+    {"name": "cat_totals_gives_a_category_with_no_sub_categories_a_defined_zero", "fn": "bxCatTotals", "args": [{}, {"$ref": "empty"}, [{"category_id": "cat-lonely", "name": "Lonely", "colour_back": "#101820", "colour_text": "#ffffff", "order": 0, "active": true}]], "expect": {"cat-lonely": {"budget": 0, "actual": 0, "variance": 0}}},
+    {"name": "cat_totals_uses_the_month_budget_not_the_rollover_available", "fn": "bxCatTotals", "args": [{"sub-fuel": {"budget": -100000, "budget_present": true, "actual": -90000, "rollover": {"supported": true, "start_missing": false, "months": 4, "carried_in": -90000, "month_budget": -100000, "available": -190000, "spent": -90000, "remaining": -100000, "overspent": 0}}}, {"$ref": "subsStd"}, {"$ref": "catsStd"}], "expect": {"cat-income": {"budget": 0, "actual": 0, "variance": 0}, "cat-home": {"budget": -100000, "actual": -90000, "variance": 10000}, "cat-food": {"budget": 0, "actual": 0, "variance": 0}, "cat-old": {"budget": 0, "actual": 0, "variance": 0}}},
+    {"name": "header_totals_split_income_from_expense", "fn": "bxHeaderTotals", "args": [{"$call": {"fn": "bxCatTotals", "args": [{"$call": {"fn": "bxSubTotals", "args": [{"$ref": "stTxns"}, {"$ref": "stBudgets"}, {"$ref": "subsStd"}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"]}}, {"$ref": "subsStd"}, {"$ref": "catsStd"}]}}, {"$ref": "catsStd"}], "expect": {"income": {"budget": 5000000, "actual": 4800000, "variance": -200000}, "expense": {"budget": -2000000, "actual": -2040000, "variance": -40000}}},
+    {"name": "header_totals_income_block_is_a_defined_zero_when_there_is_no_income_category", "fn": "bxHeaderTotals", "args": [{"$call": {"fn": "bxCatTotals", "args": [{"$call": {"fn": "bxSubTotals", "args": [{"$ref": "stTxns"}, {"$ref": "stBudgets"}, {"$ref": "subsStd"}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"]}}, {"$ref": "subsStd"}, {"$ref": "catsStd"}]}}, {"$ref": "catsNoIncome"}], "expect": {"income": {"budget": 0, "actual": 0, "variance": 0}, "expense": {"budget": 3000000, "actual": 2760000, "variance": -240000}}},
+    {"name": "header_totals_of_nothing_are_zero", "fn": "bxHeaderTotals", "args": [{}, {"$ref": "catsStd"}], "expect": {"income": {"budget": 0, "actual": 0, "variance": 0}, "expense": {"budget": 0, "actual": 0, "variance": 0}}},
+    {"name": "cat_totals_still_reports_an_archived_category_so_the_archived_view_can_show_it", "fn": "bxCatTotals", "args": [{"sub-rent": {"budget": -1000000, "budget_present": true, "actual": -900000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -1000000, "available": -1000000, "spent": -900000, "remaining": -100000, "overspent": 0}}, "sub-gone1": {"budget": -200000, "budget_present": true, "actual": -150000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -200000, "available": -200000, "spent": -150000, "remaining": -50000, "overspent": 0}}, "sub-gone2": {"budget": -75000, "budget_present": true, "actual": -60000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -75000, "available": -75000, "spent": -60000, "remaining": -15000, "overspent": 0}}}, {"$ref": "archCatSubs"}, {"$ref": "catsArchived"}], "expect": {"cat-income": {"budget": 0, "actual": 0, "variance": 0}, "cat-home": {"budget": -1000000, "actual": -900000, "variance": 100000}, "cat-archived": {"budget": -275000, "actual": -210000, "variance": 65000}}},
+    {"name": "header_totals_exclude_an_archived_category_from_every_total", "fn": "bxHeaderTotals", "args": [{"$call": {"fn": "bxCatTotals", "args": [{"sub-rent": {"budget": -1000000, "budget_present": true, "actual": -900000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -1000000, "available": -1000000, "spent": -900000, "remaining": -100000, "overspent": 0}}, "sub-gone1": {"budget": -200000, "budget_present": true, "actual": -150000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -200000, "available": -200000, "spent": -150000, "remaining": -50000, "overspent": 0}}, "sub-gone2": {"budget": -75000, "budget_present": true, "actual": -60000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -75000, "available": -75000, "spent": -60000, "remaining": -15000, "overspent": 0}}}, {"$ref": "archCatSubs"}, {"$ref": "catsArchived"}]}}, {"$ref": "catsArchived"}], "expect": {"income": {"budget": 0, "actual": 0, "variance": 0}, "expense": {"budget": -1000000, "actual": -900000, "variance": 100000}}},
+    {"name": "header_totals_exclude_only_an_explicit_active_false_never_an_unnamed_category", "fn": "bxHeaderTotals", "args": [{"$call": {"fn": "bxCatTotals", "args": [{"sub-rent": {"budget": -1000000, "budget_present": true, "actual": -900000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -1000000, "available": -1000000, "spent": -900000, "remaining": -100000, "overspent": 0}}, "sub-gone1": {"budget": -200000, "budget_present": true, "actual": -150000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -200000, "available": -200000, "spent": -150000, "remaining": -50000, "overspent": 0}}, "sub-gone2": {"budget": -75000, "budget_present": true, "actual": -60000, "rollover": {"supported": true, "start_missing": false, "months": 0, "carried_in": 0, "month_budget": -75000, "available": -75000, "spent": -60000, "remaining": -15000, "overspent": 0}}}, {"$ref": "archCatSubs"}, {"$ref": "catsArchived"}]}}, [{"category_id": "cat-income", "name": "Income", "colour_back": "#101820", "colour_text": "#ffffff", "order": 0, "active": true}, {"category_id": "cat-home", "name": "Home", "colour_back": "#101820", "colour_text": "#ffffff", "order": 1, "active": true}]], "expect": {"income": {"budget": 0, "actual": 0, "variance": 0}, "expense": {"budget": -1275000, "actual": -1110000, "variance": 165000}}},
+    {"name": "variance_positive_is_good_on_an_expense_that_underspent", "fn": "bxVariance", "args": [-90000, -100000], "expect": 10000},
+    {"name": "variance_negative_on_an_expense_that_overspent", "fn": "bxVariance", "args": [-150000, -100000], "expect": -50000},
+    {"name": "variance_positive_on_income_that_over_earned", "fn": "bxVariance", "args": [5500000, 5000000], "expect": 500000},
+    {"name": "variance_of_zero_against_zero", "fn": "bxVariance", "args": [0, 0], "expect": 0},
+    {"name": "overspend_sums_only_the_positive_overspends_and_never_nets_off_an_underspend", "fn": "bxOverspend", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 130000, "by_sub": {"sub-food": 50000, "sub-fun": 80000}}},
+    {"name": "overspend_is_zero_in_a_month_where_nothing_overspends", "fn": "bxOverspend", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}, 2026, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "overspend_excludes_an_archived_sub_category_that_overspent", "fn": "bxOverspend", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, [{"sub_category_id": "sub-arch", "name": "Archived", "icon": null, "belongs_to": "cat-food", "order": -1, "roll_over": false, "roll_over_date": null, "active": false}], {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "overspend_excludes_the_transfer_sentinel_that_overspent", "fn": "bxOverspend", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, [{"sub_category_id": "ec8e0085-8408-43a2-953f-ebba24549d96", "name": "Transfers", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}], {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "overspend_excludes_income_which_falls_short_rather_than_overspending", "fn": "bxOverspend", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, [{"sub_category_id": "sub-side", "name": "Side Income", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}], {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "overspend_excludes_a_sub_category_with_no_budget_row_for_that_month", "fn": "bxOverspend", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, [{"sub_category_id": "sub-nobud", "name": "Unbudgeted", "icon": null, "belongs_to": "cat-home", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}], {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "overspend_skips_a_whole_unbudgeted_month_rather_than_calling_all_of_it_overspent", "fn": "bxOverspend", "args": [{"$ref": "noBudBudgets"}, {"$ref": "noBudTxns"}, {"$ref": "noBudSubs"}, {"$ref": "catsStd"}, 2026, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "overspend_reaches_the_pool_from_a_roll_over_sub_category_that_blew_its_pot", "fn": "bxOverspend", "args": [{"$ref": "roBudgets"}, {"$ref": "roTxns"}, {"$ref": "roSubs"}, {"$ref": "catsStd"}, 2025, 5, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 110000, "by_sub": {"sub-fuel": 110000}}},
+    {"name": "income_shortfall_reports_each_short_income_line_as_a_positive_magnitude", "fn": "bxIncomeShortfall", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 300000, "by_sub": {"sub-side": 300000}}},
+    {"name": "income_shortfall_does_not_let_an_over_earning_line_offset_a_short_one", "fn": "bxIncomeShortfall", "args": [{"$ref": "lateIncBudgets"}, {"$ref": "lateIncTxns"}, {"$ref": "lateIncSubs"}, {"$ref": "catsStd"}, 2026, 7, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 300000, "by_sub": {"sub-side": 300000}}},
+    {"name": "income_shortfall_is_zero_once_the_late_money_arrives_in_full", "fn": "bxIncomeShortfall", "args": [{"$ref": "lateIncBudgets"}, {"$ref": "lateIncTxns"}, {"$ref": "lateIncSubs"}, {"$ref": "catsStd"}, 2026, 8, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "income_shortfall_is_empty_when_there_is_no_income_category", "fn": "bxIncomeShortfall", "args": [{"$ref": "plainBudgets"}, {"$ref": "plainTxns"}, {"$ref": "plainSubs"}, {"$ref": "catsNoIncome"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "income_shortfall_ignores_an_income_sub_category_with_no_budget_row", "fn": "bxIncomeShortfall", "args": [{"$ref": "empty"}, {"$ref": "poolTxns"}, [{"sub_category_id": "sub-side", "name": "Side Income", "icon": null, "belongs_to": "cat-income", "order": 0, "roll_over": false, "roll_over_date": null, "active": true}], {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"total": 0, "by_sub": {}}},
+    {"name": "available_P_reports_no_predecessor_data_and_carries_nothing", "fn": "bxAvailableToBudget", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-01", "prev_month": "2025-12", "prev_month_has_data": false, "income_category": true, "income_planned": 5500000, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 5500000, "assigned": 2300000, "unassigned": 3200000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "available_P1_is_reduced_by_exactly_last_months_overspend_and_shortfall", "fn": "bxAvailableToBudget", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}, 2026, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-02", "prev_month": "2026-01", "prev_month_has_data": true, "income_category": true, "income_planned": 5500000, "carried_overspend": 130000, "carried_shortfall": 300000, "carried_total": 430000, "starting_available": 5070000, "assigned": 2300000, "unassigned": 2770000, "overspend_by_sub": {"sub-food": 50000, "sub-fun": 80000}, "shortfall_by_sub": {"sub-side": 300000}}},
+    {"name": "available_P2_proves_the_deduction_does_not_chain_or_compound", "fn": "bxAvailableToBudget", "args": [{"$ref": "poolBudgets"}, {"$ref": "poolTxns"}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}, 2026, 3, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-03", "prev_month": "2026-02", "prev_month_has_data": true, "income_category": true, "income_planned": 5500000, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 5500000, "assigned": 2300000, "unassigned": 3200000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "available_P1_every_categorys_own_budget_is_untouched_by_the_carried_amount", "fn": "bxCatTotals", "args": [{"$call": {"fn": "bxSubTotals", "args": [{"$ref": "poolTxns"}, {"$ref": "poolBudgets"}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}, 2026, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"]}}, {"$ref": "poolSubs"}, {"$ref": "catsStd"}], "expect": {"cat-income": {"budget": 5500000, "actual": 5500000, "variance": 0}, "cat-home": {"budget": -1800000, "actual": -1750000, "variance": 50000}, "cat-food": {"budget": -500000, "actual": -440000, "variance": 60000}, "cat-old": {"budget": 0, "actual": 0, "variance": 0}}},
+    {"name": "available_lets_unassigned_go_negative_rather_than_clamping_it", "fn": "bxAvailableToBudget", "args": [{"$ref": "negBudgets"}, {"$ref": "negTxns"}, {"$ref": "negSubs"}, {"$ref": "catsStd"}, 2026, 4, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-04", "prev_month": "2026-03", "prev_month_has_data": true, "income_category": true, "income_planned": 100000, "carried_overspend": 150000, "carried_shortfall": 0, "carried_total": 150000, "starting_available": -50000, "assigned": 130000, "unassigned": -180000, "overspend_by_sub": {"sub-food": 150000}, "shortfall_by_sub": {}}},
+    {"name": "available_with_a_predecessor_holding_transactions_but_no_budget_rows", "fn": "bxAvailableToBudget", "args": [{"$ref": "noBudBudgets"}, {"$ref": "noBudTxns"}, {"$ref": "noBudSubs"}, {"$ref": "catsStd"}, 2026, 6, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-06", "prev_month": "2026-05", "prev_month_has_data": true, "income_category": true, "income_planned": 200000, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 200000, "assigned": 100000, "unassigned": 100000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "available_carries_an_income_shortfall_exactly_as_it_carries_an_overspend", "fn": "bxAvailableToBudget", "args": [{"$ref": "lateIncBudgets"}, {"$ref": "lateIncTxns"}, {"$ref": "lateIncSubs"}, {"$ref": "catsStd"}, 2026, 8, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-08", "prev_month": "2026-07", "prev_month_has_data": true, "income_category": true, "income_planned": 1400000, "carried_overspend": 0, "carried_shortfall": 300000, "carried_total": 300000, "starting_available": 1100000, "assigned": 600000, "unassigned": 500000, "overspend_by_sub": {}, "shortfall_by_sub": {"sub-side": 300000}}},
+    {"name": "available_income_that_arrived_late_but_in_full_hits_the_pool_once_and_does_not_chain", "fn": "bxAvailableToBudget", "args": [{"$ref": "lateIncBudgets"}, {"$ref": "lateIncTxns"}, {"$ref": "lateIncSubs"}, {"$ref": "catsStd"}, 2026, 9, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-09", "prev_month": "2026-08", "prev_month_has_data": true, "income_category": true, "income_planned": 1400000, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 1400000, "assigned": 600000, "unassigned": 800000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "available_income_planned_is_the_full_plan_and_does_not_move_when_actuals_are_removed", "fn": "bxAvailableToBudget", "args": [{"$ref": "lateIncBudgets"}, {"$ref": "lateIncTxnsNoAugustIncome"}, {"$ref": "lateIncSubs"}, {"$ref": "catsStd"}, 2026, 8, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-08", "prev_month": "2026-07", "prev_month_has_data": true, "income_category": true, "income_planned": 1400000, "carried_overspend": 0, "carried_shortfall": 300000, "carried_total": 300000, "starting_available": 1100000, "assigned": 600000, "unassigned": 500000, "overspend_by_sub": {}, "shortfall_by_sub": {"sub-side": 300000}}},
+    {"name": "available_suppresses_itself_with_income_category_false_when_there_is_no_Income", "fn": "bxAvailableToBudget", "args": [{"$ref": "plainBudgets"}, {"$ref": "plainTxns"}, {"$ref": "plainSubs"}, {"$ref": "catsNoIncome"}, 2026, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-02", "prev_month": "2026-01", "prev_month_has_data": true, "income_category": false, "income_planned": 0, "carried_overspend": 100000, "carried_shortfall": 0, "carried_total": 100000, "starting_available": -100000, "assigned": 700000, "unassigned": -800000, "overspend_by_sub": {"sub-food": 100000}, "shortfall_by_sub": {}}},
+    {"name": "available_assigned_counts_budget_rows_not_categories", "fn": "bxAvailableToBudget", "args": [[{"sub_category_id": "sub-rent", "month": "2026-02", "amount_cents": -500000, "notes": ""}], {"$ref": "empty"}, {"$ref": "plainSubs"}, {"$ref": "catsNoIncome"}, 2026, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-02", "prev_month": "2026-01", "prev_month_has_data": false, "income_category": false, "income_planned": 0, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 0, "assigned": 500000, "unassigned": -500000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "available_assigned_takes_the_absolute_value_of_an_expense_budget", "fn": "bxAvailableToBudget", "args": [[{"sub_category_id": "sub-rent", "month": "2026-02", "amount_cents": 500000, "notes": ""}], {"$ref": "empty"}, {"$ref": "plainSubs"}, {"$ref": "catsNoIncome"}, 2026, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-02", "prev_month": "2026-01", "prev_month_has_data": false, "income_category": false, "income_planned": 0, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 0, "assigned": 500000, "unassigned": -500000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "available_income_planned_ignores_a_negative_income_budget_row", "fn": "bxAvailableToBudget", "args": [[{"sub_category_id": "sub-salary", "month": "2026-02", "amount_cents": -100000, "notes": ""}, {"sub_category_id": "sub-rent", "month": "2026-02", "amount_cents": -50000, "notes": ""}], {"$ref": "empty"}, {"$ref": "negSubs"}, {"$ref": "catsStd"}, 2026, 2, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-02", "prev_month": "2026-01", "prev_month_has_data": false, "income_category": true, "income_planned": 0, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 0, "assigned": 50000, "unassigned": -50000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "available_crosses_a_year_boundary_when_it_looks_back_one_month", "fn": "bxAvailableToBudget", "args": [[{"sub_category_id": "sub-rent", "month": "2026-01", "amount_cents": -500000, "notes": ""}], {"$ref": "empty"}, {"$ref": "plainSubs"}, {"$ref": "catsNoIncome"}, 2026, 1, "ec8e0085-8408-43a2-953f-ebba24549d96"], "expect": {"month": "2026-01", "prev_month": "2025-12", "prev_month_has_data": false, "income_category": false, "income_planned": 0, "carried_overspend": 0, "carried_shortfall": 0, "carried_total": 0, "starting_available": 0, "assigned": 500000, "unassigned": -500000, "overspend_by_sub": {}, "shortfall_by_sub": {}}},
+    {"name": "progress_expense_row1_no_budget_with_spend", "fn": "bxProgress", "args": [null, -12345, false], "expect": {"state": "none", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 12345, "label_kind": "over"}},
+    {"name": "progress_expense_row1_no_budget_and_no_spend", "fn": "bxProgress", "args": [null, 0, false], "expect": {"state": "none", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 0, "label_kind": "remaining"}},
+    {"name": "progress_expense_row1_no_budget_with_a_refund", "fn": "bxProgress", "args": [null, 500, false], "expect": {"state": "none", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 500, "label_kind": "remaining"}},
+    {"name": "progress_expense_row2_a_refund_against_a_budget", "fn": "bxProgress", "args": [-100000, 2500, false], "expect": {"state": "under", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 102500, "label_kind": "remaining"}},
+    {"name": "progress_expense_row3_zero_budget_and_no_spend", "fn": "bxProgress", "args": [0, 0, false], "expect": {"state": "none", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 0, "label_kind": "remaining"}},
+    {"name": "progress_expense_row4_zero_budget_with_spend_has_no_ratio_to_divide_by", "fn": "bxProgress", "args": [0, -7500, false], "expect": {"state": "over", "fraction": 1, "over_fraction": 1, "over_ratio": null, "label_cents": 7500, "label_kind": "over"}},
+    {"name": "progress_expense_row5_under_budget", "fn": "bxProgress", "args": [-100000, -25000, false], "expect": {"state": "under", "fraction": 0.25, "over_fraction": 0, "over_ratio": null, "label_cents": 75000, "label_kind": "remaining"}},
+    {"name": "progress_expense_row5_no_spend_at_all", "fn": "bxProgress", "args": [-100000, 0, false], "expect": {"state": "under", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 100000, "label_kind": "remaining"}},
+    {"name": "progress_expense_row6_exactly_on_budget", "fn": "bxProgress", "args": [-100000, -100000, false], "expect": {"state": "at", "fraction": 1, "over_fraction": 0, "over_ratio": null, "label_cents": 0, "label_kind": "remaining"}},
+    {"name": "progress_expense_row7_over_budget", "fn": "bxProgress", "args": [-100000, -125000, false], "expect": {"state": "over", "fraction": 1, "over_fraction": 0.25, "over_ratio": 0.25, "label_cents": 25000, "label_kind": "over"}},
+    {"name": "progress_expense_one_and_a_half_times_over", "fn": "bxProgress", "args": [-100000, -150000, false], "expect": {"state": "over", "fraction": 1, "over_fraction": 0.5, "over_ratio": 0.5, "label_cents": 50000, "label_kind": "over"}},
+    {"name": "progress_expense_three_times_over", "fn": "bxProgress", "args": [-100000, -300000, false], "expect": {"state": "over", "fraction": 1, "over_fraction": 1, "over_ratio": 2, "label_cents": 200000, "label_kind": "over"}},
+    {"name": "progress_expense_thirty_times_over_is_distinguishable_from_three_times", "fn": "bxProgress", "args": [-100000, -3000000, false], "expect": {"state": "over", "fraction": 1, "over_fraction": 1, "over_ratio": 29, "label_cents": 2900000, "label_kind": "over"}},
+    {"name": "progress_expense_with_a_positive_stored_budget_still_reads_correctly", "fn": "bxProgress", "args": [100000, -50000, false], "expect": {"state": "under", "fraction": 0.5, "over_fraction": 0, "over_ratio": null, "label_cents": 50000, "label_kind": "remaining"}},
+    {"name": "progress_income_row1_no_target", "fn": "bxProgress", "args": [null, 900000, true], "expect": {"state": "none", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 900000, "label_kind": "earned"}},
+    {"name": "progress_income_row2_no_target_and_nothing_earned", "fn": "bxProgress", "args": [0, 0, true], "expect": {"state": "none", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 0, "label_kind": "short"}},
+    {"name": "progress_income_row3_zero_target_with_earnings_divides_by_nothing", "fn": "bxProgress", "args": [0, 250000, true], "expect": {"state": "over", "fraction": 1, "over_fraction": 1, "over_ratio": null, "label_cents": 250000, "label_kind": "earned"}},
+    {"name": "progress_income_row4_a_reversal_is_caught_before_the_E_less_than_T_guard", "fn": "bxProgress", "args": [100000, -5000, true], "expect": {"state": "under", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 105000, "label_kind": "short"}},
+    {"name": "progress_income_row4_a_reversal_against_a_zero_target", "fn": "bxProgress", "args": [0, -5000, true], "expect": {"state": "under", "fraction": 0, "over_fraction": 0, "over_ratio": null, "label_cents": 5000, "label_kind": "short"}},
+    {"name": "progress_income_row5_short_of_target", "fn": "bxProgress", "args": [1000000, 250000, true], "expect": {"state": "under", "fraction": 0.25, "over_fraction": 0, "over_ratio": null, "label_cents": 750000, "label_kind": "short"}},
+    {"name": "progress_income_row6_exactly_on_target", "fn": "bxProgress", "args": [1000000, 1000000, true], "expect": {"state": "at", "fraction": 1, "over_fraction": 0, "over_ratio": null, "label_cents": 0, "label_kind": "short"}},
+    {"name": "progress_income_row7_over_target", "fn": "bxProgress", "args": [1000000, 1500000, true], "expect": {"state": "over", "fraction": 1, "over_fraction": 0.5, "over_ratio": 0.5, "label_cents": 500000, "label_kind": "earned"}},
+    {"name": "progress_income_three_times_target", "fn": "bxProgress", "args": [1000000, 3000000, true], "expect": {"state": "over", "fraction": 1, "over_fraction": 1, "over_ratio": 2, "label_cents": 2000000, "label_kind": "earned"}},
+    {"name": "progress_income_thirty_times_target_is_distinguishable_from_three_times", "fn": "bxProgress", "args": [100000, 3000000, true], "expect": {"state": "over", "fraction": 1, "over_fraction": 1, "over_ratio": 29, "label_cents": 2900000, "label_kind": "earned"}},
+    {"name": "progress_income_with_an_anomalous_negative_target_clamps_the_layout_fraction_only", "fn": "bxProgress", "args": [-100000, 0, true], "expect": {"state": "over", "fraction": 1, "over_fraction": 0, "over_ratio": -1, "label_cents": 100000, "label_kind": "earned"}},
+    {"name": "progress_rejects_a_non_integer_actual", "fn": "bxProgress", "args": [-100000, -1000.5, false], "throws": "integer cents"},
+    {"name": "open_month_plan_lists_only_sub_categories_missing_a_target_row", "fn": "bxOpenMonthPlan", "args": [{"$ref": "ompBudgets"}, {"$ref": "subsStd"}, 2026, 1, 2026, 2], "expect": ["sub-food"]},
+    {"name": "open_month_plan_skips_an_archived_sub_category_with_a_source_row", "fn": "bxOpenMonthPlan", "args": [{"$ref": "ompBudgets"}, {"$ref": "subsStd"}, 2026, 1, 2026, 3], "expect": ["sub-food", "sub-rent"]},
+    {"name": "open_month_plan_is_empty_when_the_target_month_is_already_populated", "fn": "bxOpenMonthPlan", "args": [{"$ref": "ompBudgets"}, {"$ref": "subsStd"}, 2026, 1, 2026, 1], "expect": []},
+    {"name": "open_month_plan_is_empty_when_the_source_month_is_empty", "fn": "bxOpenMonthPlan", "args": [{"$ref": "ompBudgets"}, {"$ref": "subsStd"}, 2026, 9, 2026, 2], "expect": []},
+    {"name": "open_month_plan_is_empty_with_no_sub_categories", "fn": "bxOpenMonthPlan", "args": [{"$ref": "ompBudgets"}, {"$ref": "empty"}, 2026, 1, 2026, 3], "expect": []}
   ]
 }

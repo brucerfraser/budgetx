@@ -1,4 +1,4 @@
-# ServerAppData — v2
+# ServerAppData — v3
 # Budget X app data for the HTML clients: one read-only bootstrap payload per page open.
 # History:
 #   v1  2026-08-20  Session 02 — created. GET /app/bootstrap (spec_02 §3.1, contract §4).
@@ -9,6 +9,34 @@
 #                   took ?include=transactions from p50 10,457 ms to the figure in the debrief
 #                   (spec_03 AC-13.6). No key, type, value or order change. The stamp stays v2
 #                   on purpose: AC-1.6 pins /build/version to ServerAppData v2.
+#   v3  2026-08-21  Session 04 — `include` becomes a comma-separated token list matched EXACTLY
+#                   and CASE-SENSITIVELY; ?include=budgets adds the §4.3 `budgets` key;
+#                   categories[] and sub_categories[] each gain `active`; the readability probe
+#                   is generalised to those two new columns (spec_04 §3.6, contract §4.1–4.3).
+#
+# v3 — THE FOUR CHANGES, AND THE TWO THAT ARE EASY TO GET WRONG (spec_04 §3.6)
+# 1. `include` IS A TOKEN LIST NOW. It is split on ",", each token stripped of surrounding
+#    whitespace, and matched EXACTLY and CASE-SENSITIVELY against {"transactions", "budgets"}.
+#    Unrecognised tokens are ignored silently — no token is an error — and a repeated token adds
+#    its key once. v2 shipped `.strip().lower()` against a spec that read exact (S03 finding 3);
+#    this round pins the contract to the SPEC, so ?include=Transactions now returns the v1
+#    key-set with NO `transactions` key. That is a deliberate behaviour change, and AC-1.3
+#    judges it.
+# 2. KEY ORDER IS ALWAYS `transactions` THEN `budgets`, whatever order the tokens arrive in.
+#    The payload is rebuilt as a NEW dict literal in that fixed order — never by assigning into
+#    the existing one, see the subscript-assignment ban below.
+# 3. categories[] and sub_categories[] each gain ONE field, `active` — a real boolean, tested
+#    `is not False` in the ONE place is_active() already lives. ARCHIVED ROWS ARE STILL
+#    RETURNED, flagged, exactly as archived accounts already are; the client does the filtering,
+#    which is what keeps a restore reachable from the UI without a second endpoint to list what
+#    is hidden.
+# 4. WITH NO QUERY STRING THE KEY-SET IS EXACTLY v1's. AC-1.1 proves it.
+#
+# THE READABILITY PROBE IS NOW RUN FOR THREE TABLES, AND IT IS STILL NEVER CACHED. `active` on
+# categories and sub_categories arrives with Bruce's migrate click (spec_04 §3.7); a cached
+# "missing" would survive that click inside a warm server process and go on hiding rows after
+# the column existed. _active_readable() is therefore re-derived on EVERY request, per table,
+# from the rows that request already loaded.
 #
 # DESIGN NOTES (read before editing)
 # - Self-contained: this module declares its own ApiError / api_http / require_session /
@@ -96,7 +124,11 @@ import re
 import traceback
 from datetime import date, datetime, timezone
 
-MODULE_VERSION = "v2"
+MODULE_VERSION = "v3"
+
+# The exact, CASE-SENSITIVE tokens `include` recognises, and the fixed order their keys are
+# emitted in. Anything else in the query string is ignored silently.
+INCLUDE_TOKENS = ("transactions", "budgets")
 
 # The Transfer sentinel category. Hardcoded in six client_code files today; from here on the
 # clients read it from this one constant so it stops being a magic string (spec_02 §4).
@@ -301,17 +333,24 @@ def serialise_account(row):
     }
 
 
-def serialise_category(row):
+def serialise_category(row, readable=True):
+    """The §4.2 category object. v3 adds `active` — a real boolean, and the SIXTH key.
+
+    `readable` is the caller's one-off answer to "is the `active` column in the schema?"; it
+    defaults to True so a lone call behaves exactly as it always did.
+    """
     return {
         "category_id": _text(_get(row, "category_id")),
         "name": _text(_get(row, "name")),
         "colour_back": _text(_get(row, "colour_back")),
         "colour_text": _text(_get(row, "colour_text")),
         "order": _number(_get(row, "order")),
+        "active": is_active(row, readable),
     }
 
 
-def serialise_sub_category(row):
+def serialise_sub_category(row, readable=True):
+    """The §4.2 sub-category object. v3 adds `active` — a real boolean, and the EIGHTH key."""
     return {
         "sub_category_id": _text(_get(row, "sub_category_id")),
         "name": _text(_get(row, "name")),
@@ -320,6 +359,7 @@ def serialise_sub_category(row):
         "order": _number(_get(row, "order")),
         "roll_over": bool(_get(row, "roll_over", False)),
         "roll_over_date": _iso_date(_get(row, "roll_over_date")),
+        "active": is_active(row, readable),
     }
 
 
@@ -379,6 +419,12 @@ def _iso_date_text(value):
 
 def _active_readable(rows):
     """Whether the `active` column can be read at all — decided ONCE for the whole set.
+
+    v3: called for THREE tables now — transactions (the column landed in S03), and categories
+    and sub_categories (the column lands with Bruce's spec_04 §3.7 migrate click). It is
+    generic over rows and holds no state, so generalising it needed no change to its body — but
+    it is NEVER cached across calls and must not become so: a cached "missing" would survive the
+    click inside a warm server process and go on hiding archived rows after the column existed.
 
     Presence is a property of the SCHEMA, not of a row: if the column is not there, it is not
     there for any row. Rediscovering that per row costs a server round trip per row (see the
@@ -497,12 +543,88 @@ def build_transactions_payload(rows, anomalies=None):
     )
 
 
-def wants_transactions(include):
-    """True only for the exact value "transactions". Any other value — and no query string at
-    all — leaves the v1 key-set untouched (spec_03 AC-1.1/1.3)."""
+# ---------------------------------------------------------------------------------------------
+# v3 — the budget object (spec_04 §4.3) and the `include` token list (spec_04 §3.6, §4.1).
+# ---------------------------------------------------------------------------------------------
+
+
+def _budget_cents(value, anomalies=None, key=None):
+    """The stored `budget_amount` column as the contract's integer cents.
+
+    A TYPE cast, not a SCALE conversion — budgets.budget_amount ALREADY holds cents (fact 11's
+    `text * 100` on the legacy save path). NEVER multiply by 100 here. A non-integral stored
+    value is a pre-existing data defect: it is rounded and the row is collected so the round can
+    list it (§4.3), but no key is added to the payload for it.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        if anomalies is not None:
+            anomalies.append(("non_integral_amount", key, value))
+        return 0
+    if isinstance(value, float):
+        if value.is_integer():
+            return int(value)
+        if anomalies is not None:
+            anomalies.append(("non_integral_amount", key, value))
+        return int(round(value))
+    return int(value)
+
+
+def serialise_budget(row, anomalies=None):
+    """The §4.3 budget object — exactly these four keys, no extras, no omissions.
+
+    The legacy column names `belongs_to`, `period` and `budget_amount` DO NOT appear on the
+    wire. `month` is the YYYY-MM of the stored `period`, which is always the first of a month; a
+    period that is not the first of a month is an anomaly, is still serialised to its month, and
+    is collected for the debrief. `notes` serialises null to "".
+    """
+    sub_category_id = _text(_get(row, "belongs_to"))
+    iso = _iso_date(_get(row, "period"))
+    month = "" if iso is None else iso[0:7]
+    if anomalies is not None:
+        if iso is None:
+            anomalies.append(("period_missing", sub_category_id, None))
+        elif iso[8:10] != "01":
+            anomalies.append(("period_not_first_of_month", sub_category_id, iso))
+    return {
+        "sub_category_id": sub_category_id,
+        "month": month,
+        "amount_cents": _budget_cents(_get(row, "budget_amount", 0), anomalies,
+                                      (sub_category_id, month)),
+        "notes": _text(_get(row, "notes")),
+    }
+
+
+def _budget_sort_key(obj):
+    """§4.3 row order: `month` ascending, then `sub_category_id` ascending — a total order, so
+    two calls are diffable."""
+    return (obj["month"], obj["sub_category_id"])
+
+
+def build_budgets_payload(rows, anomalies=None):
+    """Every row of the budgets table, serialised and sorted by the contract order.
+
+    NO WINDOWING, consistent with §0 ruling 2 and with the transactions leg: the clients do all
+    display maths locally and every later screen needs the same set. There is no `active` column
+    on `budgets` and §2.6 says there never will be — a budget row is created, amended and
+    superseded, never archived — so nothing is filtered out here.
+    """
+    return sorted([serialise_budget(r, anomalies) for r in rows], key=_budget_sort_key)
+
+
+def include_tokens(include):
+    """The recognised tokens in `include`, as a set.
+
+    Split on ",", each token stripped of surrounding whitespace, matched EXACTLY and
+    CASE-SENSITIVELY against INCLUDE_TOKENS. Unrecognised tokens are ignored silently — no token
+    is an error — and a repeated token yields the same set, so its key is added once.
+
+    v2 used `.strip().lower()` against a spec that read exact (S03 finding 3). v3 pins the
+    contract to the SPEC: `?include=Transactions` returns the v1 key-set with no `transactions`
+    key (spec_04 §3.6, AC-1.3). That is a deliberate, judged behaviour change.
+    """
     if not isinstance(include, str):
-        return False
-    return include.strip().lower() == "transactions"
+        return set()
+    return {token.strip() for token in include.split(",")} & set(INCLUDE_TOKENS)
 
 
 def build_bootstrap_payload(email, server_date, accounts, categories, sub_categories,
@@ -526,14 +648,20 @@ def build_bootstrap_payload(email, server_date, accounts, categories, sub_catego
         key=lambda r: (_order_sort_key(r), _text(_get(r, "name")).lower(),
                        _text(_get(r, "sub_category_id"))),
     )
+    # v3: the readability probe, per table, derived HERE — once per call, from the rows this
+    # call already loaded, and never cached across calls. See _active_readable's docstring.
+    # ARCHIVED ROWS ARE STILL RETURNED, flagged; the client filters (§3.6).
+    cat_readable = _active_readable(sorted_categories)
+    sub_readable = _active_readable(sorted_sub_categories)
     return {
         "ok": True,
         "email": _text(email),
         "server_date": server_date,
         "transfer_category_id": TRANSFER_CATEGORY_ID,
         "accounts": [serialise_account(r) for r in sorted_accounts],
-        "categories": [serialise_category(r) for r in sorted_categories],
-        "sub_categories": [serialise_sub_category(r) for r in sorted_sub_categories],
+        "categories": [serialise_category(r, cat_readable) for r in sorted_categories],
+        "sub_categories": [serialise_sub_category(r, sub_readable)
+                           for r in sorted_sub_categories],
         "settings": serialise_settings(settings_row),
     }
 
@@ -573,6 +701,15 @@ def _report_amount_anomalies(anomalies):
               % (transaction_id, value))
 
 
+def _report_budget_anomalies(anomalies):
+    """§4.3's two listed anomalies — a non-integral `budget_amount` (fact 11) and a `period`
+    that is not the first of a month. Both are pre-existing data defects, both are still
+    serialised, and both go to the Anvil app log so the round can list them. §3.1 measurements 7
+    and the period check found zero of each live."""
+    for kind, key, value in anomalies or []:
+        print("ServerAppData: budget %s key=%r value=%r" % (kind, key, value))
+
+
 @api_http("/app/bootstrap", methods=["GET"])
 def api_app_bootstrap(include=None, **kwargs):
     """Everything a client shell needs, in ONE call — the standing one-fetch-per-page-open rule.
@@ -580,9 +717,12 @@ def api_app_bootstrap(include=None, **kwargs):
     Read-only: search() and get() only. Nothing in this handler, or anywhere in this module,
     creates, changes or removes a row.
 
-    v2: with ?include=transactions the payload gains ONE extra top-level key. With any other
-    include value, or none, the key-set is exactly v1's. The extra key is added by building a
-    NEW dict from the old one, never by assigning into it.
+    v3: `include` is a comma-separated token list, matched EXACTLY and CASE-SENSITIVELY against
+    {"transactions", "budgets"}. Each recognised token adds ONE top-level key; unrecognised
+    tokens are ignored silently and a repeated token adds its key once. KEY ORDER IS ALWAYS
+    `transactions` THEN `budgets`, whatever order the tokens arrived in — the payload is rebuilt
+    as a NEW dict in that fixed order, never by assigning into the existing one. With no query
+    string the key-set is EXACTLY v1's (AC-1.1).
     """
     user = require_auth()
     payload = build_bootstrap_payload(
@@ -593,10 +733,20 @@ def api_app_bootstrap(include=None, **kwargs):
         sub_categories=list(app_tables.sub_categories.search()),
         settings_row=_settings_row(),
     )
-    if not wants_transactions(include):
+    tokens = include_tokens(include)
+    if not tokens:
         return payload
-    anomalies = []
-    transactions = build_transactions_payload(
-        list(app_tables.transactions.search()), anomalies)
-    _report_amount_anomalies(anomalies)
-    return {**payload, "transactions": transactions}
+
+    if "transactions" in tokens:
+        anomalies = []
+        transactions = build_transactions_payload(
+            list(app_tables.transactions.search()), anomalies)
+        _report_amount_anomalies(anomalies)
+        payload = {**payload, "transactions": transactions}
+    if "budgets" in tokens:
+        budget_anomalies = []
+        budgets = build_budgets_payload(
+            list(app_tables.budgets.search()), budget_anomalies)
+        _report_budget_anomalies(budget_anomalies)
+        payload = {**payload, "budgets": budgets}
+    return payload

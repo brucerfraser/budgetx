@@ -1,8 +1,12 @@
-# ServerTxn — v1
+# ServerTxn — v2
 # Budget X transactions write path: categorise / update / create / archive / restore.
 # History:
 #   v1  2026-08-20  Session 03 — created. The app's FIRST write path to a business table
 #                   (spec_03 §3.1, contract §4.2–4.5).
+#   v2  2026-08-21  Session 04 — ONE behaviour change and nothing else (spec_04 §3.11 fix 1,
+#                   AC-12.1): _validate_category no longer coerces an empty-string `category`
+#                   to None. "" is now a 400 with nothing written; `null` remains the only way
+#                   to uncategorise. v1 silently widened its own whitelist.
 #
 # DESIGN NOTES (read before editing)
 #
@@ -89,7 +93,7 @@ import traceback
 import uuid
 from datetime import date, datetime, timezone
 
-MODULE_VERSION = "v1"
+MODULE_VERSION = "v2"
 
 # The Transfer sentinel category, as hardcoded across the Forms app and pinned by ServerAppData.
 # A transaction may carry it as its `category` even though it is not a sub_categories row.
@@ -424,14 +428,22 @@ def _require_transaction_id(value, field="transaction_id"):
 
 def _validate_category(value, valid_sub_ids):
     """A sub_category_id that exists, or the transfer sentinel, or null. Anything else is a 400
-    naming the field — never echoing the offending value."""
+    naming the field — never echoing the offending value.
+
+    v2 (spec_04 §3.11 fix 1, AC-12.1): AN EMPTY STRING IS A 400, NOT AN UNCATEGORISE. v1 coerced
+    "" to None here, which silently WIDENED the whitelist: a client that sent a blank field —
+    or a form that posted an empty input — quietly cleared the category instead of being told
+    its value was invalid. `null` is the ONE way to uncategorise, and it still is. A
+    whitespace-only string strips to the same empty candidate and is refused for the same
+    reason.
+    """
     if value is None:
         return None
     if not isinstance(value, str):
         raise _bad_request("category: must be a string or null")
     candidate = value.strip()
     if candidate == "":
-        return None
+        raise _bad_request("category: must be a non-empty string, or null to uncategorise")
     if candidate == TRANSFER_CATEGORY_ID:
         return candidate
     if candidate not in valid_sub_ids:
