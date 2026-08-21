@@ -2416,6 +2416,41 @@ says so; it is restated because §3.3's `bxBudget` returns `null` for the same s
 must not be confused. `bxBudget`'s `null` is unchanged — it is what §3.9 renders as "no budget
 set" rather than "R0.00".
 
+### Addenda 18–19 — 2026-08-21 (Orchestrator, on findings from the visual reviewer, cycle 1) — two criteria describe a fixture that is not the live one
+
+**Addendum 18 — AC-5.10's live half: the pool is reduced by `carried_total`, not by `carried_overspend` alone.**
+AC-5.10 says *"`starting_available` is lower than `income_planned` by exactly that amount"*, where
+"that amount" is the chosen month's total overspend. That wording assumes the live month carries an
+**overspend and nothing else**. It does not: §3.13 row 10 deliberately makes the chosen month carry
+a **shortfall as well**, because §0 ruling 6 needs one. Measured on 2026-01:
+`income_planned 16,500,000 − carried_total 4,440,112 = starting_available 12,059,888`, where
+`carried_total = carried_overspend 1,491,913 + carried_shortfall 2,948,199`.
+
+**§4.5A is right and the code is right** — `starting_available = income_planned − carried_total` is
+the definition. AC-5.10's phrasing is the thing that is wrong. **The criterion is judged as:
+`starting_available == income_planned − carried_total`, with `carried_overspend` separately equal to
+an independent recomputation of the previous month's overspend.** Both hold.
+
+**Addendum 19 — AC-14.5's `29.0000`/`2.0000` describes a different fixture from §3.13's.**
+AC-14.5 predicts `data-over` values of `29.0000` and `2.0000` for the sub-categories §3.13 row 10
+calls "30× over" and "3× over". §4.6 defines `over_ratio = (S − B) / B`. §3.13 row 10 sets the
+**overspend** to 30× and 3× the budget — `ZZ S04 Sub A`, budget R100, spend R3,100 → `(3100−100)/100
+= 30.0000`; `ZZ S04 Sub D`, budget R300, spend R1,200 → `(1200−300)/300 = 3.0000`. To yield 29 and 2
+the **spend** would have to be 30× and 3× the budget.
+
+**The arithmetic is right; the parenthetical predicts values for data the round does not create.**
+**The criterion is judged on what it exists to prove** (fact 16): the two `data-over` values must
+**differ**, both `data-state` must be `over`, and both `data-fraction` must be `1`. Measured:
+`30.0000` vs `3.0000`, both `over`, both `1.0000`, `label_cents` 300,000 and 90,000 matching an
+independent recomputation. A saturated meter that could not tell a 3× from a 30× overspend is
+exactly what this replaces.
+
+*(Also corrected, from the same review: live 2026-01 is **`covered`**, not `outstanding` —
+`assigned 1,690,000 > 0` and `unassigned 10,369,888 ≥ 0` — so the chip there renders §4.5A's merged
+covered copy. The separate-cause past-tense copy is reached by driving the month into `outstanding`,
+which the reviewer did via a `page.route`-mutated body. The orchestrator's cycle-1 dispatch stated
+the opposite and was wrong.)*
+
 ### Addendum 17 — 2026-08-21 (Orchestrator) — one leftover round-03 test row defeats §0 ruling 1, and is archived
 
 **The finding.** `bxDefaultMonth` on the **live** payload returns **2026-08** — a month holding
